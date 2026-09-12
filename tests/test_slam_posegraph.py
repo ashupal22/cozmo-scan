@@ -56,6 +56,37 @@ def test_heading_creep_vertical_drift_and_loop_are_corrected():
     assert solution.heading_priors_used and len(solution.links_used) == 1
 
 
+def winding_walk(seed, creep_deg_per_step=0.21, noise_deg=0.8, n=29, step_m=1.9, with_times=True):
+    """Submaps 4 s and 1.9 m apart on a winding path, wall headings with realistic LiDAR noise."""
+    rng = np.random.default_rng(seed)
+    turns = np.cumsum(rng.choice([0, 0, 90, -90], n)) % 360
+    true = [np.array([0.0, 1.5, 0.0])]
+    for h in turns[:-1]:
+        true.append(true[-1] + step_m * np.array([np.cos(np.radians(h)), 0, np.sin(np.radians(h))]))
+    theta_true = np.radians(creep_deg_per_step * np.arange(n))
+    recorded = [true[0].copy()]
+    for s in range(n - 1):
+        recorded.append(recorded[-1] + yaw_matrix(theta_true[s]).T @ (true[s + 1] - true[s]))
+    sigma = float(np.hypot(noise_deg / 3, 0.7))
+    nodes = [Node(np.array(recorded[s]), (BUILDING_DEG + np.degrees(theta_true[s]) + rng.normal(0, noise_deg)) % 90,
+                  None, sigma, 4.0 * s if with_times else None) for s in range(n)]
+    odometry = [Odometry(s, s + 1, *odometry_sigmas(step_m)) for s in range(n - 1)]
+    return nodes, odometry, theta_true
+
+
+@pytest.mark.parametrize("creep", [0.21, 0.0])
+def test_steady_heading_creep_is_followed_but_wall_noise_is_not(creep):
+    def worst(with_times):
+        errors = []
+        for seed in range(5):
+            nodes, odometry, theta_true = winding_walk(seed, creep, with_times=with_times)
+            errors.append(np.degrees(np.abs(solve(nodes, odometry, []).theta - theta_true)).max())
+        return float(np.median(errors))
+    smooth, random_walk = worst(True), worst(False)
+    assert smooth < 0.7                 # creep-rate model: follows the drift, not the noise
+    assert random_walk > 1.2            # heading random walk alone follows the noise
+
+
 def test_nothing_to_correct_without_evidence():
     nodes, odometry, _, _ = square_walk(heading=False, floors=False)
     solution = solve(nodes, odometry, [])
