@@ -2,12 +2,13 @@
 
 1. Split the walk at pose jumps. A jump is ARKit relocalising: it snaps its map back onto what it saw
    earlier, and the frames after the snap are in the corrected map. On walk 1a8384c3f6 the snap was
-   66 cm and 3.4 degrees in the last second. So a jump becomes a relocalisation link (the map change
-   between the frames just before and after it), not a discarded error.
+   about 60 cm in the last second. So a jump becomes a relocalisation link (the map change between
+   the frames just before and after it), not a discarded error.
 2. Cut each segment into submaps of about SUBMAP_S seconds. From its own points, each submap measures
-   the dominant wall direction (mod 90) and the floor height.
-3. Propose loop closures between submaps that are close in the recorded map but far apart in time,
-   and keep those the wall matcher verifies.
+   the dominant wall direction (mod 90, with its uncertainty) and the floor height. Floor heights far
+   from the walk's typical floor are dropped: a table top seen up close is not the floor.
+3. Propose loop closures between submaps that saw the same walls far apart in time, and keep those the
+   wall matcher verifies on the overlapping part. The search is bounded by how far drift can have grown.
 4. Solve the pose graph (cozmo.slam.posegraph); interpolate each frame's correction between the
    anchors of neighbouring submaps in the same segment.
 5. Apply the correction to fused points, normals and the camera path.
@@ -18,6 +19,7 @@ import time
 from dataclasses import dataclass, field
 
 import numpy as np
+from scipy.spatial import cKDTree
 
 from cozmo.geometry.fusion import PointSet
 from cozmo.geometry.planes import find_floors
@@ -28,23 +30,35 @@ from cozmo.slam.posegraph import Link, Node, Odometry, odometry_sigmas, solve
 JUMP_M = 0.10
 SUBMAP_S = 4.0
 MIN_TAIL_S = 1.5
-WALL_BAND_M = (-1.3, 0.3)       # wall points between these heights relative to the camera
+WALL_BAND_M = (-1.3, 0.3)          # wall points between these heights relative to the camera
 WALL_NORMAL_MAX_Y = 0.2
 MIN_HEADING_POINTS = 300
-MIN_HEADING_SHARE = 0.5
+MIN_HEADING_SHARE = 0.15           # LiDAR normals are noisy: on real walks 15-45% fall within 3 degrees
+HEADING_SYSTEMATIC_DEG = 0.7       # scatter between submaps on c00a170fe1 beyond the statistical error
 MIN_FLOOR_AREA_M2 = 1.0
+FLOOR_GATE_M = 0.05                # vertical drift stays within a few cm; a table top does not
+MIN_CAMERA_ABOVE_FLOOR_M = 1.0
+LOCAL_MAP_REACH = 2                # submaps on each side that form a loop-closure local map
 LOOP_MIN_GAP_S = 20.0
 LOOP_RADIUS_M = 3.0
 LOOP_CANDIDATES = 3
 LOOP_MIN_POINTS = 400
-LOOP_MIN_INLIERS = 0.4
-LOOP_MAX_RESIDUAL_M = 0.02
+LOOP_MIN_SHARED_BEFORE = 0.2       # share of source walls within 30 cm of target walls before matching
+LOOP_MIN_OVERLAP = 0.3
+LOOP_MAX_OVERLAP_RESIDUAL_M = 0.02
+LOOP_MIN_INLIERS = 0.2
 LOOP_MAX_AMBIGUITY = 0.85
 LOOP_SIGMA = (0.03, 0.5)
 RELOCALIZATION_SIGMA = (0.05, 1.0)
 ACROSS_JUMP_ODOMETRY_SIGMA = (0.5, 10.0)
 MAP_CELL_M = 0.02
 CHUNK = 2_000_000
+
+
+def drift_bounds(path_between_m: float) -> tuple[float, float]:
+    """How far (degrees, metres) drift can plausibly have grown over this much walking.
+    Walk 1a8384c3f6: about 6 degrees and 60 cm over 54 m."""
+    return min(8.0, 1.0 + 0.15 * path_between_m), min(1.2, 0.1 + 0.02 * path_between_m)
 
 
 def find_jumps(positions: np.ndarray, threshold_m: float = JUMP_M) -> list[tuple[int, int]]:
@@ -71,6 +85,20 @@ def relocalization(capture, before: int, after: int, history: int = 3):
     alpha = -gamma
     shift = -rot2(alpha) @ t_new
     return float(np.degrees(alpha)), shift, float(np.linalg.norm(p[after] - expected)), float(np.degrees(gamma))
+
+
+def heading_of(normals_xz: np.ndarray) -> tuple[float, float] | None:
+    """Dominant wall direction (degrees mod 90) and its uncertainty, or None if unreliable."""
+    if len(normals_xz) < MIN_HEADING_POINTS:
+        return None
+    yaw, share = dominant_yaw(normals_xz)
+    if share < MIN_HEADING_SHARE:
+        return None
+    deviation = wrap(np.degrees(np.arctan2(normals_xz[:, 1], normals_xz[:, 0])) - yaw, 90.0)
+    near = deviation[np.abs(deviation) < 10.0]
+    spread = 1.4826 * float(np.median(np.abs(near - np.median(near))))
+    statistical = spread / np.sqrt(max(len(near) / 10.0, 1.0))  # neighbouring normals are correlated
+    return yaw, float(np.hypot(statistical, HEADING_SYSTEMATIC_DEG))
 
 
 @dataclass
@@ -123,6 +151,7 @@ class DriftReport:
     submaps: int = 0
     heading_priors: int = 0
     floor_priors: int = 0
+    floors_dropped: int = 0
     heading_priors_used: bool = False
     loops_proposed: int = 0
     loops_accepted: int = 0
@@ -170,6 +199,38 @@ def _segments(n_frames: int, jumps: list[tuple[int, int]]) -> list[tuple[int, in
     return segments
 
 
+def _group_by_time(frames: np.ndarray, times: np.ndarray) -> list[list[int]]:
+    groups, current = [], [int(frames[0])]
+    for f in frames[1:]:
+        if times[f] - times[current[0]] >= SUBMAP_S:
+            groups.append(current)
+            current = [int(f)]
+        else:
+            current.append(int(f))
+    groups.append(current)
+    if len(groups) > 1 and times[groups[-1][-1]] - times[groups[-1][0]] < MIN_TAIL_S:
+        tail = groups.pop()
+        groups[-1] = groups[-1] + tail
+    return groups
+
+
+def gate_floors(submaps: list[Submap], positions: np.ndarray) -> int:
+    """Drop floor heights that are not the walk's floor. Returns how many were dropped."""
+    heights = [s.node.floor_y for s in submaps if s.node.floor_y is not None]
+    if not heights:
+        return 0
+    typical = float(np.median(heights))
+    dropped = 0
+    for s in submaps:
+        y = s.node.floor_y
+        if y is None:
+            continue
+        if abs(y - typical) > FLOOR_GATE_M or positions[s.anchor, 1] - y < MIN_CAMERA_ABOVE_FLOOR_M:
+            s.node.floor_y = None
+            dropped += 1
+    return dropped
+
+
 def _build_submaps(capture, points: PointSet, segments) -> list[Submap]:
     t = capture.timestamps
     keyframes = np.unique(points.frame)
@@ -181,17 +242,7 @@ def _build_submaps(capture, points: PointSet, segments) -> list[Submap]:
         kfs = keyframes[(keyframes >= first) & (keyframes <= last)]
         if len(kfs) == 0:
             continue
-        groups, current = [], [int(kfs[0])]
-        for f in kfs[1:]:
-            if t[f] - t[current[0]] >= SUBMAP_S:
-                groups.append(current)
-                current = [int(f)]
-            else:
-                current.append(int(f))
-        groups.append(current)
-        if len(groups) > 1 and t[groups[-1][-1]] - t[groups[-1][0]] < MIN_TAIL_S:
-            groups[-2] += groups.pop()
-        for group in groups:
+        for group in _group_by_time(kfs, t):
             idx = np.concatenate([np.arange(*span[f]) for f in group])
             xyz, nrm = points.xyz[idx], points.normal[idx]
             rel = xyz[:, 1] - points.camera_y[idx]
@@ -203,21 +254,20 @@ def _build_submaps(capture, points: PointSet, segments) -> list[Submap]:
             keep.sort()
             wxz, wn, wf = wxz[keep], wn[keep], points.frame[idx][wall][keep]
 
-            heading = None
-            if len(wxz) >= MIN_HEADING_POINTS:
-                yaw, share = dominant_yaw(wn)
-                heading = yaw if share >= MIN_HEADING_SHARE else None
+            heading = heading_of(wn)
             floors = find_floors(points.subset(idx[::4]))
             floor = floors[0].height if floors and floors[0].area_m2 >= MIN_FLOOR_AREA_M2 else None
             middle = (t[group[0]] + t[group[-1]]) / 2
             anchor = min(group, key=lambda f: abs(t[f] - middle))
-            submaps.append(Submap(g, np.array(group), anchor, wxz, wn, wf,
-                                  Node(capture.positions[anchor].astype(float), heading, floor)))
+            node = Node(capture.positions[anchor].astype(float), heading[0] if heading else None, floor,
+                        heading[1] if heading else None)
+            submaps.append(Submap(g, np.array(group), anchor, wxz, wn, wf, node))
     return submaps
 
 
 def _local_map(submaps: list[Submap], k: int):
-    ids = [j for j in (k - 1, k, k + 1) if 0 <= j < len(submaps) and submaps[j].segment == submaps[k].segment]
+    ids = [j for j in range(k - LOCAL_MAP_REACH, k + LOCAL_MAP_REACH + 1)
+           if 0 <= j < len(submaps) and submaps[j].segment == submaps[k].segment]
     xz = np.vstack([submaps[j].wall_xz for j in ids])
     normals = np.vstack([submaps[j].wall_normals for j in ids])
     _, keep = np.unique(np.floor(xz / MAP_CELL_M).astype(np.int64), axis=0, return_index=True)
@@ -226,9 +276,12 @@ def _local_map(submaps: list[Submap], k: int):
 
 def _loop_links(capture, submaps: list[Submap]):
     t = capture.timestamps
-    anchors = np.array([capture.positions[s.anchor][[0, 2]] for s in submaps])
+    positions = np.asarray(capture.positions, float)
+    walked = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(positions, axis=0), axis=1))])
+    anchors = np.array([positions[s.anchor][[0, 2]] for s in submaps])
     maps = [_local_map(submaps, k) for k in range(len(submaps))]
     usable = [len(xz) >= LOOP_MIN_POINTS and two_wall_directions(n) for xz, n in maps]
+    trees: dict[int, cKDTree] = {}
     links, proposed = [], 0
     for b in range(len(submaps)):
         if not usable[b]:
@@ -238,10 +291,21 @@ def _loop_links(capture, submaps: list[Submap]):
         for distance, a in sorted(near)[:LOOP_CANDIDATES]:
             if distance > LOOP_RADIUS_M:
                 break
+            tree = trees.setdefault(a, cKDTree(maps[a][0]))
+            d0, _ = tree.query(maps[b][0], distance_upper_bound=0.3)
+            if np.mean(np.isfinite(d0)) < LOOP_MIN_SHARED_BEFORE:
+                continue  # the two places do not show the same walls
             proposed += 1
-            m = match_walls(maps[a][0], maps[a][1], maps[b][0], max_shift_m=1.2)
-            if (m and m.inlier_fraction >= LOOP_MIN_INLIERS and m.median_residual_m <= LOOP_MAX_RESIDUAL_M
-                    and m.ambiguity <= LOOP_MAX_AMBIGUITY and abs(m.yaw_deg) <= 7.5):
+            yaw_bound, shift_bound = drift_bounds(abs(walked[submaps[b].anchor] - walked[submaps[a].anchor]))
+            m = match_walls(maps[a][0], maps[a][1], maps[b][0], yaw_range_deg=(-yaw_bound, yaw_bound),
+                            max_shift_m=shift_bound)
+            if m is None:
+                continue
+            centre = maps[b][0].mean(axis=0)
+            moved = float(np.linalg.norm(m.apply(centre[None])[0] - centre))
+            if (m.overlap_fraction >= LOOP_MIN_OVERLAP and m.overlap_median_m <= LOOP_MAX_OVERLAP_RESIDUAL_M
+                    and m.inlier_fraction >= LOOP_MIN_INLIERS and m.ambiguity <= LOOP_MAX_AMBIGUITY
+                    and abs(m.yaw_deg) <= yaw_bound and moved <= shift_bound + 0.05):
                 links.append(Link(a, b, m.yaw_deg, m.shift, *LOOP_SIGMA, kind="loop"))
     return links, proposed
 
@@ -253,6 +317,7 @@ def _frame_correction(capture, submaps, segments, jumps, solution) -> FrameCorre
     valid = np.ones(n, bool)
     for before, after in jumps:
         valid[before + 1:after] = False
+    anchors_all = np.array([s.node.anchor for s in submaps])
     for g, (first, last) in enumerate(segments):
         ids = np.array([k for k, s in enumerate(submaps) if s.segment == g], int)
         if len(ids) == 0:
@@ -267,7 +332,7 @@ def _frame_correction(capture, submaps, segments, jumps, solution) -> FrameCorre
         def via(k):
             node = ids[k]
             th = solution.theta[node]
-            anchor = np.array([submaps[j].node.anchor for j in node])
+            anchor = anchors_all[node]
             rel = recorded[frames] - anchor
             c, s = np.cos(th), np.sin(th)
             return np.column_stack([c * rel[:, 0] + s * rel[:, 2], rel[:, 1], -s * rel[:, 0] + c * rel[:, 2]]) \
@@ -284,16 +349,18 @@ def _map_area(xz: np.ndarray) -> float:
 
 def estimate_drift(capture, points: PointSet) -> tuple[FrameCorrection, DriftReport]:
     """Per-frame corrections for a walk. `capture` needs timestamps, positions, rotation(i) and len();
-    `points` must come from that capture with frame indices in ascending order (as fuse() returns)."""
+    `points` must come from that capture (frame indices are sorted here if needed)."""
     t0 = time.time()
     if np.any(np.diff(points.frame) < 0):
         order = np.argsort(points.frame, kind="stable")
         points = PointSet(points.xyz[order], points.normal[order], points.frame[order], points.camera_y[order])
     report = DriftReport()
-    jumps = find_jumps(np.asarray(capture.positions, float))
+    positions = np.asarray(capture.positions, float)
+    jumps = find_jumps(positions)
     segments = _segments(len(capture), jumps)
     submaps = _build_submaps(capture, points, segments)
     report.submaps = len(submaps)
+    report.floors_dropped = gate_floors(submaps, positions)
     report.heading_priors = sum(s.node.wall_yaw_deg is not None for s in submaps)
     report.floor_priors = sum(s.node.floor_y is not None for s in submaps)
 
@@ -314,9 +381,8 @@ def estimate_drift(capture, points: PointSet) -> tuple[FrameCorrection, DriftRep
 
     if len(submaps) < 2:
         n = len(capture)
-        recorded = np.asarray(capture.positions, float)
         report.seconds = time.time() - t0
-        return FrameCorrection(np.zeros(n), recorded.copy(), recorded, np.ones(n, bool)), report
+        return FrameCorrection(np.zeros(n), positions.copy(), positions, np.ones(n, bool)), report
 
     solution = solve([s.node for s in submaps], odometry, links)
     report.heading_priors_used = solution.heading_priors_used

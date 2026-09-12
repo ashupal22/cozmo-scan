@@ -2,8 +2,9 @@ import numpy as np
 import pytest
 
 from cozmo.geometry.fusion import PointSet
-from cozmo.slam.drift import estimate_drift, find_jumps
+from cozmo.slam.drift import Submap, _build_submaps, _group_by_time, _segments, estimate_drift, find_jumps, gate_floors
 from cozmo.slam.matching import yaw_matrix
+from cozmo.slam.posegraph import Node
 
 # 6 x 4 m room with two short stub walls, so no place looks like another
 WALLS = [((0, 0), (6, 0)), ((6, 0), (6, 4)), ((6, 4), (0, 4)), ((0, 4), (0, 0)),
@@ -102,6 +103,35 @@ def distortion(xyz: np.ndarray, truth: np.ndarray) -> np.ndarray:
 
 def floor_heights(points: PointSet) -> np.ndarray:
     return points.xyz[points.normal[:, 1] > 0.9, 1]
+
+
+def test_short_last_group_is_merged_without_losing_or_repeating_frames():
+    times = np.arange(0, 13.0, 0.5)             # groups start every 4 s; the last one is 0.5 s long
+    frames = np.arange(len(times))
+    groups = _group_by_time(frames, times)
+    flat = [f for g in groups for f in g]
+    assert flat == list(frames)
+    assert len(groups) == 3
+
+
+def test_submaps_cover_every_keyframe_once():
+    t, true_positions, heading = true_walk()
+    recorded, rotations, theta = record(true_positions, heading)
+    points, _ = observe(true_positions, recorded, theta, np.random.default_rng(2))
+    capture = FakeCapture(t, recorded, rotations)
+    frames = np.concatenate([s.frames for s in _build_submaps(capture, points, _segments(len(capture), []))])
+    assert len(frames) == len(np.unique(frames)) == len(np.unique(points.frame))
+
+
+def test_a_table_top_is_not_used_as_the_floor():
+    def submap(anchor, floor):
+        return Submap(0, np.array([anchor]), anchor, np.zeros((0, 2)), np.zeros((0, 2)), np.zeros(0, int),
+                      Node(np.zeros(3), None, floor))
+    positions = np.zeros((5, 3))
+    positions[:, 1] = 1.45
+    submaps = [submap(0, 0.012), submap(1, 0.0), submap(2, 0.43), submap(3, -0.02), submap(4, 0.01)]
+    assert gate_floors(submaps, positions) == 1
+    assert [s.node.floor_y for s in submaps] == [0.012, 0.0, None, -0.02, 0.01]
 
 
 def test_consecutive_jumping_steps_are_one_jump():

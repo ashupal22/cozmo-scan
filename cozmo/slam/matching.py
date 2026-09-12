@@ -17,6 +17,7 @@ from scipy import ndimage
 from scipy.spatial import cKDTree
 
 INLIER_M = 0.03
+OVERLAP_M = 0.10
 
 
 def rot2(theta: float) -> np.ndarray:
@@ -61,10 +62,12 @@ def two_wall_directions(normals: np.ndarray, min_share: float = 0.15) -> bool:
 class Match:
     yaw_deg: float
     shift: np.ndarray
-    inlier_fraction: float
-    median_residual_m: float
+    inlier_fraction: float      # source points within INLIER_M of the target
+    median_residual_m: float    # over all source points
     score: float
-    ambiguity: float  # best correlation >= 0.3 m away from the chosen shift, relative to the best
+    ambiguity: float            # best correlation >= 0.3 m away from the chosen shift, relative to the best
+    overlap_fraction: float = 0.0   # source points within OVERLAP_M: the part of the source the target also saw
+    overlap_median_m: float = 1.0   # median distance over that overlap
 
     def apply(self, xz: np.ndarray) -> np.ndarray:
         return xz @ rot2(np.radians(self.yaw_deg)).T + self.shift
@@ -133,9 +136,13 @@ def match_walls(target: np.ndarray, target_normals: np.ndarray, source: np.ndarr
     reach = np.hypot(kx, ky) * cell_m
     allowed = reach <= max_shift_m if max_shift_m is not None else np.ones_like(reach, bool)
 
+    # Rotate about the target's centre, not the world origin: far from the origin a small yaw would
+    # otherwise move points further than max_shift_m and the right answer could never be found.
+    pivot = t_mid
     best = None
     for yaw in np.arange(yaw_range_deg[0], yaw_range_deg[1] + 1e-9, yaw_step_deg):
-        rotated = source @ rot2(np.radians(yaw)).T
+        R = rot2(np.radians(yaw))
+        rotated = (source - pivot) @ R.T + pivot
         offset = (t_mid - rotated.mean(axis=0)) if center else np.zeros(2)
         S = _raster(rotated + offset, origin, size, cell_m, 1.0)
         corr = np.fft.ifft2(FT * np.conj(np.fft.fft2(S))).real
@@ -143,7 +150,8 @@ def match_walls(target: np.ndarray, target_normals: np.ndarray, source: np.ndarr
         idx = np.unravel_index(int(np.argmax(corr)), corr.shape)
         score = float(corr[idx] / (t_norm * np.linalg.norm(S) + 1e-9))
         if best is None or score > best[0]:
-            best = (score, yaw, offset + np.array([kx[idx], ky[idx]]) * cell_m, corr, idx)
+            shift = pivot - R @ pivot + offset + np.array([kx[idx], ky[idx]]) * cell_m
+            best = (score, yaw, shift, corr, idx)
 
     score, yaw, shift, corr, idx = best
     far = np.hypot(kx - kx[idx], ky - ky[idx]) * cell_m >= 0.3
@@ -151,5 +159,7 @@ def match_walls(target: np.ndarray, target_normals: np.ndarray, source: np.ndarr
     ambiguity = float(other.max() / corr[idx]) if other.size and corr[idx] > 0 else 1.0
 
     theta, shift, d = icp_point_to_line(source, target, target_normals, np.radians(yaw), shift)
+    overlap = d < OVERLAP_M
     return Match(float(np.degrees(theta)), shift, float(np.mean(d < INLIER_M)), float(np.median(d)),
-                 score, ambiguity)
+                 score, ambiguity, float(overlap.mean()),
+                 float(np.median(d[overlap])) if overlap.any() else 1.0)

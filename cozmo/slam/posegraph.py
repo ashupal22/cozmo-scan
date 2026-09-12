@@ -42,6 +42,7 @@ class Node:
     anchor: np.ndarray                  # (3,) recorded position
     wall_yaw_deg: float | None = None   # dominant wall direction mod 90, when reliable
     floor_y: float | None = None        # floor height seen from this node, when reliable
+    wall_yaw_sigma_deg: float | None = None  # uncertainty of wall_yaw_deg; HEADING_SIGMA_DEG if None
 
 
 @dataclass
@@ -91,6 +92,8 @@ class _Problem:
         self.heading_idx = np.array([i for i, n in enumerate(nodes) if n.wall_yaw_deg is not None], int) \
             if use_heading else np.zeros(0, int)
         self.heading = np.array([nodes[i].wall_yaw_deg for i in self.heading_idx], float)
+        self.heading_sigma = np.array([nodes[i].wall_yaw_sigma_deg or HEADING_SIGMA_DEG
+                                       for i in self.heading_idx], float)
         self.floor_idx = np.array([i for i, n in enumerate(nodes) if n.floor_y is not None], int)
         self.floor = np.array([nodes[i].floor_y for i in self.floor_idx], float)
         self.has_phi, self.has_h = len(self.heading_idx) > 0, len(self.floor_idx) > 0
@@ -142,7 +145,7 @@ class _Problem:
             out.append(((lhs - rhs) / sm).ravel())
             out.append(np.degrees(wrap(theta[t_idx] - theta[s_idx] - alpha, 2 * np.pi)) / sd)
         if self.has_phi:
-            out.append(wrap(self.heading - np.degrees(theta[self.heading_idx]) - phi, 90.0) / HEADING_SIGMA_DEG)
+            out.append(wrap(self.heading - np.degrees(theta[self.heading_idx]) - phi, 90.0) / self.heading_sigma)
         if self.has_h:
             out.append((self.floor + delta[self.floor_idx, 1] - h) / FLOOR_SIGMA_M)
         return np.concatenate(out) if out else np.zeros(1)
