@@ -24,6 +24,7 @@ DEPTH_BIAS_M = 0.013
 UNSNAPPED_FACE_M = 0.05
 POINTS_PER_SAMPLE = 100
 DOORWAY_WIDTH_SIGMA_M = 0.05
+NOMINAL_DOOR_WIDTH_SIGMA_M = 0.15  # jambs not seen: a typical door width with a wide range
 CEILING_PRIOR_M = (2.5, 2.2, 3.2)  # value, low, high when no ceiling was seen anywhere
 
 
@@ -97,10 +98,12 @@ def build_document(capture_info: dict, floor: HorizontalPlane, room_map: RoomMap
             oid = f"{name}.O{len(room_openings) + 1}"
             opening_ids[index] = oid
             room_openings.append({"id": oid, "type": "opening", "wall_id": f"{name}.W{op.wall_index + 1}",
-                                  "width_m": measurement(op.width_m, DOORWAY_WIDTH_SIGMA_M,
-                                                         method="doorway gap in the 5 cm plan grid"),
+                                  "width_m": measurement(op.width_m, DOORWAY_WIDTH_SIGMA_M, method="gap between the jambs")
+                                  if op.measured else
+                                  measurement(op.width_m, NOMINAL_DOOR_WIDTH_SIGMA_M, observed=False,
+                                              method="walked through, jambs not seen: typical door width"),
                                   "offset_along_wall_m": measurement(op.offset_m, DOORWAY_WIDTH_SIGMA_M),
-                                  "connects_to": f"R{op.other_room}"})
+                                  "connects_to": f"R{op.other_room}" if op.other_room is not None else None})
 
         rooms.append({"id": name, "label": f"room {rid}",
                       "polygon": [[round(float(x), 3), round(float(z), 3)] for x, z in outline.vertices],
@@ -112,6 +115,8 @@ def build_document(capture_info: dict, floor: HorizontalPlane, room_map: RoomMap
     for index, op in enumerate(openings):
         if index not in opening_ids:
             continue
+        if op.other_room is None:
+            continue  # a door to space that was not scanned
         key = tuple(sorted((op.room_id, op.other_room)))
         adjacency.setdefault(key, []).append(opening_ids[index])
     plan = {

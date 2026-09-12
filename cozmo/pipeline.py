@@ -10,6 +10,7 @@ from cozmo.export.document import build_document
 from cozmo.export.render import render_svg
 from cozmo.export.validate import validate_output
 from cozmo.geometry.fusion import fuse
+from cozmo.geometry.layout import NotManhattan, build_layout
 from cozmo.geometry.planes import find_floors
 from cozmo.geometry.rooms import build_room_map, room_ceilings
 from cozmo.geometry.walls import attach_doorways, outline_rooms
@@ -29,6 +30,21 @@ def _code_version() -> str:
     return out.stdout.strip() or "unknown"
 
 
+def plan_rooms(points, floor, positions):
+    """Rooms from walls first; if the walls do not meet at right angles, fall back to rooms traced
+    from the seen floor. Returns (room map, outlines, openings, note for the warnings or None)."""
+    try:
+        layout = build_layout(points, floor, positions)
+        if layout.outlines:
+            return layout.room_map, layout.outlines, layout.openings, None
+        note = "walls-first layout found no rooms; outlines traced from the seen floor instead"
+    except NotManhattan as e:
+        note = f"walls do not meet at right angles ({e}); outlines traced from the seen floor instead"
+    room_map = build_room_map(points, floor, positions)
+    outlines = outline_rooms(room_map, points, floor)
+    return room_map, outlines, attach_doorways(outlines, room_map), note
+
+
 def run_lidar(path: Path, drift: bool = True) -> tuple[dict, float]:
     t0 = time.time()
     capture = StrayCapture(path)
@@ -44,18 +60,18 @@ def run_lidar(path: Path, drift: bool = True) -> tuple[dict, float]:
     if not floors:
         raise CaptureError(f"{path}: no floor found; the capture must show the floor")
     floor = floors[0]
-    room_map = build_room_map(points, floor, positions)
-    outlines = outline_rooms(room_map, points, floor)
+    room_map, outlines, openings, method_note = plan_rooms(points, floor, positions)
     if not outlines:
         raise CaptureError(f"{path}: no room outline could be built")
     ceilings = room_ceilings(points, floor, room_map)
-    openings = attach_doorways(outlines, room_map)
     info = {"id": Path(path).name, "tier": "lidar", "device": None, "input_path": str(path),
             "pipeline_version": _code_version()}
     document, _ = build_document(info, floor, room_map, outlines, ceilings, openings, time.time() - t0,
                                  drift=drift_summary)
     for warning in capture.warnings:
         document["quality"]["warnings"].append(f"capture: {warning}")
+    if method_note:
+        document["quality"]["warnings"].append(method_note)
     yaw = next(iter(outlines.values())).yaw_deg
     return document, yaw
 
