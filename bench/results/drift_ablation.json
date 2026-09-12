@@ -1,0 +1,209 @@
+{
+  "benchmark": "drift_ablation",
+  "code_commit": "7f1424f",
+  "captures": {
+    "c00a170fe1": {
+      "off": {
+        "rooms": 2,
+        "room_areas_m2": [
+          12.73,
+          4.34
+        ],
+        "footprint_m2": 17.07,
+        "doorways": 1,
+        "walls_per_room": [
+          18,
+          8
+        ],
+        "wall_map_area_m2": 3.52
+      },
+      "on": {
+        "rooms": 2,
+        "room_areas_m2": [
+          11.66,
+          4.41
+        ],
+        "footprint_m2": 16.06,
+        "doorways": 1,
+        "walls_per_room": [
+          16,
+          12
+        ],
+        "wall_map_area_m2": 3.26
+      },
+      "drift": {
+        "jumps": [],
+        "submaps": 9,
+        "heading_priors": 0,
+        "floor_priors": 8,
+        "heading_priors_used": false,
+        "loops_proposed": 4,
+        "loops_accepted": 0,
+        "loops_rejected_by_graph": 0,
+        "relocalizations": 0,
+        "max_heading_correction_deg": 2.3508040616752925e-13,
+        "max_position_correction_m": 0.44527501684631976,
+        "wall_heading_p90_before_deg": null,
+        "wall_heading_p90_after_deg": null,
+        "wall_map_area_before_m2": 3.6304000000000003,
+        "wall_map_area_after_m2": 3.6304000000000003,
+        "seconds": 1.4281651973724365
+      },
+      "seconds": 9
+    },
+    "1a8384c3f6": {
+      "off": {
+        "rooms": 5,
+        "room_areas_m2": [
+          19.17,
+          6.57,
+          4.78,
+          4.68,
+          3.73
+        ],
+        "footprint_m2": 38.93,
+        "doorways": 4,
+        "walls_per_room": [
+          24,
+          8,
+          8,
+          4,
+          12
+        ],
+        "wall_map_area_m2": 13.27
+      },
+      "on": {
+        "rooms": 5,
+        "room_areas_m2": [
+          18.08,
+          6.57,
+          4.78,
+          4.47,
+          3.74
+        ],
+        "footprint_m2": 37.64,
+        "doorways": 4,
+        "walls_per_room": [
+          22,
+          8,
+          8,
+          4,
+          12
+        ],
+        "wall_map_area_m2": 13.27
+      },
+      "drift": {
+        "jumps": [
+          {
+            "frame": 5200,
+            "metres": 0.586,
+            "degrees": 1.97
+          }
+        ],
+        "submaps": 29,
+        "heading_priors": 0,
+        "floor_priors": 25,
+        "heading_priors_used": false,
+        "loops_proposed": 30,
+        "loops_accepted": 0,
+        "loops_rejected_by_graph": 0,
+        "relocalizations": 1,
+        "max_heading_correction_deg": 1.9380962748919723,
+        "max_position_correction_m": 0.582534482145259,
+        "wall_heading_p90_before_deg": null,
+        "wall_heading_p90_after_deg": null,
+        "wall_map_area_before_m2": 13.8236,
+        "wall_map_area_after_m2": 13.488800000000001,
+        "seconds": 6.0181849002838135
+      },
+      "seconds": 37
+    },
+    "c7d28f72c6": {
+      "off": {
+        "rooms": 6,
+        "room_areas_m2": [
+          13.18,
+          7.1,
+          6.74,
+          6.59,
+          5.36,
+          4.48
+        ],
+        "footprint_m2": 43.46,
+        "doorways": 5,
+        "walls_per_room": [
+          6,
+          10,
+          10,
+          8,
+          14,
+          10
+        ],
+        "wall_map_area_m2": 17.14
+      },
+      "on": {
+        "rooms": 5,
+        "room_areas_m2": [
+          19.53,
+          7.06,
+          6.32,
+          6.04,
+          4.43
+        ],
+        "footprint_m2": 43.39,
+        "doorways": 4,
+        "walls_per_room": [
+          18,
+          14,
+          10,
+          8,
+          10
+        ],
+        "wall_map_area_m2": 15.15
+      },
+      "drift": {
+        "jumps": [],
+        "submaps": 53,
+        "heading_priors": 1,
+        "floor_priors": 29,
+        "heading_priors_used": true,
+        "loops_proposed": 76,
+        "loops_accepted": 29,
+        "loops_rejected_by_graph": 0,
+        "relocalizations": 0,
+        "max_heading_correction_deg": 0.9206185126841567,
+        "max_position_correction_m": 0.3632865261528268,
+        "wall_heading_p90_before_deg": 0.832675602230637,
+        "wall_heading_p90_after_deg": 2.4584778657299466e-12,
+        "wall_map_area_before_m2": 17.904,
+        "wall_map_area_after_m2": 14.050400000000002,
+        "seconds": 11.399672031402588
+      },
+      "seconds": 67
+    }
+  },
+  "same_flat_repeatability": {
+    "walks": [
+      "c7d28f72c6",
+      "1a8384c3f6"
+    ],
+    "off": {
+      "fit_yaw_deg": -31.04,
+      "within_2cm": 0.576,
+      "within_5cm": 0.727,
+      "matched_median_cm": 1.19,
+      "tile_median_p50_cm": 1.22,
+      "tile_median_p90_cm": 4.29,
+      "tile_median_max_cm": 12.47
+    },
+    "on": {
+      "fit_yaw_deg": -30.77,
+      "within_2cm": 0.539,
+      "within_5cm": 0.701,
+      "matched_median_cm": 1.26,
+      "tile_median_p50_cm": 1.35,
+      "tile_median_p90_cm": 6.09,
+      "tile_median_max_cm": 11.73
+    }
+  }
+}

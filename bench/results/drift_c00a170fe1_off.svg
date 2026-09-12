@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="771" height="660" viewBox="0 0 771 660" font-family="Helvetica, Arial, sans-serif">
+<rect width="771" height="660" fill="#ffffff"/>
+<polygon points="479.6,70.0 580.2,70.0 580.1,210.4 626.7,210.4 626.7,311.2 507.3,311.2 507.3,451.7 70.0,451.7 70.0,367.1 180.8,367.1 180.8,334.2 425.4,334.2 425.4,296.4 451.2,296.4 451.2,224.4 479.0,224.4 479.1,128.4 479.6,128.4" fill="#e8eef7" stroke="#222" stroke-width="3" stroke-linejoin="miter"/>
+<polygon points="510.1,446.1 510.1,388.9 601.0,388.9 601.0,416.1 701.5,416.1 701.5,550.7 514.4,550.7 514.3,446.1" fill="#eef5e9" stroke="#222" stroke-width="3" stroke-linejoin="miter"/>
+<text x="422" y="258" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">room 1</text>
+<text x="422" y="275" text-anchor="middle" font-size="11" fill="#333">12.73 ± 1.01 m²</text>
+<text x="422" y="290" text-anchor="middle" font-size="10" fill="#555">ceiling not seen</text>
+<text x="523" y="82" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 523 82)">1.26 ± 0.04</text>
+<text x="569" y="149" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 569 149)">1.75 ± 0.09</text>
+<text x="590" y="214" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.1 590 214)">0.58 ± 0.04</text>
+<text x="613" y="261" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 613 261)">1.26 ± 0.08</text>
+<text x="554" y="307" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 554 307)">1.49 ± 0.03</text>
+<text x="499" y="370" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 499 370)">1.76 ± 0.03</text>
+<text x="297" y="440" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 297 440)">5.47 ± 0.03</text>
+<text x="83" y="404" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 83 404)">1.06 ± 0.04</text>
+<text x="139" y="363" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 139 363)">1.39 ± 0.03</text>
+<text x="315" y="327" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 315 327)">3.06 ± 0.03</text>
+<text x="437" y="263" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-89.9 437 263)">0.90 ± 0.12</text>
+<text x="472" y="188" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-89.9 472 188)">1.20 ± 0.12</text>
+<text x="475" y="112" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 475 112)">0.73 ± 0.08</text>
+<line x1="507.3" y1="353.6" x2="507.3" y2="437.0" stroke="#ffffff" stroke-width="5"/>
+<line x1="507.3" y1="353.6" x2="507.3" y2="437.0" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<text x="582" y="442" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">room 2</text>
+<text x="582" y="459" text-anchor="middle" font-size="11" fill="#333">4.34 ± 0.19 m²</text>
+<text x="582" y="474" text-anchor="middle" font-size="10" fill="#555">ceiling not seen</text>
+<text x="523" y="423" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 523 423)">0.71 ± 0.03</text>
+<text x="561" y="402" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 561 402)">1.14 ± 0.03</text>
+<text x="639" y="422" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 639 422)">1.26 ± 0.03</text>
+<text x="688" y="480" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 688 480)">1.68 ± 0.03</text>
+<text x="604" y="537" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 604 537)">2.34 ± 0.03</text>
+<text x="526" y="490" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 526 490)">1.31 ± 0.03</text>
+<line x1="510.1" y1="436.9" x2="510.2" y2="353.6" stroke="#ffffff" stroke-width="5"/>
+<line x1="510.1" y1="436.9" x2="510.2" y2="353.6" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<text x="70" y="642" font-size="12" fill="#333">c00a170fe1 · lidar · 2 rooms · footprint 17.07 ± 1.20 m² · ranges are 90%</text>
+</svg>

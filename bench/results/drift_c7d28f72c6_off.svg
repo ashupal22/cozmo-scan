@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="906" height="1009" viewBox="0 0 906 1009" font-family="Helvetica, Arial, sans-serif">
+<rect width="906" height="1009" fill="#ffffff"/>
+<polygon points="549.0,208.7 548.9,451.2 604.3,451.1 604.3,552.4 319.9,552.4 319.9,208.7" fill="#e8eef7" stroke="#222" stroke-width="3" stroke-linejoin="miter"/>
+<polygon points="282.9,726.8 282.9,642.8 376.2,642.8 376.2,899.3 281.0,899.3 281.0,856.9 152.1,856.9 152.1,695.9 221.2,696.0 221.2,726.8" fill="#eef5e9" stroke="#222" stroke-width="3" stroke-linejoin="miter"/>
+<polygon points="609.3,168.4 703.5,168.4 703.5,273.6 759.1,273.6 759.1,406.6 641.2,406.7 641.2,445.6 555.8,445.6 555.8,385.3 609.3,385.3" fill="#f7efe6" stroke="#222" stroke-width="3" stroke-linejoin="miter"/>
+<polygon points="205.8,70.0 205.8,259.0 305.7,259.1 305.7,373.9 218.8,373.9 218.9,324.9 70.0,324.9 70.0,70.0" fill="#f1e9f5" stroke="#222" stroke-width="3" stroke-linejoin="miter"/>
+<polygon points="215.9,377.9 293.8,377.9 293.8,483.9 377.1,483.9 377.1,635.9 286.7,635.8 286.7,588.0 214.3,588.0 214.3,511.4 82.9,511.4 82.9,440.7 113.1,440.7 113.1,408.6 215.9,408.7" fill="#e6f3f3" stroke="#222" stroke-width="3" stroke-linejoin="miter"/>
+<polygon points="616.7,543.2 616.7,483.6 737.8,483.6 737.8,514.8 837.0,514.8 837.0,651.3 700.4,651.3 700.4,598.9 631.2,598.9 631.2,543.2" fill="#f6f3e2" stroke="#222" stroke-width="3" stroke-linejoin="miter"/>
+<text x="491" y="396" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">room 1</text>
+<text x="491" y="413" text-anchor="middle" font-size="11" fill="#333">13.18 ± 0.66 m²</text>
+<text x="491" y="428" text-anchor="middle" font-size="10" fill="#555">ceiling 3.09 ± 0.03 m</text>
+<text x="540" y="341" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 540 341)">3.03 ± 0.08</text>
+<text x="564" y="444" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 564 444)">0.69 ± 0.09</text>
+<text x="594" y="493" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 594 493)">1.26 ± 0.09</text>
+<text x="465" y="539" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 465 539)">3.56 ± 0.08</text>
+<text x="334" y="382" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 334 382)">4.30 ± 0.03</text>
+<text x="438" y="222" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 438 222)">2.86 ± 0.03</text>
+<line x1="319.9" y1="557.6" x2="319.9" y2="484.7" stroke="#ffffff" stroke-width="5"/>
+<line x1="319.9" y1="557.6" x2="319.9" y2="484.7" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<line x1="558.9" y1="451.2" x2="625.2" y2="451.1" stroke="#ffffff" stroke-width="5"/>
+<line x1="558.9" y1="451.2" x2="625.2" y2="451.1" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<line x1="604.3" y1="461.3" x2="604.3" y2="536.0" stroke="#ffffff" stroke-width="5"/>
+<line x1="604.3" y1="461.3" x2="604.3" y2="536.0" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<text x="263" y="756" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">room 2</text>
+<text x="263" y="773" text-anchor="middle" font-size="11" fill="#333">6.74 ± 0.65 m²</text>
+<text x="263" y="788" text-anchor="middle" font-size="10" fill="#555">ceiling 2.41 ± 0.03 m</text>
+<text x="279" y="698" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 279 698)">1.05 ± 0.12</text>
+<text x="323" y="655" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 323 655)">1.17 ± 0.04</text>
+<text x="362" y="770" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 362 770)">3.21 ± 0.08</text>
+<text x="322" y="887" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 322 887)">1.19 ± 0.03</text>
+<text x="223" y="844" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 223 844)">1.61 ± 0.03</text>
+<text x="166" y="775" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 166 775)">2.01 ± 0.12</text>
+<text x="197" y="705" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.1 197 705)">0.86 ± 0.08</text>
+<text x="256" y="740" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 256 740)">0.77 ± 0.09</text>
+<line x1="289.5" y1="642.8" x2="369.9" y2="642.8" stroke="#ffffff" stroke-width="5"/>
+<line x1="289.5" y1="642.8" x2="369.9" y2="642.8" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<text x="654" y="328" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">room 3</text>
+<text x="654" y="345" text-anchor="middle" font-size="11" fill="#333">5.36 ± 0.43 m²</text>
+<text x="654" y="360" text-anchor="middle" font-size="10" fill="#555">ceiling 3.08 ± 0.03 m</text>
+<text x="656" y="182" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 656 182)">1.18 ± 0.04</text>
+<text x="698" y="234" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 698 234)">1.31 ± 0.08</text>
+<text x="720" y="282" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 720 282)">0.69 ± 0.04</text>
+<text x="745" y="340" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 745 340)">1.66 ± 0.08</text>
+<text x="692" y="395" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 692 395)">1.47 ± 0.03</text>
+<text x="605" y="433" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 605 433)">1.07 ± 0.03</text>
+<text x="567" y="407" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 567 407)">0.75 ± 0.09</text>
+<text x="594" y="377" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 594 377)">0.67 ± 0.03</text>
+<text x="618" y="288" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 618 288)">2.71 ± 0.03</text>
+<line x1="625.3" y1="445.6" x2="558.9" y2="445.6" stroke="#ffffff" stroke-width="5"/>
+<line x1="625.3" y1="445.6" x2="558.9" y2="445.6" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<text x="200" y="249" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">room 4</text>
+<text x="200" y="266" text-anchor="middle" font-size="11" fill="#333">7.10 ± 0.44 m²</text>
+<text x="200" y="281" text-anchor="middle" font-size="10" fill="#555">ceiling 2.96 ± 0.03 m</text>
+<text x="205" y="178" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 205 178)">2.36 ± 0.05</text>
+<text x="242" y="259" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 242 259)">1.25 ± 0.03</text>
+<text x="294" y="310" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 294 310)">1.44 ± 0.10</text>
+<text x="256" y="362" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 256 362)">1.09 ± 0.03</text>
+<text x="216" y="336" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-89.9 216 336)">0.61 ± 0.08</text>
+<text x="153" y="314" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 153 314)">1.86 ± 0.03</text>
+<text x="83" y="203" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 83 203)">3.19 ± 0.03</text>
+<text x="142" y="83" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 142 83)">1.70 ± 0.03</text>
+<line x1="296.5" y1="373.9" x2="220.4" y2="373.9" stroke="#ffffff" stroke-width="5"/>
+<line x1="296.5" y1="373.9" x2="220.4" y2="373.9" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<text x="226" y="484" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">room 5</text>
+<text x="226" y="501" text-anchor="middle" font-size="11" fill="#333">6.59 ± 0.42 m²</text>
+<text x="226" y="516" text-anchor="middle" font-size="10" fill="#555">ceiling 2.43 ± 0.03 m</text>
+<text x="251" y="391" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 251 391)">0.97 ± 0.03</text>
+<text x="283" y="440" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 283 440)">1.32 ± 0.08</text>
+<text x="321" y="485" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 321 485)">1.04 ± 0.03</text>
+<text x="364" y="554" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 364 554)">1.90 ± 0.09</text>
+<text x="324" y="625" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 324 625)">1.13 ± 0.03</text>
+<text x="280" y="599" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 280 599)">0.60 ± 0.09</text>
+<text x="247" y="574" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 247 574)">0.91 ± 0.03</text>
+<text x="217" y="536" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 217 536)">0.96 ± 0.03</text>
+<text x="162" y="508" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 162 508)">1.64 ± 0.03</text>
+<text x="97" y="478" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 97 478)">0.88 ± 0.03</text>
+<text x="173" y="420" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 173 420)">1.28 ± 0.03</text>
+<line x1="220.4" y1="377.9" x2="296.5" y2="377.9" stroke="#ffffff" stroke-width="5"/>
+<line x1="220.4" y1="377.9" x2="296.5" y2="377.9" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<line x1="377.1" y1="484.7" x2="377.1" y2="557.6" stroke="#ffffff" stroke-width="5"/>
+<line x1="377.1" y1="484.7" x2="377.1" y2="557.6" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<line x1="369.9" y1="635.9" x2="289.5" y2="635.8" stroke="#ffffff" stroke-width="5"/>
+<line x1="369.9" y1="635.9" x2="289.5" y2="635.8" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<text x="705" y="550" text-anchor="middle" font-size="14" font-weight="bold" fill="#111">room 6</text>
+<text x="705" y="567" text-anchor="middle" font-size="11" fill="#333">4.48 ± 0.32 m²</text>
+<text x="705" y="582" text-anchor="middle" font-size="10" fill="#555">ceiling 2.34 ± 0.03 m</text>
+<text x="629" y="520" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 629 520)">0.74 ± 0.03</text>
+<text x="682" y="497" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 682 497)">1.51 ± 0.08</text>
+<text x="775" y="521" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 775 521)">1.24 ± 0.03</text>
+<text x="823" y="580" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 823 580)">1.71 ± 0.03</text>
+<text x="761" y="640" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-0.0 761 640)">1.71 ± 0.03</text>
+<text x="701" y="611" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(-90.0 701 611)">0.66 ± 0.08</text>
+<text x="676" y="589" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(0.0 676 589)">0.87 ± 0.03</text>
+<text x="645" y="569" text-anchor="middle" font-size="9" fill="#1f3a93" transform="rotate(90.0 645 569)">0.70 ± 0.08</text>
+<line x1="616.7" y1="536.1" x2="616.7" y2="461.4" stroke="#ffffff" stroke-width="5"/>
+<line x1="616.7" y1="536.1" x2="616.7" y2="461.4" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/>
+<text x="70" y="991" font-size="12" fill="#333">c7d28f72c6 · lidar · 6 rooms · footprint 43.46 ± 2.91 m² · ranges are 90%</text>
+</svg>
