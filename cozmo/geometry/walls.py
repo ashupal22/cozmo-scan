@@ -62,15 +62,21 @@ def wall_mask(points: PointSet, floor: HorizontalPlane) -> np.ndarray:
             & (above > WALL_MIN_ABOVE_FLOOR_M) & (above < WALL_MAX_ABOVE_FLOOR_M))
 
 
-def dominant_yaw_deg(normals_xz: np.ndarray) -> float:
-    """Dominant horizontal normal direction in degrees, modulo 90."""
+def dominant_yaw(normals_xz: np.ndarray) -> tuple[float, float]:
+    """Dominant horizontal normal direction in degrees (mod 90), and the share of normals within 3 degrees of it."""
     theta = np.degrees(np.arctan2(normals_xz[:, 1], normals_xz[:, 0])) % 90
     hist, _ = np.histogram(theta, bins=360, range=(0, 90))
     k = int(np.argmax(uniform_filter1d(hist.astype(float), 5, mode="wrap")))
     center = np.radians((k + 0.5) * 0.25 * 4)
     diff = np.angle(np.exp(1j * (np.radians(theta * 4) - center)))
     near = np.abs(diff) < np.radians(12)
-    return float((np.degrees(center + np.angle(np.exp(1j * diff[near]).mean())) / 4) % 90)
+    yaw = float((np.degrees(center + np.angle(np.exp(1j * diff[near]).mean())) / 4) % 90)
+    return yaw, float(near.mean())
+
+
+def dominant_yaw_deg(normals_xz: np.ndarray) -> float:
+    """Dominant horizontal normal direction in degrees, modulo 90."""
+    return dominant_yaw(normals_xz)[0]
 
 
 def _to_aligned(yaw_deg: float) -> np.ndarray:
