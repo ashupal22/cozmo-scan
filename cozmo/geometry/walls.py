@@ -195,8 +195,8 @@ def outline_room(room_map: RoomMap, room_id: int, points: PointSet, floor: Horiz
     signed = np.dot(corners[:, 0], np.roll(corners[:, 1], -1)) - np.dot(corners[:, 1], np.roll(corners[:, 0], -1))
     if signed < 0:
         corners = corners[::-1]
-        segments = [segments[(n - 1 - k) % n] for k in range(n)]
-        segments = segments[-1:] + segments[:-1]
+        # reversed segment k runs from old corner n-1-k to old corner n-2-k; those two corners share line n-1-k
+        segments = [lines[(n - 1 - k) % n] for k in range(n)]
 
     wall_list = []
     for k in range(n):

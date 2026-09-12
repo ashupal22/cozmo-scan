@@ -8,11 +8,17 @@ from cozmo.geometry.rooms import build_room_map, room_ceilings
 FLOOR = HorizontalPlane(height=0.0, spread=0.005, count=100000)
 
 
-def two_room_apartment(door=(1.0, 1.9), ceiling_b=None, yaw_deg=0.0):
+def rotation_about_y(yaw_deg: float) -> np.ndarray:
+    t = np.radians(yaw_deg)
+    return np.array([[np.cos(t), 0, np.sin(t)], [0, 1, 0], [-np.sin(t), 0, np.cos(t)]])
+
+
+def two_room_apartment(door=(1.0, 1.9), ceiling_b=None, yaw_deg=0.0, drop_wall_z0=False):
     """Room A: x 0..4, z 0..3. Room B: x 4.1..7.1, z 0..3. A 10 cm wall between them at x 4.0..4.1
     with a doorway at the given z range. Wall normals face into the room they were seen from, as
-    real LiDAR normals face the camera. Optionally a ceiling over room B, and the whole apartment
-    rotated about the vertical axis by yaw_deg."""
+    real LiDAR normals face the camera. Optionally a ceiling over room B, the whole apartment
+    rotated about the vertical axis by yaw_deg, and room A's z=0 wall left without any wall points
+    (as if hidden behind furniture)."""
     rng = np.random.default_rng(1)
     xyz, nrm = [], []
 
@@ -38,7 +44,8 @@ def two_room_apartment(door=(1.0, 1.9), ceiling_b=None, yaw_deg=0.0):
     floor(4.1, 7.1, 0, 3)
     floor(4.0, 4.1, *door)
     for x0, x1 in ((0, 4), (4.1, 7.1)):
-        wall_at_z(0, x0, x1, +1)
+        if not (drop_wall_z0 and x0 == 0):
+            wall_at_z(0, x0, x1, +1)
         wall_at_z(3, x0, x1, -1)
     wall_at_x(0, 0, 3, +1)
     wall_at_x(7.1, 0, 3, -1)
@@ -52,8 +59,7 @@ def two_room_apartment(door=(1.0, 1.9), ceiling_b=None, yaw_deg=0.0):
     xyz, nrm = np.vstack(xyz), np.vstack(nrm)
     walk = np.column_stack([np.linspace(1, 6, 60), np.full(60, 1.5), np.full(60, 1.45)])
     if yaw_deg:
-        t = np.radians(yaw_deg)
-        about_y = np.array([[np.cos(t), 0, np.sin(t)], [0, 1, 0], [-np.sin(t), 0, np.cos(t)]])
+        about_y = rotation_about_y(yaw_deg)
         xyz, nrm, walk = xyz @ about_y.T, nrm @ about_y.T, walk @ about_y.T
     points = PointSet(xyz.astype(np.float32), nrm.astype(np.float32), np.zeros(len(xyz), np.int32),
                       np.full(len(xyz), 1.5, np.float32))
