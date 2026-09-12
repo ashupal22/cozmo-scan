@@ -6,7 +6,33 @@ Built for the Cozmo AI Applied AI case study.
 
 ## Status
 
-Early work. The repo currently holds exploration scripts that check the LiDAR captures: floor and ceiling planes, heading drift, and how well two walks of the same apartment agree. The pipeline itself is not built yet.
+Early work. What exists so far:
+
+- `cozmo inspect`: detects the input tier and summarises a capture. For LiDAR captures it reports frames, frame rate, intrinsics range, walk length and pose jumps.
+- `cozmo validate`: checks an output JSON against the schema, interval order and internal references.
+- A Stray Scanner loader that returns per-frame depth, confidence, intrinsics, poses and world-frame points.
+- Exploration scripts in `explore/`.
+
+The measurement pipeline (`cozmo run`) is not built yet.
+
+## Install
+
+Python 3.10 or newer.
+
+```bash
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+pytest            # unit tests on small synthetic captures, no data needed
+```
+
+## Commands
+
+```bash
+cozmo inspect data/captures/c7d28f72c6            # LiDAR export folder
+cozmo inspect path/to/walkthrough.mov             # video file
+cozmo inspect path/to/photos                      # one sub-folder per room
+cozmo validate schema/example_output.json         # check an output file
+```
 
 ## Output format and gates
 
