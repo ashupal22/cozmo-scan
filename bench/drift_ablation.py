@@ -68,14 +68,19 @@ def plan(capture_id, points, positions, drift_summary):
 
 
 def repeatability(a, b):
-    """Two walks of the same flat: fit b onto a once, then measure how far b's walls sit from a's."""
+    """Two walks of the same flat: fit b onto a once, then measure how far the walls of each sit from
+    the other's. Symmetric, so a sharper map is not penalised: with one-way distances, doubled (drifted)
+    walls in the target gave the source two chances to match, and sharpening the target looked worse."""
     (axz, an), (bxz, _) = a, b
     m = match_walls(axz, an, bxz, yaw_range_deg=(-180, 179), yaw_step_deg=1.0, max_shift_m=None,
                     cell_m=0.05, center=True)
     moved = m.apply(bxz)
-    d, _ = cKDTree(axz).query(moved)
+    d_ba, _ = cKDTree(axz).query(moved)
+    d_ab, _ = cKDTree(moved).query(axz)
+    points = np.vstack([moved, axz])
+    d = np.concatenate([d_ba, d_ab])
     tiles: dict[tuple, list] = {}
-    for p, di in zip(moved, d):
+    for p, di in zip(points, d):
         if di < 0.15:
             tiles.setdefault(tuple(np.floor(p).astype(int)), []).append(di)
     tile_medians = np.array([np.median(v) for v in tiles.values() if len(v) > 30])
