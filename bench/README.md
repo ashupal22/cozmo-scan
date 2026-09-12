@@ -89,6 +89,31 @@ Walls of each walk compared with the other after one rigid fit, in both directio
 
 The wall maps agree much better, but **the two plans still differ**: footprints of 44.5 vs 40.0 m². One reason is room splitting: in `c7d28f72c6` the hallway merged into the largest room once walls sharpened. The other is outlines traced from seen floor, which depend on how much of each room was walked. The next fix is wall-first outlines and splitting rooms at doors.
 
+## Same flat, same plan: rooms from walls first (`bench/same_flat_plans.py`)
+
+```bash
+COZMO_DATA=/path/to/captures python bench/same_flat_plans.py     # ~3 min
+```
+
+Both walks of the flat go through the LiDAR pipeline with drift correction. The second walk's plan is placed on the first by one rigid fit of their wall maps. Rooms are paired when they overlap by IoU ≥ 0.5.
+
+| | Rooms traced from seen floor (old) | Rooms from walls first (new, `cozmo/geometry/layout.py`) |
+|---|---|---|
+| Rooms, walk A / walk B | 5 / 5 | 9 / 7 |
+| Footprint, walk A / walk B | 44.5 / 40.0 m² | 55.8 / 54.7 m² |
+| **Footprint difference** | 10.2% | **1.9%** |
+| Rooms paired (IoU ≥ 0.5) | 5 | 7 |
+| Median IoU of paired rooms | 0.82 | 0.78 |
+| Median difference of room main dimensions | 24.9 cm | 17.0 cm |
+| Dimensions within 1 cm or 0.5% (the gate) | 2 of 10 | 3 of 14 |
+
+**What this shows**
+- **Walls first makes the outline of the flat repeatable.** Rooms reach their walls behind furniture instead of stopping where the floor was hidden, so both walks agree on the footprint to 1.9%.
+- **When both walks see a room's walls well, the room repeats to the gate's level.** Room A-R4 / B-R4 measures 5.56 vs 5.65 m², IoU 0.93, with both main dimensions within 0.6 cm.
+- **The remaining difference is room splitting.** Walk `1a8384c3f6` saw almost no wall above 1.5 m because the phone pointed down, so some inner walls were never seen as walls. It merged the corridor with the living area into one 19 m² room, where the other walk gives separate rooms.
+  - This is why the capture guide must ask for a ceiling sweep.
+  - The pipeline softens it: a room is split again where the seen floor narrows at a doorway.
+
 ### History of this benchmark
 
 - **First run (`ea62760`): the correction barely engaged.** No wall directions were used on two walks, no loops were accepted on two walks, and a table top used as floor moved one walk 44 cm.
