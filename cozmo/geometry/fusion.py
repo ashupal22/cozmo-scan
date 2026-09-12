@@ -43,12 +43,22 @@ def select_keyframes(capture, min_translation_m: float = 0.05, min_rotation_deg:
 
 
 def frame_points(capture, i: int, min_confidence: int = 2, min_depth: float = 0.3, max_depth: float = 4.5,
-                 stride: int = 2, max_depth_step: float = 0.04) -> tuple[np.ndarray, np.ndarray]:
+                 stride: int = 2, max_depth_step: float = 0.04,
+                 ground_truth: bool = False) -> tuple[np.ndarray, np.ndarray]:
     """(xyz, normal) in the world frame for one depth frame. Pixels on depth edges are dropped,
-    because their normals are meaningless."""
-    z = cv2.medianBlur(capture.depth(i), 5)
-    c = capture.confidence(i)
-    k = capture.intrinsics(i, "depth")
+    because their normals are meaningless. With ground_truth=True the capture's laser-rendered
+    depth is used instead of the device depth (ARKitScenes walks only)."""
+    if ground_truth:
+        raw = capture.gt_depth(i)
+        if raw is None:
+            return np.zeros((0, 3), np.float32), np.zeros((0, 3), np.float32)
+        z = cv2.medianBlur(raw, 5)
+        c = np.full(z.shape, 2, np.uint8)
+        k = capture.intrinsics(i, "gt")
+    else:
+        z = cv2.medianBlur(capture.depth(i), 5)
+        c = capture.confidence(i)
+        k = capture.intrinsics(i, "depth")
     h, w = z.shape
     u, v = np.meshgrid(np.arange(w, dtype=np.float32), np.arange(h, dtype=np.float32))
     P = np.stack([(u - k.cx) / k.fx * z, (v - k.cy) / k.fy * z, z], axis=-1)
