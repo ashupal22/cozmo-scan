@@ -45,7 +45,7 @@ def cmd_run(args) -> int:
 
     out = Path(args.out) if args.out else Path("out") / Path(args.path).name
     try:
-        result = run(args.path, out)
+        result = run(args.path, out, drift=not args.no_drift)
     except NotBuiltYet as e:
         print(f"error: {e}", file=sys.stderr)
         return 3
@@ -88,6 +88,7 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("run", help="measure a capture: writes result.json and plan.svg")
     p.add_argument("path", help="capture to measure (LiDAR export folder for now)")
     p.add_argument("--out", help="output folder (default: out/<capture name>)")
+    p.add_argument("--no-drift", action="store_true", help="skip drift correction (for the on/off ablation)")
     p.set_defaults(func=cmd_run)
 
     p = sub.add_parser("validate", help="check an output JSON file against the schema")

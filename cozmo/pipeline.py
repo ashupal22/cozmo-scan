@@ -15,6 +15,7 @@ from cozmo.geometry.rooms import build_room_map, room_ceilings
 from cozmo.geometry.walls import attach_doorways, outline_rooms
 from cozmo.ingest.detect import detect_tier
 from cozmo.ingest.stray import CaptureError, StrayCapture
+from cozmo.slam.drift import estimate_drift
 
 REPO = Path(__file__).resolve().parents[1]
 
@@ -24,19 +25,26 @@ class NotBuiltYet(RuntimeError):
 
 
 def _code_version() -> str:
-    out = subprocess.run(["git", "-C", str(REPO), "rev-parse", "--short", "HEAD"], capture_output=True, text=True)
+    out = subprocess.run(["git", "-C", str(REPO), "describe", "--always", "--dirty"], capture_output=True, text=True)
     return out.stdout.strip() or "unknown"
 
 
-def run_lidar(path: Path) -> tuple[dict, float]:
+def run_lidar(path: Path, drift: bool = True) -> tuple[dict, float]:
     t0 = time.time()
     capture = StrayCapture(path)
     points = fuse(capture)
+    positions = capture.positions
+    drift_summary = None
+    if drift:
+        correction, report = estimate_drift(capture, points)
+        points = correction.apply(points)
+        positions = correction.positions[correction.valid]
+        drift_summary = report.to_schema()
     floors = find_floors(points)
     if not floors:
         raise CaptureError(f"{path}: no floor found; the capture must show the floor")
     floor = floors[0]
-    room_map = build_room_map(points, floor, capture.positions)
+    room_map = build_room_map(points, floor, positions)
     outlines = outline_rooms(room_map, points, floor)
     if not outlines:
         raise CaptureError(f"{path}: no room outline could be built")
@@ -44,19 +52,20 @@ def run_lidar(path: Path) -> tuple[dict, float]:
     openings = attach_doorways(outlines, room_map)
     info = {"id": Path(path).name, "tier": "lidar", "device": None, "input_path": str(path),
             "pipeline_version": _code_version()}
-    document, _ = build_document(info, floor, room_map, outlines, ceilings, openings, time.time() - t0)
+    document, _ = build_document(info, floor, room_map, outlines, ceilings, openings, time.time() - t0,
+                                 drift=drift_summary)
     for warning in capture.warnings:
         document["quality"]["warnings"].append(f"capture: {warning}")
     yaw = next(iter(outlines.values())).yaw_deg
     return document, yaw
 
 
-def run(path, out_dir) -> Path:
+def run(path, out_dir, drift: bool = True) -> Path:
     path, out_dir = Path(path), Path(out_dir)
     tier = detect_tier(path)
     if tier != "lidar":
         raise NotBuiltYet(f"the {tier} tier is not built yet; only LiDAR captures run for now")
-    document, yaw = run_lidar(path)
+    document, yaw = run_lidar(path, drift=drift)
     out_dir.mkdir(parents=True, exist_ok=True)
     svg_path = out_dir / "plan.svg"
     document["render"] = {"plan_svg": str(svg_path)}

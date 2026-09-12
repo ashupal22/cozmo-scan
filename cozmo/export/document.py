@@ -47,10 +47,13 @@ def face_sigma(outline: RoomOutline, k: int) -> float:
 
 def build_document(capture_info: dict, floor: HorizontalPlane, room_map: RoomMap,
                    outlines: dict[int, RoomOutline], ceilings: dict[int, HorizontalPlane | None],
-                   openings: list[OpeningOnWall], runtime_s: float) -> tuple[dict, list[str]]:
-    warnings = ["drift correction not built yet: phone poses used as recorded",
-                "opening widths are coarse (5 cm plan grid); image-edge refinement not built yet",
+                   openings: list[OpeningOnWall], runtime_s: float,
+                   drift: dict | None = None) -> tuple[dict, list[str]]:
+    """`drift` is DriftReport.to_schema(), or None when drift correction was switched off."""
+    warnings = ["opening widths are coarse (5 cm plan grid); image-edge refinement not built yet",
                 "damage detection, concealed-damage rules and scope are not built yet"]
+    if drift is None:
+        warnings.insert(0, "drift correction switched off: phone poses used as recorded")
     seen = [c.height - floor.height for c in ceilings.values() if c is not None]
 
     rooms, footprint, footprint_sigma = [], 0.0, 0.0
@@ -115,7 +118,7 @@ def build_document(capture_info: dict, floor: HorizontalPlane, room_map: RoomMap
         "footprint_area_m2": measurement(footprint, footprint_sigma, digits=2),
         "adjacency": [{"room_a": f"R{a}", "room_b": f"R{b}", "via": via} for (a, b), via in sorted(adjacency.items())],
         "stitch": {"method": "single_map" if len(rooms) > 1 else "single_room", "low_confidence": False},
-        "drift": {"enabled": False, "correction": [], "notes": "not built yet"},
+        "drift": drift or {"enabled": False, "correction": [], "notes": "switched off"},
     }
     document = {
         "schema_version": "0.1.0",
