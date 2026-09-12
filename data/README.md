@@ -27,4 +27,13 @@ All three were recorded with the Stray Scanner app on an iPhone Pro.
 | `1a8384c3f6` | 115 s | ~54 m | Same apartment, a second walk. Ceiling never in view; two pose jumps near the end |
 | `c00a170fe1` | 37 s | ~14 m | Part of the apartment. Ceiling never in view |
 
-There is no tape or laser ground truth yet.
+There is no tape or laser ground truth for these recordings.
+
+## External datasets
+
+Public datasets with ground truth are downloaded into `data/external/`, which git ignores. [`docs/datasets.md`](../docs/datasets.md) explains why each one is used and its license.
+
+```bash
+python scripts/fetch_external.py arkitscenes     # ~1 GB: LiDAR walks with laser-scanner depth
+python scripts/fetch_external.py houselayout3d   # ~32 MB: multi-room layout annotations
+```
