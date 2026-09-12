@@ -134,6 +134,31 @@ def test_a_table_top_is_not_used_as_the_floor():
     assert [s.node.floor_y for s in submaps] == [0.012, 0.0, None, -0.02, 0.01]
 
 
+def test_a_match_between_corrected_maps_converts_back_to_recorded_coordinates():
+    from cozmo.slam.drift import to_recorded_link
+    from cozmo.slam.matching import rot2
+    rng = np.random.default_rng(4)
+    anchors = rng.uniform(-5, 5, (2, 2))
+    theta = np.radians([1.7, -2.4])
+    delta = rng.uniform(-0.3, 0.3, (2, 2))
+
+    def corrected(k, q):
+        return (q - anchors[k]) @ rot2(theta[k]).T + anchors[k] + delta[k]
+
+    true_yaw, true_shift = np.radians(3.1), np.array([0.21, -0.37])  # recorded: q_0 = rot2(yaw) q_1 + shift
+    q1 = rng.uniform(-4, 4, (20, 2))
+    q0 = q1 @ rot2(true_yaw).T + true_shift
+    y0, y1 = corrected(0, q0), corrected(1, q1)                       # what the matcher sees
+    c0, c1 = y0.mean(axis=0), y1.mean(axis=0)
+    U, _, Vt = np.linalg.svd((y1 - c1).T @ (y0 - c0))
+    R = (U @ Vt).T
+    yaw_seen = np.arctan2(R[0, 1], R[0, 0])
+    shift_seen = c0 - rot2(yaw_seen) @ c1
+    link = to_recorded_link(0, 1, np.degrees(yaw_seen), shift_seen, anchors, theta, delta, (0.03, 0.5))
+    assert link.yaw_deg == pytest.approx(np.degrees(true_yaw), abs=1e-9)
+    assert np.allclose(link.shift, true_shift, atol=1e-9)
+
+
 def test_consecutive_jumping_steps_are_one_jump():
     positions = np.zeros((10, 3))
     positions[5:, 0] = 0.3
@@ -159,16 +184,27 @@ def test_heading_creep_and_height_drift_are_removed():
     assert np.abs(heading_error - heading_error.mean()).max() < 0.6
 
 
-def test_arkit_relocalization_jump_is_used_as_a_link():
+def test_arkit_snap_back_to_the_start_becomes_a_loop_closure():
+    # As on walk 1a8384c3f6: ARKit snaps back onto its map just after the walker returns to the start
     t, true_positions, heading = true_walk()
-    snap = int(0.7 * len(t))
+    snap = len(t) // 2 + 30
     recorded, rotations, theta = record(true_positions, heading, creep_deg=6.0, snap_at=snap)
     points, truth = observe(true_positions, recorded, theta, np.random.default_rng(1))
     correction, report = estimate_drift(FakeCapture(t, recorded, rotations), points)
 
-    assert len(report.jumps) == 1 and report.relocalizations == 1
+    assert len(report.jumps) == 1 and report.relocalizations == 1 and report.anchors == 1
+    assert report.anchor_wall_agreement and report.anchor_wall_agreement[0] > 0.5
     assert report.jumps[0]["degrees"] == pytest.approx(np.degrees(theta[snap - 1]), abs=0.2)
     before, after = distortion(points.xyz, truth), distortion(correction.apply(points).xyz, truth)
-    assert np.percentile(before, 90) > 0.08
+    assert np.percentile(before, 90) > 0.05           # the snap halfway resets part of the drift
     assert np.median(after) < 0.01 and np.percentile(after, 90) < 0.03
     assert report.to_schema()["correction"][:2] == ["jump_cut", "loop_closure"]
+
+
+def test_a_snap_far_from_the_start_is_not_tied_to_it():
+    t, true_positions, heading = true_walk()
+    snap = int(0.7 * len(t))  # on the far side of the room, 3+ m from where the walk began
+    recorded, rotations, theta = record(true_positions, heading, creep_deg=6.0, snap_at=snap)
+    points, _ = observe(true_positions, recorded, theta, np.random.default_rng(1))
+    _, report = estimate_drift(FakeCapture(t, recorded, rotations), points)
+    assert report.relocalizations == 1 and report.anchors == 0

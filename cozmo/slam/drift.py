@@ -2,15 +2,19 @@
 
 1. Split the walk at pose jumps. A jump is ARKit relocalising: it snaps its map back onto what it saw
    earlier, and the frames after the snap are in the corrected map. On walk 1a8384c3f6 the snap was
-   about 60 cm in the last second. So a jump becomes a relocalisation link (the map change between
-   the frames just before and after it), not a discarded error.
+   about 60 cm in the last second, landing 10 cm from where the walk began. So a jump becomes a
+   relocalisation link (the map change between the frames just before and after it) plus, when the
+   camera landed near the start, an anchor tying the post-jump frames to the start: a loop closure
+   that ARKit found for us.
 2. Cut each segment into submaps of about SUBMAP_S seconds. From its own points, each submap measures
    the dominant wall direction (mod 90, with its uncertainty) and the floor height. Floor heights far
    from the walk's typical floor are dropped: a table top seen up close is not the floor.
-3. Propose loop closures between submaps that saw the same walls far apart in time, and keep those the
-   wall matcher verifies on the overlapping part. The search is bounded by how far drift can have grown.
-4. Solve the pose graph (cozmo.slam.posegraph); interpolate each frame's correction between the
-   anchors of neighbouring submaps in the same segment.
+3. First pass: solve the pose graph (cozmo.slam.posegraph) from walls, floor and snaps alone.
+4. Propose loop closures between submaps that saw the same walls far apart in time, match them on the
+   maps straightened by the first pass (a raw 20-second map is itself bent by drift, which biased the
+   matches), keep those the wall matcher verifies on the overlapping part, and solve again with them.
+   The search is bounded by how far drift can have grown. Each frame's correction is interpolated
+   between the anchors of neighbouring submaps in the same segment.
 5. Apply the correction to fused points, normals and the camera path.
 """
 from __future__ import annotations
@@ -51,6 +55,12 @@ LOOP_MAX_AMBIGUITY = 0.85
 LOOP_SIGMA = (0.03, 0.5)
 RELOCALIZATION_SIGMA = (0.05, 1.0)
 ACROSS_JUMP_ODOMETRY_SIGMA = (0.5, 10.0)
+ANCHOR_SIGMA = (0.05, 1.0)
+EARLY_WALK_FRACTION = 0.2          # "early" = the first 20% of the distance walked: little drift yet
+MIN_EARLY_WALK_M = 5.0
+ANCHOR_RADIUS_M = 1.5
+ANCHOR_MIN_AGREEMENT = 0.2         # share of post-jump wall points within 5 cm of early walls
+ANCHOR_CHECK_MIN_POINTS = 200
 MAP_CELL_M = 0.02
 CHUNK = 2_000_000
 
@@ -157,6 +167,8 @@ class DriftReport:
     loops_accepted: int = 0
     loops_rejected_by_graph: int = 0
     relocalizations: int = 0
+    anchors: int = 0
+    anchor_wall_agreement: list = field(default_factory=list)
     max_heading_correction_deg: float = 0.0
     max_position_correction_m: float = 0.0
     wall_heading_p90_before_deg: float | None = None
@@ -169,20 +181,21 @@ class DriftReport:
         correction = []
         if self.jumps:
             correction.append("jump_cut")
-        if self.loops_accepted or self.relocalizations:
+        if self.loops_accepted or self.relocalizations or self.anchors:
             correction.append("loop_closure")
         if self.heading_priors_used:
             correction.append("wall_plane_factors")
         if self.floor_priors:
             correction.append("floor_plane_factor")
-        notes = (f"{len(self.jumps)} ARKit relocalisation jump(s) turned into links; "
+        notes = (f"{len(self.jumps)} ARKit relocalisation jump(s) turned into links, "
+                 f"{self.anchors} tied back to the start of the walk; "
                  f"{self.loops_accepted} of {self.loops_proposed} loop candidates accepted; "
                  f"wall heading p90 {self._fmt(self.wall_heading_p90_before_deg)} -> "
                  f"{self._fmt(self.wall_heading_p90_after_deg)} deg; "
                  f"wall map area {self.wall_map_area_before_m2:.1f} -> {self.wall_map_area_after_m2:.1f} m2; "
                  f"max position correction {self.max_position_correction_m:.2f} m")
         return {"enabled": True, "correction": correction,
-                "loop_closures": self.loops_accepted + self.relocalizations,
+                "loop_closures": self.loops_accepted + self.relocalizations + self.anchors,
                 "heading_change_deg": round(self.max_heading_correction_deg, 2), "notes": notes}
 
     @staticmethod
@@ -260,43 +273,101 @@ def _build_submaps(capture, points: PointSet, segments) -> list[Submap]:
             middle = (t[group[0]] + t[group[-1]]) / 2
             anchor = min(group, key=lambda f: abs(t[f] - middle))
             node = Node(capture.positions[anchor].astype(float), heading[0] if heading else None, floor,
-                        heading[1] if heading else None)
+                        heading[1] if heading else None, float(t[anchor]))
             submaps.append(Submap(g, np.array(group), anchor, wxz, wn, wf, node))
     return submaps
 
 
-def _local_map(submaps: list[Submap], k: int):
+def _local_map(submaps: list[Submap], k: int, maps=None):
+    """Walls of submap k and its neighbours in the same segment. `maps` optionally replaces each
+    submap's (wall_xz, wall_normals), e.g. with pre-corrected copies."""
     ids = [j for j in range(k - LOCAL_MAP_REACH, k + LOCAL_MAP_REACH + 1)
            if 0 <= j < len(submaps) and submaps[j].segment == submaps[k].segment]
-    xz = np.vstack([submaps[j].wall_xz for j in ids])
-    normals = np.vstack([submaps[j].wall_normals for j in ids])
+    parts = [maps[j] if maps is not None else (submaps[j].wall_xz, submaps[j].wall_normals) for j in ids]
+    xz = np.vstack([p[0] for p in parts])
+    normals = np.vstack([p[1] for p in parts])
     _, keep = np.unique(np.floor(xz / MAP_CELL_M).astype(np.int64), axis=0, return_index=True)
     return xz[keep], normals[keep]
 
 
-def _loop_links(capture, submaps: list[Submap]):
+def to_recorded_link(target: int, source: int, yaw_deg: float, shift: np.ndarray, anchors_xz: np.ndarray,
+                     theta: np.ndarray, delta_xz: np.ndarray, sigmas, kind: str = "loop") -> Link:
+    """A match found between pre-corrected maps, C_a(q_a) = rot2(yaw) C_b(q_b) + shift, re-expressed in
+    recorded coordinates, q_a = rot2(yaw') q_b + shift', using each node's first-pass correction
+    C_k(q) = rot2(theta_k) (q - p_k) + p_k + delta_k."""
+    a, b = target, source
+    p_a, p_b = anchors_xz[a], anchors_xz[b]
+    alpha = np.radians(yaw_deg)
+    yaw_rec = alpha + theta[b] - theta[a]
+    inner = rot2(alpha) @ (p_b + delta_xz[b] - rot2(theta[b]) @ p_b) + shift - p_a - delta_xz[a]
+    shift_rec = rot2(-theta[a]) @ inner + p_a
+    return Link(a, b, float(np.degrees(yaw_rec)), shift_rec, *sigmas, kind=kind)
+
+
+def _anchor_links(positions: np.ndarray, submaps: list[Submap], n_segments: int):
+    """After an ARKit jump the camera is back in ARKit's reference frame: ARKit recognised a place it
+    mapped earlier and snapped onto it. When that place is near the start of the walk, where drift is
+    still small, the post-jump submap and the nearest early submap share one frame: identity link.
+    On walk 1a8384c3f6 the camera landed 10 cm from where the walk began."""
+    walked = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(positions, axis=0), axis=1))])
+    early_m = max(EARLY_WALK_FRACTION * walked[-1], MIN_EARLY_WALK_M)
+    early = [k for k, s in enumerate(submaps) if s.segment == 0 and walked[s.anchor] <= early_m]
+    links, agreement = [], []
+    for g in range(1, n_segments):
+        first = next((k for k, s in enumerate(submaps) if s.segment == g), None)
+        if first is None or not early:
+            continue
+        here = submaps[first].node.anchor[[0, 2]]
+        nearest = min(early, key=lambda k: np.linalg.norm(submaps[k].node.anchor[[0, 2]] - here))
+        if np.linalg.norm(submaps[nearest].node.anchor[[0, 2]] - here) > ANCHOR_RADIUS_M:
+            continue
+        mine = submaps[first].wall_xz
+        share = None
+        if len(mine) >= ANCHOR_CHECK_MIN_POINTS:
+            d, _ = cKDTree(_local_map(submaps, nearest)[0]).query(mine)
+            share = float(np.mean(d < 0.05))
+            agreement.append(round(share, 3))
+            if share < ANCHOR_MIN_AGREEMENT:
+                continue  # the walls do not agree: do not trust the snap as a return to the start
+        links.append(Link(nearest, first, 0.0, np.zeros(2), *ANCHOR_SIGMA, kind="anchor"))
+    return links, agreement
+
+
+def _loop_links(capture, submaps: list[Submap], correction: "FrameCorrection", first_pass):
+    """Loop closures matched on maps already straightened by the first pass (walls, floor, snaps), so a
+    20-second local map is not itself bent by drift; each match is then re-expressed in recorded
+    coordinates for the final graph."""
     t = capture.timestamps
     positions = np.asarray(capture.positions, float)
     walked = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(positions, axis=0), axis=1))])
-    anchors = np.array([positions[s.anchor][[0, 2]] for s in submaps])
-    maps = [_local_map(submaps, k) for k in range(len(submaps))]
+    corrected = []
+    for sm in submaps:
+        th = correction.theta[sm.wall_frames]
+        c, si = np.cos(th), np.sin(th)
+        n = sm.wall_normals
+        corrected.append((correction.transform_xz(sm.wall_xz, sm.wall_frames),
+                          np.column_stack([c * n[:, 0] + si * n[:, 1], -si * n[:, 0] + c * n[:, 1]])))
+    maps = [_local_map(submaps, k, corrected) for k in range(len(submaps))]
     usable = [len(xz) >= LOOP_MIN_POINTS and two_wall_directions(n) for xz, n in maps]
+    here = np.array([correction.positions[sm.anchor][[0, 2]] for sm in submaps])
+    anchors_xz = np.array([sm.node.anchor[[0, 2]] for sm in submaps])
+    delta_xz = first_pass.delta[:, [0, 2]]
     trees: dict[int, cKDTree] = {}
     links, proposed = [], 0
     for b in range(len(submaps)):
         if not usable[b]:
             continue
-        near = [(float(np.linalg.norm(anchors[b] - anchors[a])), a) for a in range(b)
+        near = [(float(np.linalg.norm(here[b] - here[a])), a) for a in range(b)
                 if usable[a] and t[submaps[b].anchor] - t[submaps[a].anchor] >= LOOP_MIN_GAP_S]
         for distance, a in sorted(near)[:LOOP_CANDIDATES]:
             if distance > LOOP_RADIUS_M:
                 break
+            yaw_bound, shift_bound = drift_bounds(abs(walked[submaps[b].anchor] - walked[submaps[a].anchor]))
             tree = trees.setdefault(a, cKDTree(maps[a][0]))
-            d0, _ = tree.query(maps[b][0], distance_upper_bound=0.3)
+            d0, _ = tree.query(maps[b][0], distance_upper_bound=min(max(0.3, shift_bound), 0.6))
             if np.mean(np.isfinite(d0)) < LOOP_MIN_SHARED_BEFORE:
                 continue  # the two places do not show the same walls
             proposed += 1
-            yaw_bound, shift_bound = drift_bounds(abs(walked[submaps[b].anchor] - walked[submaps[a].anchor]))
             m = match_walls(maps[a][0], maps[a][1], maps[b][0], yaw_range_deg=(-yaw_bound, yaw_bound),
                             max_shift_m=shift_bound)
             if m is None:
@@ -306,7 +377,8 @@ def _loop_links(capture, submaps: list[Submap]):
             if (m.overlap_fraction >= LOOP_MIN_OVERLAP and m.overlap_median_m <= LOOP_MAX_OVERLAP_RESIDUAL_M
                     and m.inlier_fraction >= LOOP_MIN_INLIERS and m.ambiguity <= LOOP_MAX_AMBIGUITY
                     and abs(m.yaw_deg) <= yaw_bound and moved <= shift_bound + 0.05):
-                links.append(Link(a, b, m.yaw_deg, m.shift, *LOOP_SIGMA, kind="loop"))
+                links.append(to_recorded_link(a, b, m.yaw_deg, m.shift, anchors_xz, first_pass.theta, delta_xz,
+                                              LOOP_SIGMA))
     return links, proposed
 
 
@@ -375,20 +447,25 @@ def estimate_drift(capture, points: PointSet) -> tuple[FrameCorrection, DriftRep
             yaw, shift, metres, degrees = relocalization(capture, before, after)
             report.jumps.append({"frame": after, "metres": round(metres, 3), "degrees": round(degrees, 2)})
             links.append(Link(k, k + 1, yaw, shift, *RELOCALIZATION_SIGMA, kind="relocalization"))
-            odometry.append(Odometry(k, k + 1, *ACROSS_JUMP_ODOMETRY_SIGMA))
-    loops, report.loops_proposed = _loop_links(capture, submaps)
-    links += loops
+            odometry.append(Odometry(k, k + 1, *ACROSS_JUMP_ODOMETRY_SIGMA, smooth=False))
+    anchors, report.anchor_wall_agreement = _anchor_links(positions, submaps, len(segments))
+    links += anchors
 
     if len(submaps) < 2:
         n = len(capture)
         report.seconds = time.time() - t0
         return FrameCorrection(np.zeros(n), positions.copy(), positions, np.ones(n, bool)), report
 
-    solution = solve([s.node for s in submaps], odometry, links)
+    nodes = [s.node for s in submaps]
+    first_pass = solve(nodes, odometry, links)
+    straightened = _frame_correction(capture, submaps, segments, jumps, first_pass)
+    loops, report.loops_proposed = _loop_links(capture, submaps, straightened, first_pass)
+    solution = solve(nodes, odometry, links + loops)
     report.heading_priors_used = solution.heading_priors_used
     report.loops_accepted = sum(l.kind == "loop" for l in solution.links_used)
     report.loops_rejected_by_graph = sum(l.kind == "loop" for l in solution.links_rejected)
     report.relocalizations = sum(l.kind == "relocalization" for l in solution.links_used)
+    report.anchors = sum(l.kind == "anchor" for l in solution.links_used)
 
     correction = _frame_correction(capture, submaps, segments, jumps, solution)
     report.max_heading_correction_deg = float(np.degrees(np.abs(correction.theta).max()))
