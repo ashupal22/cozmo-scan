@@ -10,8 +10,8 @@ Early work. The repo currently holds exploration scripts that check the LiDAR ca
 
 ## Output format and gates
 
-- [`schema/output.schema.json`](schema/output.schema.json): the JSON every run must produce. It's a stand-in until Cozmo shares their published schema. See [`schema/example_output.json`](schema/example_output.json).
-- [`docs/gates.md`](docs/gates.md): every pass/fail target, each marked as from the brief or as our assumption.
+- [`schema/output.schema.json`](schema/output.schema.json): the JSON every run must produce. Cozmo did not provide a schema, so this one is ours. See [`schema/example_output.json`](schema/example_output.json).
+- [`docs/gates.md`](docs/gates.md): every pass/fail target, each marked as from the brief or as our decision.
 
 ## Data
 

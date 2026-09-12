@@ -1,8 +1,8 @@
 # Gates: pass/fail targets
 
-The brief says *"Round 1 gates apply, with five additions"* and *"JSON to the published schema"*. Neither the Round 1 gates nor the schema were provided. This file lists every target we test against, and marks each one as coming **from the brief** or as **our assumption**. If Cozmo sends the real Round 1 gates or schema, update this file and `schema/output.schema.json`. Nothing else should need to change.
+The brief says *"Round 1 gates apply, with five additions"* and *"JSON to the published schema"*. Cozmo has not provided the Round 1 gates or schema and will not share more material, so we define both ourselves. This file lists every target we test against, and marks each one as coming **from the brief** or as **our decision**. Every decision has a reason, and the technical report repeats them.
 
-Output format: [`schema/output.schema.json`](../schema/output.schema.json) (v0.1.0, stand-in). Example: [`schema/example_output.json`](../schema/example_output.json).
+Output format: [`schema/output.schema.json`](../schema/output.schema.json) (v0.1.0, our own). Example: [`schema/example_output.json`](../schema/example_output.json).
 
 ## How errors are measured
 
@@ -11,7 +11,7 @@ Output format: [`schema/output.schema.json`](../schema/output.schema.json) (v0.1
 - **Wall length** = inside face, corner to corner.
 - **Footprint** = sum of room floor areas (inside faces).
 - **Intervals** are nominal 90% (`confidence: 0.9` in the JSON).
-- **Repeatability tolerance** for a wall of length L = max(1 cm, 0.5% × L). This reads the brief's "1 cm or 0.5%" as "whichever is looser"; see the open questions below.
+- **Repeatability tolerance** for a wall of length L = max(1 cm, 0.5% × L). This reads the brief's "1 cm or 0.5%" as "whichever is looser"; see decision 2 below.
 
 ## From the brief
 
@@ -29,9 +29,9 @@ Output format: [`schema/output.schema.json`](../schema/output.schema.json) (v0.1
 | G-CONTRACT | Output contract | All | Per-room plan, stitched plan, damage regions, concealed flags with rule, scope keyed to surfaces, interval on every measurement, one command, JSON, rendered plan | p. 1 |
 | G-INSTALL | Fresh setup | All | README to a first result on a clean machine in < 15 min | p. 4 |
 
-## Our assumptions
+## Our decisions
 
-Replace these if Cozmo sends the Round 1 gates.
+Round 1 gates were not provided, so these targets are ours.
 
 | ID | Gate | Tier | Target | Why this value |
 |---|---|---|---|---|
@@ -47,9 +47,9 @@ Replace these if Cozmo sends the Round 1 gates.
 | A-DETERMINISM | Same input, same output | All | Running twice on the same capture gives identical JSON (except runtime) | Needed for G-REPEAT and a regenerable fix loop |
 | A-RUNTIME | Runtime | All | ≤ 10 min per capture on an Apple M4 laptop | The walk-in test runs live while the examiners measure |
 
-## Open questions for Cozmo
+## How we read unclear parts of the brief
 
-1. Please share the Round 1 JSON schema and the Round 1 gates.
-2. Do the opening (G-OPEN) and ceiling (G-CEIL) gates also apply at the photo and video tiers? The brief only loosens wall lengths for those tiers.
-3. Does "within 1 cm or 0.5% per wall" mean whichever is looser (our reading) or whichever is tighter?
-4. Is the footprint the sum of room floor areas (our reading) or the outer outline including walls?
+1. **Opening and ceiling gates at the photo and video tiers.** The brief only loosens wall lengths for those tiers. We apply G-OPEN and G-CEIL strictly at the LiDAR tier. At the photo and video tiers we still report the same errors, and those intervals must be calibrated (A-CALIB). We never hide a failure: the benchmark shows the numbers against the LiDAR thresholds too.
+2. **"Within 1 cm or 0.5% per wall"** means whichever is looser: max(1 cm, 0.5% × L). We also report how many walls pass the stricter reading, min(1 cm, 0.5% × L).
+3. **Footprint** means the sum of room floor areas (inside faces). We also report the outer outline area including walls, so either reading can be checked.
+4. **Round 1 contract items** are taken as the list in the brief's Part 2 (G-CONTRACT). The schema covers each item, and the compliance matrix maps each one to a file.
