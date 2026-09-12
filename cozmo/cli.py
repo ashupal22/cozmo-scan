@@ -40,6 +40,25 @@ def cmd_inspect(args) -> int:
     return 0
 
 
+def cmd_run(args) -> int:
+    from cozmo.pipeline import NotBuiltYet, run
+
+    out = Path(args.out) if args.out else Path("out") / Path(args.path).name
+    try:
+        result = run(args.path, out)
+    except NotBuiltYet as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 3
+    doc = json.loads(result.read_text())
+    footprint = doc["plan"]["footprint_area_m2"]
+    print(f"{args.path}: {len(doc['rooms'])} rooms, footprint {footprint['value']} m2 "
+          f"[{footprint['ci_low']}, {footprint['ci_high']}], {doc['capture']['runtime_s']} s")
+    for warning in doc["quality"]["warnings"]:
+        print(f"  warning: {warning}")
+    print(f"wrote {result} and {result.parent / 'plan.svg'}")
+    return 0
+
+
 def cmd_validate(args) -> int:
     try:
         doc = json.loads(Path(args.file).read_text())
@@ -65,6 +84,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("path", help="LiDAR export folder, video file, or folder of room photo folders")
     p.add_argument("--json", action="store_true", help="print the summary as JSON")
     p.set_defaults(func=cmd_inspect)
+
+    p = sub.add_parser("run", help="measure a capture: writes result.json and plan.svg")
+    p.add_argument("path", help="capture to measure (LiDAR export folder for now)")
+    p.add_argument("--out", help="output folder (default: out/<capture name>)")
+    p.set_defaults(func=cmd_run)
 
     p = sub.add_parser("validate", help="check an output JSON file against the schema")
     p.add_argument("file")

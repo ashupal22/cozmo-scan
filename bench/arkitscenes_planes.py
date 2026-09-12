@@ -132,7 +132,8 @@ def main() -> None:
         visits.setdefault(m["visit_id"], []).append(m["video_id"])
         print(m["video_id"], json.dumps(walks[m["video_id"]]))
 
-    commit = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"],
+    # "-dirty" marks results produced with uncommitted changes in the working tree
+    commit = subprocess.run(["git", "-C", str(ROOT), "describe", "--always", "--dirty"],
                             capture_output=True, text=True).stdout.strip()
     report = {"benchmark": "arkitscenes_planes", "code_commit": commit,
               "gates_mm": {"ceiling_error": CEIL_GATE_MM, "ceiling_spread": SPREAD_GATE_MM},

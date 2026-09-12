@@ -8,12 +8,14 @@ Built for the Cozmo AI Applied AI case study.
 
 Early work. What exists so far:
 
+- `cozmo run` (LiDAR tier only, first version): floor, rooms split at doorways, right-angled room outlines snapped to wall faces, wall lengths, floor areas, per-room ceiling heights (or "not observed"), openings between rooms. Writes `result.json` (validated against the schema) and `plan.svg`, with provisional 90% ranges.
 - `cozmo inspect`: detects the input tier and summarises a capture. For LiDAR captures it reports frames, frame rate, intrinsics range, walk length and pose jumps.
 - `cozmo validate`: checks an output JSON against the schema, interval order and internal references.
-- A Stray Scanner loader that returns per-frame depth, confidence, intrinsics, poses and world-frame points.
+- Loaders for Stray Scanner exports and ARKitScenes walks (public data with laser ground truth).
+- `bench/arkitscenes_planes.py`: floor and ceiling accuracy against laser ground truth.
 - Exploration scripts in `explore/`.
 
-The measurement pipeline (`cozmo run`) is not built yet.
+Not built yet: drift correction, image-edge opening widths, video and photo tiers, damage, calibrated ranges. Each run lists what is missing under `quality.warnings`.
 
 ## Install
 
@@ -28,6 +30,7 @@ pytest            # unit tests on small synthetic captures, no data needed
 ## Commands
 
 ```bash
+cozmo run data/captures/c7d28f72c6                # measure: out/c7d28f72c6/result.json and plan.svg
 cozmo inspect data/captures/c7d28f72c6            # LiDAR export folder
 cozmo inspect path/to/walkthrough.mov             # video file
 cozmo inspect path/to/photos                      # one sub-folder per room
