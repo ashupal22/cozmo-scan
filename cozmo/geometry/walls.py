@@ -218,8 +218,9 @@ class OpeningOnWall:
     wall_index: int
     offset_m: float    # from the wall start to the opening centre
     width_m: float
-    other_room: int
+    other_room: int | None
     doorway_index: int
+    measured: bool = True  # False: the jambs were not seen, the width is nominal
 
 
 def attach_doorways(outlines: dict[int, RoomOutline], room_map: RoomMap,

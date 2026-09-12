@@ -13,12 +13,15 @@ def rotation_about_y(yaw_deg: float) -> np.ndarray:
     return np.array([[np.cos(t), 0, np.sin(t)], [0, 1, 0], [-np.sin(t), 0, np.cos(t)]])
 
 
-def two_room_apartment(door=(1.0, 1.9), ceiling_b=None, yaw_deg=0.0, drop_wall_z0=False):
+def two_room_apartment(door=(1.0, 1.9), ceiling_b=None, yaw_deg=0.0, drop_wall_z0=False,
+                       cabinet=False, lintel=False, hide=None):
     """Room A: x 0..4, z 0..3. Room B: x 4.1..7.1, z 0..3. A 10 cm wall between them at x 4.0..4.1
     with a doorway at the given z range. Wall normals face into the room they were seen from, as
-    real LiDAR normals face the camera. Optionally a ceiling over room B, the whole apartment
-    rotated about the vertical axis by yaw_deg, and room A's z=0 wall left without any wall points
-    (as if hidden behind furniture)."""
+    real LiDAR normals face the camera. Options: a ceiling over room B; the whole apartment rotated
+    about the vertical axis by yaw_deg; room A's z=0 wall without any wall points; a 0.9 m cabinet
+    against room A's z=3 wall (x 1.0..2.5, 0.6 m deep), hiding the floor under it and the wall
+    behind it; the wall above the door (2.05..2.4 m) seen; a section (x0, x1) of room A's z=3 wall
+    hidden at every height."""
     rng = np.random.default_rng(1)
     xyz, nrm = [], []
 
@@ -26,32 +29,55 @@ def two_room_apartment(door=(1.0, 1.9), ceiling_b=None, yaw_deg=0.0, drop_wall_z
         xyz.append(points)
         nrm.append(np.tile(normal, (len(points), 1)))
 
-    def floor(x0, x1, z0, z1, per_m2=400):
+    def floor(x0, x1, z0, z1, per_m2=2000):  # LiDAR floors are denser still: tens of points per 5 cm cell
         n = int((x1 - x0) * (z1 - z0) * per_m2)
         add(np.column_stack([rng.uniform(x0, x1, n), rng.normal(0, 0.005, n), rng.uniform(z0, z1, n)]), [0, 1, 0])
 
-    def wall_at_x(x, z0, z1, facing, per_m=600):
+    def wall_at_x(x, z0, z1, facing, per_m=600, y=(0.3, 1.8)):
         n = int((z1 - z0) * per_m)
-        add(np.column_stack([x + rng.normal(0, 0.005, n), rng.uniform(0.3, 1.8, n), rng.uniform(z0, z1, n)]),
+        add(np.column_stack([x + rng.normal(0, 0.005, n), rng.uniform(*y, n), rng.uniform(z0, z1, n)]),
             [facing, 0, 0])
 
-    def wall_at_z(z, x0, x1, facing, per_m=600):
+    def wall_at_z(z, x0, x1, facing, per_m=600, y=(0.3, 1.8), skip=None):
         n = int((x1 - x0) * per_m)
-        add(np.column_stack([rng.uniform(x0, x1, n), rng.uniform(0.3, 1.8, n), z + rng.normal(0, 0.005, n)]),
-            [0, 0, facing])
+        p = np.column_stack([rng.uniform(x0, x1, n), rng.uniform(*y, n), z + rng.normal(0, 0.005, n)])
+        if skip is not None:
+            p = p[~skip(p)]
+        add(p, [0, 0, facing])
 
-    floor(0, 4, 0, 3)
+    if cabinet:
+        floor(0, 1.0, 0, 3)
+        floor(2.5, 4, 0, 3)
+        floor(1.0, 2.5, 0, 2.4)
+        n = 900  # cabinet front at z=2.4 (faces -z), sides, top
+        add(np.column_stack([rng.uniform(1.0, 2.5, n), rng.uniform(0.1, 0.9, n), 2.4 + rng.normal(0, 0.005, n)]), [0, 0, -1])
+        for x, facing in ((1.0, -1), (2.5, 1)):
+            add(np.column_stack([x + rng.normal(0, 0.005, 300), rng.uniform(0.1, 0.9, 300), rng.uniform(2.4, 3.0, 300)]), [facing, 0, 0])
+        add(np.column_stack([rng.uniform(1.0, 2.5, 600), 0.9 + rng.normal(0, 0.005, 600), rng.uniform(2.4, 3.0, 600)]), [0, 1, 0])
+    else:
+        floor(0, 4, 0, 3)
     floor(4.1, 7.1, 0, 3)
     floor(4.0, 4.1, *door)
+
+    def hidden(p):
+        out = np.zeros(len(p), bool)
+        if cabinet:
+            out |= (p[:, 0] > 1.0) & (p[:, 0] < 2.5) & (p[:, 1] < 0.9)
+        if hide is not None:
+            out |= (p[:, 0] > hide[0]) & (p[:, 0] < hide[1])
+        return out
+
     for x0, x1 in ((0, 4), (4.1, 7.1)):
         if not (drop_wall_z0 and x0 == 0):
             wall_at_z(0, x0, x1, +1)
-        wall_at_z(3, x0, x1, -1)
+        wall_at_z(3, x0, x1, -1, skip=hidden if x0 == 0 else None)
     wall_at_x(0, 0, 3, +1)
     wall_at_x(7.1, 0, 3, -1)
     for x, facing in ((4.0, -1), (4.1, +1)):
         wall_at_x(x, 0, door[0], facing)
         wall_at_x(x, door[1], 3, facing)
+        if lintel:
+            wall_at_x(x, door[0], door[1], facing, y=(2.05, 2.4))
     if ceiling_b is not None:
         n = 4000
         add(np.column_stack([rng.uniform(4.1, 7.1, n), ceiling_b + rng.normal(0, 0.005, n), rng.uniform(0, 3, n)]), [0, -1, 0])
