@@ -1,0 +1,196 @@
+{
+  "benchmark": "arkitscenes_planes",
+  "code_commit": "48522ac",
+  "gates_mm": {
+    "ceiling_error": 15.0,
+    "ceiling_spread": 10.0
+  },
+  "summary": {
+    "pipeline": {
+      "ceiling_errors_mm": [
+        -28.1,
+        -26.9,
+        -23.6,
+        -221.2,
+        -11.2,
+        -19.8
+      ],
+      "mean_error_mm": -55.1,
+      "walks_within_gate": "1/6",
+      "spread_across_walks_mm": {
+        "381644": 9.2,
+        "384651": 226.1
+      },
+      "venues_within_spread_gate": "1/2"
+    },
+    "matched": {
+      "ceiling_errors_mm": [
+        -28.1,
+        -27.1,
+        -23.6,
+        -20.5,
+        -11.3,
+        -19.8
+      ],
+      "mean_error_mm": -21.7,
+      "walks_within_gate": "1/6",
+      "spread_across_walks_mm": {
+        "381644": 8.9,
+        "384651": 42.5
+      },
+      "venues_within_spread_gate": "1/2"
+    }
+  },
+  "walks": {
+    "41069048": {
+      "visit_id": 381644,
+      "frames": 1974,
+      "gt_frames": 150,
+      "truth": {
+        "ceiling_height_m": 2.263643205165863
+      },
+      "pipeline": {
+        "floor_error_mm": 16.1,
+        "ceiling_height_m": 2.2355085015296936,
+        "ceiling_error_mm": -28.1
+      },
+      "matched": {
+        "floor_error_mm": 16.1,
+        "ceiling_plane_error_mm": -12.0,
+        "ceiling_error_mm": -28.1
+      },
+      "depth_bias_mm": {
+        "0.3-1.0 m": -13.0,
+        "1.0-2.0 m": -14.5,
+        "2.0-3.0 m": -51.0,
+        "3.0-4.5 m": null
+      },
+      "seconds": 44
+    },
+    "41069050": {
+      "visit_id": 381644,
+      "frames": 1860,
+      "gt_frames": 131,
+      "truth": {
+        "ceiling_height_m": 2.2715582847595215
+      },
+      "pipeline": {
+        "floor_error_mm": 14.3,
+        "ceiling_height_m": 2.244672119617462,
+        "ceiling_error_mm": -26.9
+      },
+      "matched": {
+        "floor_error_mm": 14.5,
+        "ceiling_plane_error_mm": -12.6,
+        "ceiling_error_mm": -27.1
+      },
+      "depth_bias_mm": {
+        "0.3-1.0 m": -14.0,
+        "1.0-2.0 m": -14.5,
+        "2.0-3.0 m": -3.5,
+        "3.0-4.5 m": null
+      },
+      "seconds": 42
+    },
+    "41069051": {
+      "visit_id": 381644,
+      "frames": 3845,
+      "gt_frames": 289,
+      "truth": {
+        "ceiling_height_m": 2.262375593185425
+      },
+      "pipeline": {
+        "floor_error_mm": 10.7,
+        "ceiling_height_m": 2.238811492919922,
+        "ceiling_error_mm": -23.6
+      },
+      "matched": {
+        "floor_error_mm": 10.7,
+        "ceiling_plane_error_mm": -12.8,
+        "ceiling_error_mm": -23.6
+      },
+      "depth_bias_mm": {
+        "0.3-1.0 m": -9.0,
+        "1.0-2.0 m": -13.0,
+        "2.0-3.0 m": -22.5,
+        "3.0-4.5 m": null
+      },
+      "seconds": 99
+    },
+    "41142278": {
+      "visit_id": 384651,
+      "frames": 4153,
+      "gt_frames": 312,
+      "truth": {
+        "ceiling_height_m": 2.265782117843628
+      },
+      "pipeline": {
+        "floor_error_mm": 207.7,
+        "ceiling_height_m": 2.044546663761139,
+        "ceiling_error_mm": -221.2
+      },
+      "matched": {
+        "floor_error_mm": 7.0,
+        "ceiling_plane_error_mm": -13.5,
+        "ceiling_error_mm": -20.5
+      },
+      "depth_bias_mm": {
+        "0.3-1.0 m": -9.0,
+        "1.0-2.0 m": -15.5,
+        "2.0-3.0 m": null,
+        "3.0-4.5 m": null
+      },
+      "seconds": 118
+    },
+    "41142280": {
+      "visit_id": 384651,
+      "frames": 3445,
+      "gt_frames": 166,
+      "truth": {
+        "ceiling_height_m": 2.2818681597709656
+      },
+      "pipeline": {
+        "floor_error_mm": 12.1,
+        "ceiling_height_m": 2.2706632018089294,
+        "ceiling_error_mm": -11.2
+      },
+      "matched": {
+        "floor_error_mm": 12.2,
+        "ceiling_plane_error_mm": 0.9,
+        "ceiling_error_mm": -11.3
+      },
+      "depth_bias_mm": {
+        "0.3-1.0 m": -13.0,
+        "1.0-2.0 m": -14.5,
+        "2.0-3.0 m": -18.5,
+        "3.0-4.5 m": null
+      },
+      "seconds": 74
+    },
+    "41142281": {
+      "visit_id": 384651,
+      "frames": 4718,
+      "gt_frames": 388,
+      "truth": {
+        "ceiling_height_m": 2.247833013534546
+      },
+      "pipeline": {
+        "floor_error_mm": 11.0,
+        "ceiling_height_m": 2.2280141711235046,
+        "ceiling_error_mm": -19.8
+      },
+      "matched": {
+        "floor_error_mm": 10.9,
+        "ceiling_plane_error_mm": -8.9,
+        "ceiling_error_mm": -19.8
+      },
+      "depth_bias_mm": {
+        "0.3-1.0 m": -11.0,
+        "1.0-2.0 m": -14.0,
+        "2.0-3.0 m": -14.0,
+        "3.0-4.5 m": null
+      },
+      "seconds": 124
+    }
+  }
+}
