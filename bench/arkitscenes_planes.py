@@ -117,11 +117,18 @@ def summarize(walks: dict, visits: dict) -> dict:
     return summary
 
 
+def code_commit() -> str:
+    """Read before any output is written: a run's own tracked result files would otherwise mark the
+    tree "-dirty". "-dirty" means uncommitted code changes at the start of the run."""
+    return subprocess.run(["git", "-C", str(ROOT), "describe", "--always", "--dirty"], capture_output=True, text=True).stdout.strip()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--walks", nargs="+", help="video ids (default: all in manifest.json)")
     args = parser.parse_args()
 
+    commit = code_commit()
     manifest = json.loads((DATA / "manifest.json").read_text())
     chosen = [m for m in manifest if not args.walks or m["video_id"] in args.walks]
     walks, visits = {}, {}
@@ -132,9 +139,6 @@ def main() -> None:
         visits.setdefault(m["visit_id"], []).append(m["video_id"])
         print(m["video_id"], json.dumps(walks[m["video_id"]]))
 
-    # "-dirty" marks results produced with uncommitted changes in the working tree
-    commit = subprocess.run(["git", "-C", str(ROOT), "describe", "--always", "--dirty"],
-                            capture_output=True, text=True).stdout.strip()
     report = {"benchmark": "arkitscenes_planes", "code_commit": commit,
               "gates_mm": {"ceiling_error": CEIL_GATE_MM, "ceiling_spread": SPREAD_GATE_MM},
               "summary": summarize(walks, visits), "walks": walks}

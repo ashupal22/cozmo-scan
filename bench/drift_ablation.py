@@ -95,7 +95,14 @@ def repeatability(a, b):
     }
 
 
+def code_commit() -> str:
+    """Read before any output is written: a run's own tracked result files would otherwise mark the
+    tree "-dirty". "-dirty" means uncommitted code changes at the start of the run."""
+    return subprocess.run(["git", "-C", str(ROOT), "describe", "--always", "--dirty"], capture_output=True, text=True).stdout.strip()
+
+
 def main():
+    commit = code_commit()
     OUT.mkdir(parents=True, exist_ok=True)
     results, maps = {}, {}
     for cid in CAPTURES:
@@ -126,8 +133,6 @@ def main():
             comparison[mode] = repeatability(maps[SAME_FLAT[0]][mode], maps[SAME_FLAT[1]][mode])
             print("same flat, drift", mode, comparison[mode])
 
-    commit = subprocess.run(["git", "-C", str(ROOT), "describe", "--always", "--dirty"],
-                            capture_output=True, text=True).stdout.strip()
     report = {"benchmark": "drift_ablation", "code_commit": commit, "captures": results,
               "same_flat_repeatability": {"walks": list(SAME_FLAT), **comparison}}
     (OUT / "drift_ablation.json").write_text(json.dumps(report, indent=2, default=float) + "\n")
