@@ -1,0 +1,129 @@
+{
+  "schema_version": "0.1.0",
+  "capture": {
+    "id": "example-lidar",
+    "tier": "lidar",
+    "device": "iPhone 15 Pro",
+    "input_path": "data/captures/example",
+    "pipeline_version": "0000000",
+    "runtime_s": 312.5,
+    "notes": "Illustrative values for documentation only, not a real measurement"
+  },
+  "units": { "length": "m", "area": "m2" },
+  "rooms": [
+    {
+      "id": "R1",
+      "label": "living room",
+      "polygon": [[0.0, 0.0], [4.2, 0.0], [4.2, 3.6], [0.0, 3.6]],
+      "floor_area_m2": { "value": 15.12, "ci_low": 15.02, "ci_high": 15.22, "confidence": 0.9 },
+      "perimeter_m": { "value": 15.6, "ci_low": 15.56, "ci_high": 15.64, "confidence": 0.9 },
+      "ceiling_height_m": { "value": 2.35, "ci_low": 2.338, "ci_high": 2.362, "confidence": 0.9, "observed": true },
+      "walls": [
+        { "id": "R1.W1", "start": [0.0, 0.0], "end": [4.2, 0.0], "length_m": { "value": 4.2, "ci_low": 4.189, "ci_high": 4.211, "confidence": 0.9 } },
+        { "id": "R1.W2", "start": [4.2, 0.0], "end": [4.2, 3.6], "length_m": { "value": 3.6, "ci_low": 3.59, "ci_high": 3.61, "confidence": 0.9 } },
+        { "id": "R1.W3", "start": [4.2, 3.6], "end": [0.0, 3.6], "length_m": { "value": 4.2, "ci_low": 4.189, "ci_high": 4.211, "confidence": 0.9 } },
+        { "id": "R1.W4", "start": [0.0, 3.6], "end": [0.0, 0.0], "length_m": { "value": 3.6, "ci_low": 3.59, "ci_high": 3.61, "confidence": 0.9 } }
+      ],
+      "openings": [
+        {
+          "id": "R1.O1", "type": "door", "wall_id": "R1.W2", "connects_to": "R2",
+          "width_m": { "value": 0.812, "ci_low": 0.803, "ci_high": 0.821, "confidence": 0.9 },
+          "height_m": { "value": 2.03, "ci_low": 2.018, "ci_high": 2.042, "confidence": 0.9 },
+          "offset_along_wall_m": { "value": 1.0, "ci_low": 0.99, "ci_high": 1.01, "confidence": 0.9 },
+          "detection_confidence": 0.97
+        },
+        {
+          "id": "R1.O2", "type": "window", "wall_id": "R1.W3", "connects_to": "exterior",
+          "width_m": { "value": 1.2, "ci_low": 1.191, "ci_high": 1.209, "confidence": 0.9 },
+          "height_m": { "value": 1.2, "ci_low": 1.19, "ci_high": 1.21, "confidence": 0.9 },
+          "sill_height_m": { "value": 0.9, "ci_low": 0.89, "ci_high": 0.91, "confidence": 0.9 },
+          "offset_along_wall_m": { "value": 2.1, "ci_low": 2.09, "ci_high": 2.11, "confidence": 0.9 },
+          "detection_confidence": 0.93
+        }
+      ]
+    },
+    {
+      "id": "R2",
+      "label": "bathroom",
+      "polygon": [[4.32, 0.0], [6.72, 0.0], [6.72, 2.0], [4.32, 2.0]],
+      "floor_area_m2": { "value": 4.8, "ci_low": 4.75, "ci_high": 4.85, "confidence": 0.9 },
+      "perimeter_m": { "value": 8.8, "ci_low": 8.76, "ci_high": 8.84, "confidence": 0.9 },
+      "ceiling_height_m": { "value": 2.27, "ci_low": 2.256, "ci_high": 2.284, "confidence": 0.9, "observed": true },
+      "walls": [
+        { "id": "R2.W1", "start": [4.32, 0.0], "end": [6.72, 0.0], "length_m": { "value": 2.4, "ci_low": 2.39, "ci_high": 2.41, "confidence": 0.9 } },
+        { "id": "R2.W2", "start": [6.72, 0.0], "end": [6.72, 2.0], "length_m": { "value": 2.0, "ci_low": 1.99, "ci_high": 2.01, "confidence": 0.9 } },
+        { "id": "R2.W3", "start": [6.72, 2.0], "end": [4.32, 2.0], "length_m": { "value": 2.4, "ci_low": 2.39, "ci_high": 2.41, "confidence": 0.9 } },
+        { "id": "R2.W4", "start": [4.32, 2.0], "end": [4.32, 0.0], "length_m": { "value": 2.0, "ci_low": 1.99, "ci_high": 2.01, "confidence": 0.9 } }
+      ],
+      "openings": [
+        {
+          "id": "R2.O1", "type": "door", "wall_id": "R2.W4", "connects_to": "R1",
+          "width_m": { "value": 0.812, "ci_low": 0.803, "ci_high": 0.821, "confidence": 0.9 },
+          "offset_along_wall_m": { "value": 1.0, "ci_low": 0.99, "ci_high": 1.01, "confidence": 0.9 },
+          "detection_confidence": 0.96
+        }
+      ]
+    }
+  ],
+  "plan": {
+    "footprint_area_m2": { "value": 19.92, "ci_low": 19.8, "ci_high": 20.04, "confidence": 0.9 },
+    "adjacency": [
+      { "room_a": "R1", "room_b": "R2", "via": ["R1.O1", "R2.O1"], "confidence": 0.98 }
+    ],
+    "stitch": { "method": "single_map", "low_confidence": false },
+    "drift": {
+      "enabled": true,
+      "correction": ["jump_cut", "loop_closure", "wall_plane_factors", "floor_plane_factor"],
+      "loop_closures": 3,
+      "heading_change_deg": 0.3
+    }
+  },
+  "damage": [
+    {
+      "id": "D1", "surface_id": "R2.W2", "class": "water_stain",
+      "area_m2": { "value": 0.21, "ci_low": 0.18, "ci_high": 0.24, "confidence": 0.9 },
+      "width_m": { "value": 0.7, "ci_low": 0.68, "ci_high": 0.72, "confidence": 0.9 },
+      "height_m": { "value": 0.3, "ci_low": 0.28, "ci_high": 0.32, "confidence": 0.9 },
+      "bottom_above_floor_m": { "value": 0.05, "ci_low": 0.03, "ci_high": 0.07, "confidence": 0.9 },
+      "outline_uv": [[0.6, 0.05], [1.3, 0.05], [1.3, 0.35], [0.6, 0.35]],
+      "detection_confidence": 0.88,
+      "views": 6
+    }
+  ],
+  "concealed_flags": [
+    {
+      "id": "F1", "surface_id": "R2.W2", "rule_id": "R-WALL-WICK-01",
+      "description": "Stain starts 5 cm above the floor: moisture may be wicking behind the baseboard",
+      "evidence": ["D1"],
+      "severity": "medium"
+    }
+  ],
+  "scope": [
+    {
+      "id": "S1", "surface_id": "R2.W2",
+      "description": "Drywall flood cut to 0.6 m: remove and replace",
+      "unit": "m2",
+      "quantity": { "value": 1.2, "ci_low": 1.17, "ci_high": 1.23, "confidence": 0.9 },
+      "because": { "damage_ids": ["D1"], "rule_ids": ["R-WALL-WICK-01"] }
+    },
+    {
+      "id": "S2", "surface_id": "R2.W2",
+      "description": "Baseboard: remove and replace",
+      "unit": "m",
+      "quantity": { "value": 2.0, "ci_low": 1.97, "ci_high": 2.03, "confidence": 0.9 },
+      "because": { "rule_ids": ["R-WALL-WICK-01"] }
+    },
+    {
+      "id": "S3", "surface_id": "R2.W2",
+      "description": "Stain-blocking primer and two coats of paint",
+      "unit": "m2",
+      "quantity": { "value": 4.7, "ci_low": 4.6, "ci_high": 4.8, "confidence": 0.9 },
+      "because": { "damage_ids": ["D1"] }
+    }
+  ],
+  "quality": {
+    "low_confidence": false,
+    "warnings": ["Example file: values are illustrative"]
+  },
+  "render": { "plan_svg": "out/example-lidar/plan.svg" }
+}

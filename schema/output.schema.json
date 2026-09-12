@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ashupal22/cozmo-scan/blob/main/schema/output.schema.json",
+  "title": "cozmo-scan capture output",
+  "description": "Output of `cozmo run` for one capture (photo, video or LiDAR tier). Stand-in for Cozmo's Round 1 published schema, which was not provided (see docs/gates.md). Lengths are metres, areas square metres. Plan coordinates are 2D [x, y] in metres, in one frame shared by all rooms. Code must additionally check ci_low <= value <= ci_high for every measurement.",
+  "type": "object",
+  "required": ["schema_version", "capture", "units", "rooms", "plan", "damage", "concealed_flags", "scope", "quality"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "0.1.0" },
+    "capture": { "$ref": "#/$defs/capture" },
+    "units": {
+      "type": "object",
+      "required": ["length", "area"],
+      "additionalProperties": false,
+      "properties": {
+        "length": { "const": "m" },
+        "area": { "const": "m2" }
+      }
+    },
+    "rooms": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/room" } },
+    "plan": { "$ref": "#/$defs/plan" },
+    "damage": { "type": "array", "items": { "$ref": "#/$defs/damage_region" } },
+    "concealed_flags": { "type": "array", "items": { "$ref": "#/$defs/concealed_flag" } },
+    "scope": { "type": "array", "items": { "$ref": "#/$defs/scope_item" } },
+    "quality": { "$ref": "#/$defs/quality" },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "plan_svg": { "type": "string" },
+        "plan_png": { "type": "string" }
+      }
+    }
+  },
+  "$defs": {
+    "measurement": {
+      "description": "A measured value with its interval.",
+      "type": "object",
+      "required": ["value", "ci_low", "ci_high", "confidence"],
+      "additionalProperties": false,
+      "properties": {
+        "value": { "type": "number" },
+        "ci_low": { "type": "number" },
+        "ci_high": { "type": "number" },
+        "confidence": {
+          "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1,
+          "description": "Nominal coverage of [ci_low, ci_high], e.g. 0.9"
+        },
+        "observed": {
+          "type": "boolean", "default": true,
+          "description": "false when the sensor never saw it and the value is inferred; the interval must then be wide"
+        },
+        "method": { "type": "string" }
+      }
+    },
+    "point2": {
+      "type": "array",
+      "prefixItems": [{ "type": "number" }, { "type": "number" }],
+      "items": false,
+      "minItems": 2
+    },
+    "room_id": { "type": "string", "pattern": "^R[0-9]+$" },
+    "wall_id": { "type": "string", "pattern": "^R[0-9]+\\.W[0-9]+$" },
+    "opening_id": { "type": "string", "pattern": "^R[0-9]+\\.O[0-9]+$" },
+    "surface_id": {
+      "type": "string",
+      "pattern": "^R[0-9]+\\.(W[0-9]+|FLOOR|CEIL)$",
+      "description": "A wall (R1.W3), the floor (R1.FLOOR) or the ceiling (R1.CEIL)"
+    },
+    "damage_id": { "type": "string", "pattern": "^D[0-9]+$" },
+    "rule_id": { "type": "string", "pattern": "^R-[A-Z0-9-]+$" },
+    "capture": {
+      "type": "object",
+      "required": ["id", "tier", "pipeline_version"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "tier": { "enum": ["photo", "video", "lidar"] },
+        "device": { "type": ["string", "null"] },
+        "input_path": { "type": "string" },
+        "pipeline_version": { "type": "string", "description": "git commit of cozmo-scan that produced this file" },
+        "runtime_s": { "type": "number", "minimum": 0 },
+        "notes": { "type": "string" }
+      }
+    },
+    "wall": {
+      "type": "object",
+      "required": ["id", "start", "end", "length_m"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/wall_id" },
+        "start": { "$ref": "#/$defs/point2" },
+        "end": { "$ref": "#/$defs/point2" },
+        "length_m": { "$ref": "#/$defs/measurement", "description": "Inside-face length, corner to corner" },
+        "height_m": { "$ref": "#/$defs/measurement" }
+      }
+    },
+    "opening": {
+      "type": "object",
+      "required": ["id", "type", "wall_id", "width_m", "connects_to"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/opening_id" },
+        "type": { "enum": ["door", "window", "archway", "opening"] },
+        "wall_id": { "$ref": "#/$defs/wall_id" },
+        "width_m": { "$ref": "#/$defs/measurement", "description": "Clear width between inner jamb faces, trim excluded" },
+        "height_m": { "$ref": "#/$defs/measurement" },
+        "sill_height_m": { "$ref": "#/$defs/measurement" },
+        "offset_along_wall_m": { "$ref": "#/$defs/measurement", "description": "Distance from the wall start to the opening centre" },
+        "connects_to": {
+          "oneOf": [
+            { "$ref": "#/$defs/room_id" },
+            { "const": "exterior" },
+            { "type": "null" }
+          ]
+        },
+        "detection_confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "room": {
+      "type": "object",
+      "required": ["id", "label", "polygon", "floor_area_m2", "ceiling_height_m", "walls", "openings"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/room_id" },
+        "label": { "type": "string" },
+        "polygon": {
+          "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point2" },
+          "description": "Inside-face outline in plan coordinates, counter-clockwise"
+        },
+        "floor_area_m2": { "$ref": "#/$defs/measurement" },
+        "perimeter_m": { "$ref": "#/$defs/measurement" },
+        "ceiling_height_m": { "$ref": "#/$defs/measurement" },
+        "walls": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/wall" } },
+        "openings": { "type": "array", "items": { "$ref": "#/$defs/opening" } }
+      }
+    },
+    "plan": {
+      "type": "object",
+      "required": ["footprint_area_m2", "adjacency", "stitch", "drift"],
+      "additionalProperties": false,
+      "properties": {
+        "footprint_area_m2": {
+          "$ref": "#/$defs/measurement",
+          "description": "Sum of room floor areas (inside faces)"
+        },
+        "adjacency": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["room_a", "room_b", "via"],
+            "additionalProperties": false,
+            "properties": {
+              "room_a": { "$ref": "#/$defs/room_id" },
+              "room_b": { "$ref": "#/$defs/room_id" },
+              "via": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/opening_id" } },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        },
+        "stitch": {
+          "type": "object",
+          "required": ["method", "low_confidence"],
+          "additionalProperties": false,
+          "properties": {
+            "method": { "enum": ["single_room", "single_map", "door_matching"] },
+            "low_confidence": { "type": "boolean" },
+            "notes": { "type": "string" }
+          }
+        },
+        "drift": {
+          "type": "object",
+          "required": ["enabled", "correction"],
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "correction": {
+              "type": "array",
+              "items": { "enum": ["jump_cut", "loop_closure", "wall_plane_factors", "floor_plane_factor"] }
+            },
+            "loop_closures": { "type": "integer", "minimum": 0 },
+            "heading_change_deg": { "type": "number" },
+            "notes": { "type": "string" }
+          }
+        }
+      }
+    },
+    "damage_region": {
+      "type": "object",
+      "required": ["id", "surface_id", "class", "area_m2", "width_m", "height_m"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/damage_id" },
+        "surface_id": { "$ref": "#/$defs/surface_id" },
+        "class": { "enum": ["water_stain", "mold", "crack", "peeling_paint", "hole", "other"] },
+        "area_m2": { "$ref": "#/$defs/measurement" },
+        "width_m": { "$ref": "#/$defs/measurement" },
+        "height_m": { "$ref": "#/$defs/measurement" },
+        "bottom_above_floor_m": { "$ref": "#/$defs/measurement" },
+        "outline_uv": {
+          "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/point2" },
+          "description": "Outline on the surface plane in metres: u along the surface, v up (walls) or across (floor, ceiling)"
+        },
+        "detection_confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "views": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "concealed_flag": {
+      "type": "object",
+      "required": ["id", "surface_id", "rule_id", "description", "evidence"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^F[0-9]+$" },
+        "surface_id": { "$ref": "#/$defs/surface_id" },
+        "rule_id": { "$ref": "#/$defs/rule_id" },
+        "description": { "type": "string", "minLength": 1 },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/damage_id" } },
+        "severity": { "enum": ["low", "medium", "high"] }
+      }
+    },
+    "scope_item": {
+      "type": "object",
+      "required": ["id", "surface_id", "description", "unit", "quantity", "because"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string", "pattern": "^S[0-9]+$" },
+        "surface_id": { "$ref": "#/$defs/surface_id" },
+        "description": { "type": "string", "minLength": 1 },
+        "code": { "type": "string", "description": "Optional estimating line code" },
+        "unit": { "enum": ["m", "m2", "each"] },
+        "quantity": { "$ref": "#/$defs/measurement" },
+        "because": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "properties": {
+            "damage_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/damage_id" } },
+            "rule_ids": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/rule_id" } }
+          }
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "required": ["low_confidence", "warnings"],
+      "additionalProperties": false,
+      "properties": {
+        "low_confidence": { "type": "boolean" },
+        "warnings": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}
