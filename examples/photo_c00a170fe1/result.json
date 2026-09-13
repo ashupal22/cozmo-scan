@@ -1,0 +1,340 @@
+{
+  "schema_version": "0.1.0",
+  "capture": {
+    "id": "c00a170fe1_photo_sweeps",
+    "tier": "photo",
+    "device": null,
+    "input_path": "data/derived/c00a170fe1_photo_sweeps",
+    "pipeline_version": "ac0c0f6",
+    "runtime_s": 32.8
+  },
+  "units": {
+    "length": "m",
+    "area": "m2"
+  },
+  "rooms": [
+    {
+      "id": "R1",
+      "label": "room_1",
+      "polygon": [
+        [
+          0.227,
+          -1.898
+        ],
+        [
+          2.69,
+          -0.662
+        ],
+        [
+          0.749,
+          3.206
+        ],
+        [
+          -1.713,
+          1.97
+        ]
+      ],
+      "floor_area_m2": {
+        "value": 11.92,
+        "ci_low": 2.4,
+        "ci_high": 59.15,
+        "confidence": 0.9
+      },
+      "perimeter_m": {
+        "value": 14.17,
+        "ci_low": 6.39,
+        "ci_high": 31.4,
+        "confidence": 0.9
+      },
+      "ceiling_height_m": {
+        "value": 2.5,
+        "ci_low": 2.2,
+        "ci_high": 3.2,
+        "confidence": 0.9,
+        "observed": false,
+        "method": "not observed anywhere; typical residential range"
+      },
+      "walls": [
+        {
+          "id": "R1.W1",
+          "start": [
+            0.227,
+            -1.898
+          ],
+          "end": [
+            2.69,
+            -0.662
+          ],
+          "length_m": {
+            "value": 2.755,
+            "ci_low": 1.26,
+            "ci_high": 6.024,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W2",
+          "start": [
+            2.69,
+            -0.662
+          ],
+          "end": [
+            0.749,
+            3.206
+          ],
+          "length_m": {
+            "value": 4.328,
+            "ci_low": 1.612,
+            "ci_high": 11.621,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W3",
+          "start": [
+            0.749,
+            3.206
+          ],
+          "end": [
+            -1.713,
+            1.97
+          ],
+          "length_m": {
+            "value": 2.755,
+            "ci_low": 1.26,
+            "ci_high": 6.024,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W4",
+          "start": [
+            -1.713,
+            1.97
+          ],
+          "end": [
+            0.227,
+            -1.898
+          ],
+          "length_m": {
+            "value": 4.328,
+            "ci_low": 1.612,
+            "ci_high": 11.621,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        }
+      ],
+      "openings": [
+        {
+          "id": "R1.O1",
+          "type": "opening",
+          "wall_id": "R1.W3",
+          "width_m": {
+            "value": 0.85,
+            "ci_low": 0.603,
+            "ci_high": 1.097,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 1.859,
+            "ci_low": 0.846,
+            "ci_high": 4.089,
+            "confidence": 0.9
+          },
+          "connects_to": "R2"
+        }
+      ]
+    },
+    {
+      "id": "R2",
+      "label": "room_2",
+      "polygon": [
+        [
+          -2.979,
+          3.581
+        ],
+        [
+          -2.146,
+          1.921
+        ],
+        [
+          -0.15,
+          2.923
+        ],
+        [
+          -0.982,
+          4.583
+        ]
+      ],
+      "floor_area_m2": {
+        "value": 4.15,
+        "ci_low": 0.58,
+        "ci_high": 29.78,
+        "confidence": 0.9
+      },
+      "perimeter_m": {
+        "value": 8.18,
+        "ci_low": 3.27,
+        "ci_high": 20.47,
+        "confidence": 0.9
+      },
+      "ceiling_height_m": {
+        "value": 2.5,
+        "ci_low": 2.2,
+        "ci_high": 3.2,
+        "confidence": 0.9,
+        "observed": false,
+        "method": "not observed anywhere; typical residential range"
+      },
+      "walls": [
+        {
+          "id": "R2.W1",
+          "start": [
+            -2.979,
+            3.581
+          ],
+          "end": [
+            -2.146,
+            1.921
+          ],
+          "length_m": {
+            "value": 1.857,
+            "ci_low": 0.404,
+            "ci_high": 8.546,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W2",
+          "start": [
+            -2.146,
+            1.921
+          ],
+          "end": [
+            -0.15,
+            2.923
+          ],
+          "length_m": {
+            "value": 2.233,
+            "ci_low": 0.992,
+            "ci_high": 5.028,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W3",
+          "start": [
+            -0.15,
+            2.923
+          ],
+          "end": [
+            -0.982,
+            4.583
+          ],
+          "length_m": {
+            "value": 1.857,
+            "ci_low": 0.404,
+            "ci_high": 8.546,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W4",
+          "start": [
+            -0.982,
+            4.583
+          ],
+          "end": [
+            -2.979,
+            3.581
+          ],
+          "length_m": {
+            "value": 2.233,
+            "ci_low": 0.992,
+            "ci_high": 5.028,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        }
+      ],
+      "openings": [
+        {
+          "id": "R2.O1",
+          "type": "opening",
+          "wall_id": "R2.W2",
+          "width_m": {
+            "value": 0.85,
+            "ci_low": 0.603,
+            "ci_high": 1.097,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 1.305,
+            "ci_low": 0.559,
+            "ci_high": 3.047,
+            "confidence": 0.9
+          },
+          "connects_to": "R1"
+        }
+      ]
+    }
+  ],
+  "plan": {
+    "footprint_area_m2": {
+      "value": 16.07,
+      "ci_low": 3.91,
+      "ci_high": 66.02,
+      "confidence": 0.9
+    },
+    "adjacency": [
+      {
+        "room_a": "R1",
+        "room_b": "R2",
+        "via": [
+          "R1.O1",
+          "R2.O1"
+        ]
+      }
+    ],
+    "stitch": {
+      "method": "door_matching",
+      "low_confidence": true,
+      "notes": "1 door pair(s) join 2 rooms into 1 group(s); groups not joined by a door are set beside the plan, where they really are is unknown"
+    },
+    "drift": {
+      "enabled": false,
+      "correction": [],
+      "notes": "not applicable: each room is measured from its own photos"
+    }
+  },
+  "damage": [],
+  "concealed_flags": [],
+  "scope": [],
+  "quality": {
+    "low_confidence": true,
+    "warnings": [
+      "opening widths are coarse (5 cm plan grid); image-edge refinement not built yet",
+      "R1: ceiling not observed; height is a prior with a wide range",
+      "R2: ceiling not observed; height is a prior with a wide range",
+      "room_1: 1 of 4 walls not seen; closed at the camera (photos taken from the doorway), with a wide interval",
+      "room_2: 1 of 4 walls not seen; closed at the camera (photos taken from the doorway), with a wide interval",
+      "no depth sensor and no camera poses: each room's walls come from a learned depth model (Depth Anything 3) on its own photos, sized by a monocular metric-depth model; focal length from DA3 estimate (no EXIF focal length, too few straight lines)",
+      "rooms joined through their doors: 1 group(s); the photo tier's stitch is not yet reliable (bench/README.md), so check the adjacency",
+      "damage: 0 region(s) from a zero-shot image model (CLIP), not yet tested on staged damage; check each against its detection confidence. 0 concealed-damage flag(s), 0 scope item(s)"
+    ]
+  },
+  "render": {
+    "plan_svg": "examples/photo_c00a170fe1/plan.svg"
+  }
+}

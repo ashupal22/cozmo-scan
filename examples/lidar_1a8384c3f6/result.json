@@ -1,0 +1,2130 @@
+{
+  "schema_version": "0.1.0",
+  "capture": {
+    "id": "1a8384c3f6",
+    "tier": "lidar",
+    "device": null,
+    "input_path": "/Users/ashupal/Downloads/ASSI/1a8384c3f6",
+    "pipeline_version": "ee69832-dirty",
+    "runtime_s": 27.2
+  },
+  "units": {
+    "length": "m",
+    "area": "m2"
+  },
+  "rooms": [
+    {
+      "id": "R1",
+      "label": "room 1",
+      "polygon": [
+        [
+          -0.75,
+          2.8
+        ],
+        [
+          -0.449,
+          2.767
+        ],
+        [
+          -0.37,
+          3.504
+        ],
+        [
+          -0.024,
+          3.467
+        ],
+        [
+          0.077,
+          4.403
+        ],
+        [
+          -0.269,
+          4.44
+        ],
+        [
+          -0.249,
+          4.622
+        ],
+        [
+          -2.717,
+          4.888
+        ],
+        [
+          -2.586,
+          6.098
+        ],
+        [
+          -3.778,
+          6.227
+        ],
+        [
+          -3.746,
+          6.522
+        ],
+        [
+          -4.749,
+          6.63
+        ],
+        [
+          -4.781,
+          6.335
+        ],
+        [
+          -5.226,
+          6.383
+        ],
+        [
+          -5.309,
+          5.614
+        ],
+        [
+          -4.728,
+          5.551
+        ],
+        [
+          -4.896,
+          3.991
+        ],
+        [
+          -3.559,
+          3.847
+        ],
+        [
+          -3.935,
+          0.353
+        ],
+        [
+          -1.047,
+          0.042
+        ]
+      ],
+      "floor_area_m2": {
+        "value": 19.16,
+        "ci_low": 17.94,
+        "ci_high": 20.37,
+        "confidence": 0.9
+      },
+      "perimeter_m": {
+        "value": 23.28,
+        "ci_low": 22.24,
+        "ci_high": 24.32,
+        "confidence": 0.9
+      },
+      "ceiling_height_m": {
+        "value": 2.5,
+        "ci_low": 2.2,
+        "ci_high": 3.2,
+        "confidence": 0.9,
+        "observed": false,
+        "method": "not observed anywhere; typical residential range"
+      },
+      "walls": [
+        {
+          "id": "R1.W1",
+          "start": [
+            -0.75,
+            2.8
+          ],
+          "end": [
+            -0.449,
+            2.767
+          ],
+          "length_m": {
+            "value": 0.303,
+            "ci_low": 0.218,
+            "ci_high": 0.388,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W2",
+          "start": [
+            -0.449,
+            2.767
+          ],
+          "end": [
+            -0.37,
+            3.504
+          ],
+          "length_m": {
+            "value": 0.742,
+            "ci_low": 0.625,
+            "ci_high": 0.858,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W3",
+          "start": [
+            -0.37,
+            3.504
+          ],
+          "end": [
+            -0.024,
+            3.467
+          ],
+          "length_m": {
+            "value": 0.348,
+            "ci_low": 0.232,
+            "ci_high": 0.465,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W4",
+          "start": [
+            -0.024,
+            3.467
+          ],
+          "end": [
+            0.077,
+            4.403
+          ],
+          "length_m": {
+            "value": 0.941,
+            "ci_low": 0.856,
+            "ci_high": 1.026,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W5",
+          "start": [
+            0.077,
+            4.403
+          ],
+          "end": [
+            -0.269,
+            4.44
+          ],
+          "length_m": {
+            "value": 0.348,
+            "ci_low": 0.232,
+            "ci_high": 0.465,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W6",
+          "start": [
+            -0.269,
+            4.44
+          ],
+          "end": [
+            -0.249,
+            4.622
+          ],
+          "length_m": {
+            "value": 0.183,
+            "ci_low": 0.152,
+            "ci_high": 0.215,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W7",
+          "start": [
+            -0.249,
+            4.622
+          ],
+          "end": [
+            -2.717,
+            4.888
+          ],
+          "length_m": {
+            "value": 2.481,
+            "ci_low": 2.396,
+            "ci_high": 2.566,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W8",
+          "start": [
+            -2.717,
+            4.888
+          ],
+          "end": [
+            -2.586,
+            6.098
+          ],
+          "length_m": {
+            "value": 1.217,
+            "ci_low": 1.132,
+            "ci_high": 1.303,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W9",
+          "start": [
+            -2.586,
+            6.098
+          ],
+          "end": [
+            -3.778,
+            6.227
+          ],
+          "length_m": {
+            "value": 1.199,
+            "ci_low": 1.113,
+            "ci_high": 1.284,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W10",
+          "start": [
+            -3.778,
+            6.227
+          ],
+          "end": [
+            -3.746,
+            6.522
+          ],
+          "length_m": {
+            "value": 0.297,
+            "ci_low": 0.181,
+            "ci_high": 0.414,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W11",
+          "start": [
+            -3.746,
+            6.522
+          ],
+          "end": [
+            -4.749,
+            6.63
+          ],
+          "length_m": {
+            "value": 1.008,
+            "ci_low": 0.892,
+            "ci_high": 1.125,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W12",
+          "start": [
+            -4.749,
+            6.63
+          ],
+          "end": [
+            -4.781,
+            6.335
+          ],
+          "length_m": {
+            "value": 0.297,
+            "ci_low": 0.181,
+            "ci_high": 0.414,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W13",
+          "start": [
+            -4.781,
+            6.335
+          ],
+          "end": [
+            -5.226,
+            6.383
+          ],
+          "length_m": {
+            "value": 0.448,
+            "ci_low": 0.363,
+            "ci_high": 0.533,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W14",
+          "start": [
+            -5.226,
+            6.383
+          ],
+          "end": [
+            -5.309,
+            5.614
+          ],
+          "length_m": {
+            "value": 0.773,
+            "ci_low": 0.688,
+            "ci_high": 0.858,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W15",
+          "start": [
+            -5.309,
+            5.614
+          ],
+          "end": [
+            -4.728,
+            5.551
+          ],
+          "length_m": {
+            "value": 0.584,
+            "ci_low": 0.553,
+            "ci_high": 0.615,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W16",
+          "start": [
+            -4.728,
+            5.551
+          ],
+          "end": [
+            -4.896,
+            3.991
+          ],
+          "length_m": {
+            "value": 1.57,
+            "ci_low": 1.537,
+            "ci_high": 1.602,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W17",
+          "start": [
+            -4.896,
+            3.991
+          ],
+          "end": [
+            -3.559,
+            3.847
+          ],
+          "length_m": {
+            "value": 1.344,
+            "ci_low": 1.314,
+            "ci_high": 1.375,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W18",
+          "start": [
+            -3.559,
+            3.847
+          ],
+          "end": [
+            -3.935,
+            0.353
+          ],
+          "length_m": {
+            "value": 3.514,
+            "ci_low": 3.482,
+            "ci_high": 3.547,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W19",
+          "start": [
+            -3.935,
+            0.353
+          ],
+          "end": [
+            -1.047,
+            0.042
+          ],
+          "length_m": {
+            "value": 2.905,
+            "ci_low": 2.874,
+            "ci_high": 2.936,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R1.W20",
+          "start": [
+            -1.047,
+            0.042
+          ],
+          "end": [
+            -0.75,
+            2.8
+          ],
+          "length_m": {
+            "value": 2.774,
+            "ci_low": 2.688,
+            "ci_high": 2.859,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        }
+      ],
+      "openings": [
+        {
+          "id": "R1.O1",
+          "type": "opening",
+          "wall_id": "R1.W17",
+          "width_m": {
+            "value": 0.775,
+            "ci_low": 0.692,
+            "ci_high": 0.857,
+            "confidence": 0.9,
+            "method": "gap between the jambs"
+          },
+          "offset_along_wall_m": {
+            "value": 0.686,
+            "ci_low": 0.603,
+            "ci_high": 0.768,
+            "confidence": 0.9
+          },
+          "connects_to": "R6"
+        },
+        {
+          "id": "R1.O2",
+          "type": "opening",
+          "wall_id": "R1.W2",
+          "width_m": {
+            "value": 1.041,
+            "ci_low": 0.794,
+            "ci_high": 1.288,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 0.449,
+            "ci_low": 0.367,
+            "ci_high": 0.532,
+            "confidence": 0.9
+          },
+          "connects_to": "R2"
+        },
+        {
+          "id": "R1.O3",
+          "type": "opening",
+          "wall_id": "R1.W4",
+          "width_m": {
+            "value": 0.815,
+            "ci_low": 0.568,
+            "ci_high": 1.061,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 0.496,
+            "ci_low": 0.413,
+            "ci_high": 0.578,
+            "confidence": 0.9
+          },
+          "connects_to": "R3"
+        },
+        {
+          "id": "R1.O4",
+          "type": "opening",
+          "wall_id": "R1.W9",
+          "width_m": {
+            "value": 1.069,
+            "ci_low": 0.823,
+            "ci_high": 1.316,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 0.603,
+            "ci_low": 0.521,
+            "ci_high": 0.685,
+            "confidence": 0.9
+          },
+          "connects_to": "R4"
+        }
+      ]
+    },
+    {
+      "id": "R2",
+      "label": "room 2",
+      "polygon": [
+        [
+          2.606,
+          2.431
+        ],
+        [
+          0.311,
+          2.678
+        ],
+        [
+          0.391,
+          3.423
+        ],
+        [
+          -0.37,
+          3.504
+        ],
+        [
+          -0.449,
+          2.767
+        ],
+        [
+          -0.724,
+          2.797
+        ],
+        [
+          -0.752,
+          2.535
+        ],
+        [
+          -0.48,
+          2.506
+        ],
+        [
+          -0.684,
+          0.606
+        ],
+        [
+          -0.342,
+          0.569
+        ],
+        [
+          -0.42,
+          -0.152
+        ],
+        [
+          2.296,
+          -0.444
+        ]
+      ],
+      "floor_area_m2": {
+        "value": 9.29,
+        "ci_low": 8.77,
+        "ci_high": 9.81,
+        "confidence": 0.9
+      },
+      "perimeter_m": {
+        "value": 13.98,
+        "ci_low": 13.53,
+        "ci_high": 14.43,
+        "confidence": 0.9
+      },
+      "ceiling_height_m": {
+        "value": 2.5,
+        "ci_low": 2.2,
+        "ci_high": 3.2,
+        "confidence": 0.9,
+        "observed": false,
+        "method": "not observed anywhere; typical residential range"
+      },
+      "walls": [
+        {
+          "id": "R2.W1",
+          "start": [
+            2.606,
+            2.431
+          ],
+          "end": [
+            0.311,
+            2.678
+          ],
+          "length_m": {
+            "value": 2.308,
+            "ci_low": 2.278,
+            "ci_high": 2.339,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W2",
+          "start": [
+            0.311,
+            2.678
+          ],
+          "end": [
+            0.391,
+            3.423
+          ],
+          "length_m": {
+            "value": 0.749,
+            "ci_low": 0.664,
+            "ci_high": 0.834,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W3",
+          "start": [
+            0.391,
+            3.423
+          ],
+          "end": [
+            -0.37,
+            3.504
+          ],
+          "length_m": {
+            "value": 0.765,
+            "ci_low": 0.68,
+            "ci_high": 0.85,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W4",
+          "start": [
+            -0.37,
+            3.504
+          ],
+          "end": [
+            -0.449,
+            2.767
+          ],
+          "length_m": {
+            "value": 0.742,
+            "ci_low": 0.625,
+            "ci_high": 0.858,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W5",
+          "start": [
+            -0.449,
+            2.767
+          ],
+          "end": [
+            -0.724,
+            2.797
+          ],
+          "length_m": {
+            "value": 0.276,
+            "ci_low": 0.191,
+            "ci_high": 0.361,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W6",
+          "start": [
+            -0.724,
+            2.797
+          ],
+          "end": [
+            -0.752,
+            2.535
+          ],
+          "length_m": {
+            "value": 0.263,
+            "ci_low": 0.178,
+            "ci_high": 0.348,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W7",
+          "start": [
+            -0.752,
+            2.535
+          ],
+          "end": [
+            -0.48,
+            2.506
+          ],
+          "length_m": {
+            "value": 0.274,
+            "ci_low": 0.243,
+            "ci_high": 0.305,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W8",
+          "start": [
+            -0.48,
+            2.506
+          ],
+          "end": [
+            -0.684,
+            0.606
+          ],
+          "length_m": {
+            "value": 1.911,
+            "ci_low": 1.879,
+            "ci_high": 1.943,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W9",
+          "start": [
+            -0.684,
+            0.606
+          ],
+          "end": [
+            -0.342,
+            0.569
+          ],
+          "length_m": {
+            "value": 0.344,
+            "ci_low": 0.312,
+            "ci_high": 0.376,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W10",
+          "start": [
+            -0.342,
+            0.569
+          ],
+          "end": [
+            -0.42,
+            -0.152
+          ],
+          "length_m": {
+            "value": 0.725,
+            "ci_low": 0.692,
+            "ci_high": 0.757,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W11",
+          "start": [
+            -0.42,
+            -0.152
+          ],
+          "end": [
+            2.296,
+            -0.444
+          ],
+          "length_m": {
+            "value": 2.732,
+            "ci_low": 2.701,
+            "ci_high": 2.763,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R2.W12",
+          "start": [
+            2.296,
+            -0.444
+          ],
+          "end": [
+            2.606,
+            2.431
+          ],
+          "length_m": {
+            "value": 2.892,
+            "ci_low": 2.861,
+            "ci_high": 2.923,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        }
+      ],
+      "openings": [
+        {
+          "id": "R2.O1",
+          "type": "opening",
+          "wall_id": "R2.W4",
+          "width_m": {
+            "value": 1.041,
+            "ci_low": 0.794,
+            "ci_high": 1.288,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 0.292,
+            "ci_low": 0.21,
+            "ci_high": 0.375,
+            "confidence": 0.9
+          },
+          "connects_to": "R1"
+        }
+      ]
+    },
+    {
+      "id": "R3",
+      "label": "room 3",
+      "polygon": [
+        [
+          0.403,
+          3.433
+        ],
+        [
+          0.323,
+          2.684
+        ],
+        [
+          2.718,
+          2.426
+        ],
+        [
+          3.045,
+          5.47
+        ],
+        [
+          0.531,
+          5.74
+        ],
+        [
+          0.387,
+          4.406
+        ],
+        [
+          0.081,
+          4.438
+        ],
+        [
+          -0.022,
+          3.478
+        ]
+      ],
+      "floor_area_m2": {
+        "value": 7.95,
+        "ci_low": 7.41,
+        "ci_high": 8.49,
+        "confidence": 0.9
+      },
+      "perimeter_m": {
+        "value": 11.8,
+        "ci_low": 11.43,
+        "ci_high": 12.16,
+        "confidence": 0.9
+      },
+      "ceiling_height_m": {
+        "value": 2.5,
+        "ci_low": 2.2,
+        "ci_high": 3.2,
+        "confidence": 0.9,
+        "observed": false,
+        "method": "not observed anywhere; typical residential range"
+      },
+      "walls": [
+        {
+          "id": "R3.W1",
+          "start": [
+            0.403,
+            3.433
+          ],
+          "end": [
+            0.323,
+            2.684
+          ],
+          "length_m": {
+            "value": 0.753,
+            "ci_low": 0.664,
+            "ci_high": 0.842,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R3.W2",
+          "start": [
+            0.323,
+            2.684
+          ],
+          "end": [
+            2.718,
+            2.426
+          ],
+          "length_m": {
+            "value": 2.409,
+            "ci_low": 2.324,
+            "ci_high": 2.494,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R3.W3",
+          "start": [
+            2.718,
+            2.426
+          ],
+          "end": [
+            3.045,
+            5.47
+          ],
+          "length_m": {
+            "value": 3.061,
+            "ci_low": 2.976,
+            "ci_high": 3.146,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R3.W4",
+          "start": [
+            3.045,
+            5.47
+          ],
+          "end": [
+            0.531,
+            5.74
+          ],
+          "length_m": {
+            "value": 2.529,
+            "ci_low": 2.498,
+            "ci_high": 2.56,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R3.W5",
+          "start": [
+            0.531,
+            5.74
+          ],
+          "end": [
+            0.387,
+            4.406
+          ],
+          "length_m": {
+            "value": 1.343,
+            "ci_low": 1.311,
+            "ci_high": 1.374,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R3.W6",
+          "start": [
+            0.387,
+            4.406
+          ],
+          "end": [
+            0.081,
+            4.438
+          ],
+          "length_m": {
+            "value": 0.308,
+            "ci_low": 0.223,
+            "ci_high": 0.393,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R3.W7",
+          "start": [
+            0.081,
+            4.438
+          ],
+          "end": [
+            -0.022,
+            3.478
+          ],
+          "length_m": {
+            "value": 0.966,
+            "ci_low": 0.925,
+            "ci_high": 1.006,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R3.W8",
+          "start": [
+            -0.022,
+            3.478
+          ],
+          "end": [
+            0.403,
+            3.433
+          ],
+          "length_m": {
+            "value": 0.428,
+            "ci_low": 0.312,
+            "ci_high": 0.544,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        }
+      ],
+      "openings": [
+        {
+          "id": "R3.O1",
+          "type": "opening",
+          "wall_id": "R3.W7",
+          "width_m": {
+            "value": 0.815,
+            "ci_low": 0.568,
+            "ci_high": 1.061,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 0.481,
+            "ci_low": 0.399,
+            "ci_high": 0.563,
+            "confidence": 0.9
+          },
+          "connects_to": "R1"
+        }
+      ]
+    },
+    {
+      "id": "R4",
+      "label": "room 4",
+      "polygon": [
+        [
+          -2.605,
+          6.1
+        ],
+        [
+          -2.269,
+          9.22
+        ],
+        [
+          -3.439,
+          9.346
+        ],
+        [
+          -3.499,
+          8.796
+        ],
+        [
+          -4.95,
+          8.952
+        ],
+        [
+          -5.226,
+          6.383
+        ],
+        [
+          -4.781,
+          6.335
+        ],
+        [
+          -4.749,
+          6.63
+        ],
+        [
+          -3.741,
+          6.522
+        ],
+        [
+          -3.773,
+          6.226
+        ]
+      ],
+      "floor_area_m2": {
+        "value": 7.16,
+        "ci_low": 6.6,
+        "ci_high": 7.73,
+        "confidence": 0.9
+      },
+      "perimeter_m": {
+        "value": 12.14,
+        "ci_low": 11.68,
+        "ci_high": 12.61,
+        "confidence": 0.9
+      },
+      "ceiling_height_m": {
+        "value": 2.5,
+        "ci_low": 2.2,
+        "ci_high": 3.2,
+        "confidence": 0.9,
+        "observed": false,
+        "method": "not observed anywhere; typical residential range"
+      },
+      "walls": [
+        {
+          "id": "R4.W1",
+          "start": [
+            -2.605,
+            6.1
+          ],
+          "end": [
+            -2.269,
+            9.22
+          ],
+          "length_m": {
+            "value": 3.137,
+            "ci_low": 3.052,
+            "ci_high": 3.223,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R4.W2",
+          "start": [
+            -2.269,
+            9.22
+          ],
+          "end": [
+            -3.439,
+            9.346
+          ],
+          "length_m": {
+            "value": 1.177,
+            "ci_low": 1.145,
+            "ci_high": 1.208,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R4.W3",
+          "start": [
+            -3.439,
+            9.346
+          ],
+          "end": [
+            -3.499,
+            8.796
+          ],
+          "length_m": {
+            "value": 0.553,
+            "ci_low": 0.522,
+            "ci_high": 0.584,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R4.W4",
+          "start": [
+            -3.499,
+            8.796
+          ],
+          "end": [
+            -4.95,
+            8.952
+          ],
+          "length_m": {
+            "value": 1.46,
+            "ci_low": 1.426,
+            "ci_high": 1.494,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R4.W5",
+          "start": [
+            -4.95,
+            8.952
+          ],
+          "end": [
+            -5.226,
+            6.383
+          ],
+          "length_m": {
+            "value": 2.584,
+            "ci_low": 2.499,
+            "ci_high": 2.669,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R4.W6",
+          "start": [
+            -5.226,
+            6.383
+          ],
+          "end": [
+            -4.781,
+            6.335
+          ],
+          "length_m": {
+            "value": 0.448,
+            "ci_low": 0.362,
+            "ci_high": 0.534,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R4.W7",
+          "start": [
+            -4.781,
+            6.335
+          ],
+          "end": [
+            -4.749,
+            6.63
+          ],
+          "length_m": {
+            "value": 0.297,
+            "ci_low": 0.181,
+            "ci_high": 0.414,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R4.W8",
+          "start": [
+            -4.749,
+            6.63
+          ],
+          "end": [
+            -3.741,
+            6.522
+          ],
+          "length_m": {
+            "value": 1.014,
+            "ci_low": 0.928,
+            "ci_high": 1.099,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R4.W9",
+          "start": [
+            -3.741,
+            6.522
+          ],
+          "end": [
+            -3.773,
+            6.226
+          ],
+          "length_m": {
+            "value": 0.297,
+            "ci_low": 0.181,
+            "ci_high": 0.414,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R4.W10",
+          "start": [
+            -3.773,
+            6.226
+          ],
+          "end": [
+            -2.605,
+            6.1
+          ],
+          "length_m": {
+            "value": 1.174,
+            "ci_low": 1.142,
+            "ci_high": 1.207,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        }
+      ],
+      "openings": [
+        {
+          "id": "R4.O1",
+          "type": "opening",
+          "wall_id": "R4.W10",
+          "width_m": {
+            "value": 1.069,
+            "ci_low": 0.823,
+            "ci_high": 1.316,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 0.59,
+            "ci_low": 0.508,
+            "ci_high": 0.673,
+            "confidence": 0.9
+          },
+          "connects_to": "R1"
+        }
+      ]
+    },
+    {
+      "id": "R5",
+      "label": "room 5",
+      "polygon": [
+        [
+          -5.2,
+          2.261
+        ],
+        [
+          -6.906,
+          2.445
+        ],
+        [
+          -7.238,
+          -0.636
+        ],
+        [
+          -5.531,
+          -0.82
+        ]
+      ],
+      "floor_area_m2": {
+        "value": 5.32,
+        "ci_low": 5.09,
+        "ci_high": 5.55,
+        "confidence": 0.9
+      },
+      "perimeter_m": {
+        "value": 9.63,
+        "ci_low": 9.54,
+        "ci_high": 9.73,
+        "confidence": 0.9
+      },
+      "ceiling_height_m": {
+        "value": 2.5,
+        "ci_low": 2.2,
+        "ci_high": 3.2,
+        "confidence": 0.9,
+        "observed": false,
+        "method": "not observed anywhere; typical residential range"
+      },
+      "walls": [
+        {
+          "id": "R5.W1",
+          "start": [
+            -5.2,
+            2.261
+          ],
+          "end": [
+            -6.906,
+            2.445
+          ],
+          "length_m": {
+            "value": 1.716,
+            "ci_low": 1.68,
+            "ci_high": 1.753,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R5.W2",
+          "start": [
+            -6.906,
+            2.445
+          ],
+          "end": [
+            -7.238,
+            -0.636
+          ],
+          "length_m": {
+            "value": 3.099,
+            "ci_low": 3.068,
+            "ci_high": 3.131,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R5.W3",
+          "start": [
+            -7.238,
+            -0.636
+          ],
+          "end": [
+            -5.531,
+            -0.82
+          ],
+          "length_m": {
+            "value": 1.716,
+            "ci_low": 1.68,
+            "ci_high": 1.753,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R5.W4",
+          "start": [
+            -5.531,
+            -0.82
+          ],
+          "end": [
+            -5.2,
+            2.261
+          ],
+          "length_m": {
+            "value": 3.099,
+            "ci_low": 3.068,
+            "ci_high": 3.131,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        }
+      ],
+      "openings": [
+        {
+          "id": "R5.O1",
+          "type": "opening",
+          "wall_id": "R5.W4",
+          "width_m": {
+            "value": 0.8,
+            "ci_low": 0.553,
+            "ci_high": 1.047,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 2.655,
+            "ci_low": 2.572,
+            "ci_high": 2.737,
+            "confidence": 0.9
+          },
+          "connects_to": "R6"
+        }
+      ]
+    },
+    {
+      "id": "R6",
+      "label": "room 6",
+      "polygon": [
+        [
+          -5.407,
+          0.513
+        ],
+        [
+          -4.243,
+          0.388
+        ],
+        [
+          -3.867,
+          3.881
+        ],
+        [
+          -4.878,
+          3.99
+        ],
+        [
+          -5.065,
+          2.248
+        ],
+        [
+          -5.219,
+          2.264
+        ]
+      ],
+      "floor_area_m2": {
+        "value": 3.84,
+        "ci_low": 3.26,
+        "ci_high": 4.43,
+        "confidence": 0.9
+      },
+      "perimeter_m": {
+        "value": 9.37,
+        "ci_low": 9.0,
+        "ci_high": 9.74,
+        "confidence": 0.9
+      },
+      "ceiling_height_m": {
+        "value": 2.5,
+        "ci_low": 2.2,
+        "ci_high": 3.2,
+        "confidence": 0.9,
+        "observed": false,
+        "method": "not observed anywhere; typical residential range"
+      },
+      "walls": [
+        {
+          "id": "R6.W1",
+          "start": [
+            -5.407,
+            0.513
+          ],
+          "end": [
+            -4.243,
+            0.388
+          ],
+          "length_m": {
+            "value": 1.171,
+            "ci_low": 1.086,
+            "ci_high": 1.256,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R6.W2",
+          "start": [
+            -4.243,
+            0.388
+          ],
+          "end": [
+            -3.867,
+            3.881
+          ],
+          "length_m": {
+            "value": 3.513,
+            "ci_low": 3.397,
+            "ci_high": 3.63,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R6.W3",
+          "start": [
+            -3.867,
+            3.881
+          ],
+          "end": [
+            -4.878,
+            3.99
+          ],
+          "length_m": {
+            "value": 1.017,
+            "ci_low": 0.986,
+            "ci_high": 1.048,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R6.W4",
+          "start": [
+            -4.878,
+            3.99
+          ],
+          "end": [
+            -5.065,
+            2.248
+          ],
+          "length_m": {
+            "value": 1.752,
+            "ci_low": 1.636,
+            "ci_high": 1.868,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R6.W5",
+          "start": [
+            -5.065,
+            2.248
+          ],
+          "end": [
+            -5.219,
+            2.264
+          ],
+          "length_m": {
+            "value": 0.154,
+            "ci_low": 0.096,
+            "ci_high": 0.248,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R6.W6",
+          "start": [
+            -5.219,
+            2.264
+          ],
+          "end": [
+            -5.407,
+            0.513
+          ],
+          "length_m": {
+            "value": 1.761,
+            "ci_low": 1.645,
+            "ci_high": 1.878,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        }
+      ],
+      "openings": [
+        {
+          "id": "R6.O1",
+          "type": "opening",
+          "wall_id": "R6.W3",
+          "width_m": {
+            "value": 0.775,
+            "ci_low": 0.692,
+            "ci_high": 0.857,
+            "confidence": 0.9,
+            "method": "gap between the jambs"
+          },
+          "offset_along_wall_m": {
+            "value": 0.349,
+            "ci_low": 0.267,
+            "ci_high": 0.432,
+            "confidence": 0.9
+          },
+          "connects_to": "R1"
+        },
+        {
+          "id": "R6.O2",
+          "type": "opening",
+          "wall_id": "R6.W6",
+          "width_m": {
+            "value": 0.8,
+            "ci_low": 0.553,
+            "ci_high": 1.047,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 0.446,
+            "ci_low": 0.363,
+            "ci_high": 0.528,
+            "confidence": 0.9
+          },
+          "connects_to": "R5"
+        },
+        {
+          "id": "R6.O3",
+          "type": "opening",
+          "wall_id": "R6.W4",
+          "width_m": {
+            "value": 0.8,
+            "ci_low": 0.553,
+            "ci_high": 1.047,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 0.457,
+            "ci_low": 0.375,
+            "ci_high": 0.539,
+            "confidence": 0.9
+          },
+          "connects_to": "R7"
+        }
+      ]
+    },
+    {
+      "id": "R7",
+      "label": "room 7",
+      "polygon": [
+        [
+          -5.118,
+          3.155
+        ],
+        [
+          -4.956,
+          4.662
+        ],
+        [
+          -6.668,
+          4.847
+        ],
+        [
+          -6.831,
+          3.339
+        ]
+      ],
+      "floor_area_m2": {
+        "value": 2.61,
+        "ci_low": 2.47,
+        "ci_high": 2.75,
+        "confidence": 0.9
+      },
+      "perimeter_m": {
+        "value": 6.48,
+        "ci_low": 6.39,
+        "ci_high": 6.57,
+        "confidence": 0.9
+      },
+      "ceiling_height_m": {
+        "value": 2.5,
+        "ci_low": 2.2,
+        "ci_high": 3.2,
+        "confidence": 0.9,
+        "observed": false,
+        "method": "not observed anywhere; typical residential range"
+      },
+      "walls": [
+        {
+          "id": "R7.W1",
+          "start": [
+            -5.118,
+            3.155
+          ],
+          "end": [
+            -4.956,
+            4.662
+          ],
+          "length_m": {
+            "value": 1.517,
+            "ci_low": 1.485,
+            "ci_high": 1.548,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R7.W2",
+          "start": [
+            -4.956,
+            4.662
+          ],
+          "end": [
+            -6.668,
+            4.847
+          ],
+          "length_m": {
+            "value": 1.722,
+            "ci_low": 1.691,
+            "ci_high": 1.753,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R7.W3",
+          "start": [
+            -6.668,
+            4.847
+          ],
+          "end": [
+            -6.831,
+            3.339
+          ],
+          "length_m": {
+            "value": 1.517,
+            "ci_low": 1.485,
+            "ci_high": 1.548,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R7.W4",
+          "start": [
+            -6.831,
+            3.339
+          ],
+          "end": [
+            -5.118,
+            3.155
+          ],
+          "length_m": {
+            "value": 1.722,
+            "ci_low": 1.691,
+            "ci_high": 1.753,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        }
+      ],
+      "openings": [
+        {
+          "id": "R7.O1",
+          "type": "opening",
+          "wall_id": "R7.W1",
+          "width_m": {
+            "value": 0.8,
+            "ci_low": 0.553,
+            "ci_high": 1.047,
+            "confidence": 0.9,
+            "observed": false,
+            "method": "walked through, jambs not seen: typical door width"
+          },
+          "offset_along_wall_m": {
+            "value": 0.399,
+            "ci_low": 0.317,
+            "ci_high": 0.481,
+            "confidence": 0.9
+          },
+          "connects_to": "R6"
+        }
+      ]
+    },
+    {
+      "id": "R8",
+      "label": "room 8",
+      "polygon": [
+        [
+          -3.254,
+          -0.021
+        ],
+        [
+          -1.105,
+          -0.252
+        ],
+        [
+          -1.073,
+          0.047
+        ],
+        [
+          -3.961,
+          0.357
+        ],
+        [
+          -4.104,
+          -0.969
+        ],
+        [
+          -3.364,
+          -1.048
+        ]
+      ],
+      "floor_area_m2": {
+        "value": 1.64,
+        "ci_low": 1.1,
+        "ci_high": 2.19,
+        "confidence": 0.9
+      },
+      "perimeter_m": {
+        "value": 8.48,
+        "ci_low": 8.09,
+        "ci_high": 8.87,
+        "confidence": 0.9
+      },
+      "ceiling_height_m": {
+        "value": 2.5,
+        "ci_low": 2.2,
+        "ci_high": 3.2,
+        "confidence": 0.9,
+        "observed": false,
+        "method": "not observed anywhere; typical residential range"
+      },
+      "walls": [
+        {
+          "id": "R8.W1",
+          "start": [
+            -3.254,
+            -0.021
+          ],
+          "end": [
+            -1.105,
+            -0.252
+          ],
+          "length_m": {
+            "value": 2.161,
+            "ci_low": 2.045,
+            "ci_high": 2.278,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R8.W2",
+          "start": [
+            -1.105,
+            -0.252
+          ],
+          "end": [
+            -1.073,
+            0.047
+          ],
+          "length_m": {
+            "value": 0.301,
+            "ci_low": 0.211,
+            "ci_high": 0.391,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R8.W3",
+          "start": [
+            -1.073,
+            0.047
+          ],
+          "end": [
+            -3.961,
+            0.357
+          ],
+          "length_m": {
+            "value": 2.905,
+            "ci_low": 2.82,
+            "ci_high": 2.99,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R8.W4",
+          "start": [
+            -3.961,
+            0.357
+          ],
+          "end": [
+            -4.104,
+            -0.969
+          ],
+          "length_m": {
+            "value": 1.334,
+            "ci_low": 1.218,
+            "ci_high": 1.45,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R8.W5",
+          "start": [
+            -4.104,
+            -0.969
+          ],
+          "end": [
+            -3.364,
+            -1.048
+          ],
+          "length_m": {
+            "value": 0.744,
+            "ci_low": 0.659,
+            "ci_high": 0.829,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        },
+        {
+          "id": "R8.W6",
+          "start": [
+            -3.364,
+            -1.048
+          ],
+          "end": [
+            -3.254,
+            -0.021
+          ],
+          "length_m": {
+            "value": 1.033,
+            "ci_low": 0.943,
+            "ci_high": 1.123,
+            "confidence": 0.9,
+            "method": "corner to corner, inside faces"
+          }
+        }
+      ],
+      "openings": []
+    }
+  ],
+  "plan": {
+    "footprint_area_m2": {
+      "value": 56.98,
+      "ci_low": 52.63,
+      "ci_high": 61.32,
+      "confidence": 0.9
+    },
+    "adjacency": [
+      {
+        "room_a": "R1",
+        "room_b": "R2",
+        "via": [
+          "R1.O2",
+          "R2.O1"
+        ]
+      },
+      {
+        "room_a": "R1",
+        "room_b": "R3",
+        "via": [
+          "R1.O3",
+          "R3.O1"
+        ]
+      },
+      {
+        "room_a": "R1",
+        "room_b": "R4",
+        "via": [
+          "R1.O4",
+          "R4.O1"
+        ]
+      },
+      {
+        "room_a": "R1",
+        "room_b": "R6",
+        "via": [
+          "R1.O1",
+          "R6.O1"
+        ]
+      },
+      {
+        "room_a": "R5",
+        "room_b": "R6",
+        "via": [
+          "R5.O1",
+          "R6.O2"
+        ]
+      },
+      {
+        "room_a": "R6",
+        "room_b": "R7",
+        "via": [
+          "R6.O3",
+          "R7.O1"
+        ]
+      }
+    ],
+    "stitch": {
+      "method": "single_map",
+      "low_confidence": false
+    },
+    "drift": {
+      "enabled": true,
+      "correction": [
+        "jump_cut",
+        "loop_closure",
+        "wall_plane_factors",
+        "floor_plane_factor"
+      ],
+      "loop_closures": 10,
+      "heading_change_deg": 4.39,
+      "notes": "1 ARKit relocalisation jump(s) turned into links, 1 tied back to the start of the walk; 8 of 27 loop candidates accepted; wall heading p90 4.74 -> 1.67 deg; wall map area 14.4 -> 11.0 m2; max position correction 0.60 m"
+    }
+  },
+  "damage": [],
+  "concealed_flags": [],
+  "scope": [],
+  "quality": {
+    "low_confidence": true,
+    "warnings": [
+      "opening widths are coarse (5 cm plan grid); image-edge refinement not built yet",
+      "R1: ceiling not observed; height is a prior with a wide range",
+      "R2: ceiling not observed; height is a prior with a wide range",
+      "R3: ceiling not observed; height is a prior with a wide range",
+      "R4: ceiling not observed; height is a prior with a wide range",
+      "R5: ceiling not observed; height is a prior with a wide range",
+      "R6: ceiling not observed; height is a prior with a wide range",
+      "R7: ceiling not observed; height is a prior with a wide range",
+      "R8: ceiling not observed; height is a prior with a wide range",
+      "LiDAR depth corrected by +11.9 mm (calibrated on a 2020 iPad Pro against laser scans; not yet verified on iPhone, so ceiling intervals keep the full bias allowance)",
+      "damage: 0 region(s) from a zero-shot image model (CLIP), not yet tested on staged damage; check each against its detection confidence. 0 concealed-damage flag(s), 0 scope item(s)"
+    ]
+  },
+  "render": {
+    "plan_svg": "examples/lidar_1a8384c3f6/plan.svg"
+  }
+}

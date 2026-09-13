@@ -1,0 +1,14 @@
+{
+  "benchmark": "timing_cold_video",
+  "capture": "c00a170fe1 video (37 s clip, 111 key frames)",
+  "machine": "Apple M4, 16 GB",
+  "seconds": 378,
+  "pipeline_runtime_s": 359.1,
+  "rooms": 2,
+  "footprint_m2": 20.32,
+  "cached_run": {
+    "rooms": 3,
+    "footprint_m2": 19.82
+  },
+  "note": "cold cache: DA3 runs live on every key frame. A fresh DA3 run on Apple's GPU is not bit-identical to the cached one, and plans from video depth are sensitive to small changes: 2 rooms, 20.32 m2 here against 3 rooms, 19.82 m2 from the cache. Cached runs replay exactly."
+}

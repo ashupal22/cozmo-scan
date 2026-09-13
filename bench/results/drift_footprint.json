@@ -1,0 +1,133 @@
+{
+  "benchmark": "drift_footprint",
+  "code_commit": "ac0c0f6",
+  "walks": {
+    "c00a170fe1": {
+      "off": {
+        "rooms": 3,
+        "footprint_m2": 24.06,
+        "interval": [
+          22.55,
+          25.58
+        ],
+        "adjacencies": 2,
+        "seconds": 8.9,
+        "drift": {
+          "enabled": false,
+          "correction": [],
+          "notes": "switched off"
+        }
+      },
+      "on": {
+        "rooms": 3,
+        "footprint_m2": 24.62,
+        "interval": [
+          23.03,
+          26.21
+        ],
+        "adjacencies": 2,
+        "seconds": 13.1,
+        "drift": {
+          "enabled": true,
+          "correction": [
+            "loop_closure",
+            "wall_plane_factors",
+            "floor_plane_factor"
+          ],
+          "loop_closures": 2,
+          "heading_change_deg": 1.45,
+          "notes": "0 ARKit relocalisation jump(s) turned into links, 0 tied back to the start of the walk; 2 of 3 loop candidates accepted; wall heading p90 1.94 -> 1.39 deg; wall map area 3.8 -> 3.0 m2; max position correction 0.12 m"
+        }
+      }
+    },
+    "1a8384c3f6": {
+      "off": {
+        "rooms": 7,
+        "footprint_m2": 60.68,
+        "interval": [
+          56.04,
+          65.32
+        ],
+        "adjacencies": 6,
+        "seconds": 39.8,
+        "drift": {
+          "enabled": false,
+          "correction": [],
+          "notes": "switched off"
+        }
+      },
+      "on": {
+        "rooms": 8,
+        "footprint_m2": 56.98,
+        "interval": [
+          52.63,
+          61.32
+        ],
+        "adjacencies": 6,
+        "seconds": 30.7,
+        "drift": {
+          "enabled": true,
+          "correction": [
+            "jump_cut",
+            "loop_closure",
+            "wall_plane_factors",
+            "floor_plane_factor"
+          ],
+          "loop_closures": 10,
+          "heading_change_deg": 4.39,
+          "notes": "1 ARKit relocalisation jump(s) turned into links, 1 tied back to the start of the walk; 8 of 27 loop candidates accepted; wall heading p90 4.74 -> 1.67 deg; wall map area 14.4 -> 11.0 m2; max position correction 0.60 m"
+        }
+      }
+    },
+    "c7d28f72c6": {
+      "off": {
+        "rooms": 12,
+        "footprint_m2": 58.04,
+        "interval": [
+          54.24,
+          61.84
+        ],
+        "adjacencies": 11,
+        "seconds": 92.9,
+        "drift": {
+          "enabled": false,
+          "correction": [],
+          "notes": "switched off"
+        }
+      },
+      "on": {
+        "rooms": 9,
+        "footprint_m2": 56.07,
+        "interval": [
+          52.47,
+          59.68
+        ],
+        "adjacencies": 9,
+        "seconds": 133.3,
+        "drift": {
+          "enabled": true,
+          "correction": [
+            "loop_closure",
+            "wall_plane_factors",
+            "floor_plane_factor"
+          ],
+          "loop_closures": 56,
+          "heading_change_deg": 0.52,
+          "notes": "0 ARKit relocalisation jump(s) turned into links, 0 tied back to the start of the walk; 56 of 73 loop candidates accepted; wall heading p90 1.77 -> 1.69 deg; wall map area 18.2 -> 14.1 m2; max position correction 0.21 m"
+        }
+      }
+    }
+  },
+  "same_flat": {
+    "off": {
+      "c7d28f72c6": 58.04,
+      "1a8384c3f6": 60.68,
+      "difference_pct": 4.4
+    },
+    "on": {
+      "c7d28f72c6": 56.07,
+      "1a8384c3f6": 56.98,
+      "difference_pct": 1.6
+    }
+  }
+}
