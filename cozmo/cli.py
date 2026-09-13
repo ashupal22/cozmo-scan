@@ -46,14 +46,14 @@ def cmd_run(args) -> int:
     src = Path(args.path)
     out = Path(args.out) if args.out else Path("out") / (src.stem if src.is_file() else src.name)
     try:
-        result = run(args.path, out, drift=not args.no_drift)
+        result = run(args.path, out, drift=not args.no_drift, damage=not args.no_damage)
     except NotBuiltYet as e:
         print(f"error: {e}", file=sys.stderr)
         return 3
     doc = json.loads(result.read_text())
     footprint = doc["plan"]["footprint_area_m2"]
     print(f"{args.path}: {doc['capture']['tier']} tier, {len(doc['rooms'])} rooms, footprint {footprint['value']} m2 "
-          f"[{footprint['ci_low']}, {footprint['ci_high']}], "
+          f"[{footprint['ci_low']}, {footprint['ci_high']}], {len(doc['damage'])} damage region(s), "
           f"{doc['capture']['runtime_s']} s")
     for warning in doc["quality"]["warnings"]:
         print(f"  warning: {warning}")
@@ -91,6 +91,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("path", help="capture to measure: Stray Scanner LiDAR folder, video file, or folder of room photo folders")
     p.add_argument("--out", help="output folder (default: out/<capture name>)")
     p.add_argument("--no-drift", action="store_true", help="skip drift correction (for the on/off ablation)")
+    p.add_argument("--no-damage", action="store_true", help="skip damage detection (faster)")
     p.set_defaults(func=cmd_run)
 
     p = sub.add_parser("validate", help="check an output JSON file against the schema")

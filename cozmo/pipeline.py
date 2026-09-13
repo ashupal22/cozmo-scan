@@ -59,6 +59,7 @@ class Plan:
     outlines: dict      # room id -> RoomOutline
     correction: object = None  # FrameCorrection (per-frame corrected camera positions), None without drift correction
     photo_rooms: list = None   # photo tier: the per-room models (cozmo/photo/room.py), each in its own frame
+    capture: object = None     # LiDAR and video tiers: the capture, for damage detection on its images
 
 
 def plan_capture(capture, path: Path, tier: str, t0: float, drift: bool = True, jumps=None, relocalized: bool = True,
@@ -91,7 +92,7 @@ def plan_capture(capture, path: Path, tier: str, t0: float, drift: bool = True, 
     if method_note:
         document["quality"]["warnings"].append(method_note)
     yaw = next(iter(outlines.values())).yaw_deg
-    return Plan(document, yaw, points, floor, outlines, correction)
+    return Plan(document, yaw, points, floor, outlines, correction, capture=capture)
 
 
 def run_lidar(path: Path, drift: bool = True) -> Plan:
@@ -185,7 +186,7 @@ def run_photos(path: Path, work_dir: Path, fx_over_width: float | None = None) -
     return Plan(document, yaw, None, None, outlines, None, rooms)
 
 
-def run(path, out_dir, drift: bool = True) -> Path:
+def run(path, out_dir, drift: bool = True, damage: bool = True) -> Path:
     path, out_dir = Path(path), Path(out_dir)
     tier = detect_tier(path)
     if tier == "lidar":
@@ -197,6 +198,11 @@ def run(path, out_dir, drift: bool = True) -> Path:
         plan = run_photos(path, out_dir / "photo_work")
     document, yaw = plan.document, plan.yaw_deg
     out_dir.mkdir(parents=True, exist_ok=True)
+    if damage:
+        from cozmo.damage.assess import assess
+        assess(plan, tier, out_dir)
+    else:
+        document["quality"]["warnings"].append("damage detection switched off (--no-damage)")
     svg_path = out_dir / "plan.svg"
     document["render"] = {"plan_svg": str(svg_path)}
     problems = validate_output(document)
