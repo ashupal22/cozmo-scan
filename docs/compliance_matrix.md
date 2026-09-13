@@ -14,13 +14,13 @@ Paths are relative to the repo root. Results are in `bench/results/`. Our gate I
 
 | # | Requirement (brief) | File path | Artifact | Status |
 |---|---|---|---|---|
-| 1.1 | Capture route: a stock capture protocol, one page, followable by a non-engineer | `docs/capture_protocol.md` | Route 2. Stray Scanner (LiDAR) and the iPhone Camera app (video, photos), with install, walk, duration, what to avoid and hand-off | **Met** |
+| 1.1 | Capture route: a stock capture protocol, one page, followable by a non-engineer | `docs/capture_protocol.md`, `docs/capture_protocol.pdf` (one A4 page) | Route 2. Stray Scanner (LiDAR) and the iPhone Camera app (video, photos), with install, walk, duration, what to avoid and hand-off | **Met** |
 | 1.2 | Three input tiers, all mandatory, same output contract | `cozmo/pipeline.py` (`run_lidar`, `run_video`, `run_photos`), `cozmo/ingest/detect.py` | `cozmo run <capture>` detects the tier. All three write the same schema, validated on every run | **Met** (runs), accuracy per tier below |
 | 1.3 | Photos: 2–8 stills per room, per-room folders, stitched whole-property plan, wider intervals | `cozmo/photo/room.py`, `cozmo/stitch/solver.py`, `bench/results/timing.json` | Room box per folder from Depth Anything 3, joined through doors; intervals widened 5.1× | **Partial**: runs end to end, but stitching often leaves several groups (G-PHOTO-STITCH below) |
 | 1.4 | Video: handheld walkthrough, iPhone 15 or newer | `cozmo/video/`, `bench/results/timing.json` | Key frames → DA3 poses and depth → metric scale → drift correction → layout | **Met** (runs); accuracy fails G-WALL-VIDEO |
 | 1.5 | LiDAR: depth, poses, intrinsics on Pro devices | `cozmo/ingest/stray.py`, `cozmo/geometry/`, `cozmo/slam/`, `bench/results/timing.json` | Fusion, depth-bias correction, drift correction, walls-first layout | **Met** (runs) |
 | 1.6 | Intervals widen honestly as sensor data thins | `cozmo/export/document.py`, `bench/calibrate_intervals.py`, `bench/photo_vs_lidar.py` | LiDAR: measured error model. Video ×4.5 (holds on 6 of 7 walls). Photo ×5.1 (holds on 17 of 18). Unseen values are marked `observed: false` with a wide range | **Met** on our benchmark; thin evidence (two flats) |
-| 1.7 | Device matrix: tier by hardware, and the accuracy each tier honestly delivers | `docs/capture_protocol.md` (bottom), `README.md` | Table with measured accuracy and gate status per tier | **Met** |
+| 1.7 | Device matrix: tier by hardware, and the accuracy each tier honestly delivers | `docs/device_matrix.md`, `README.md` | Table with measured accuracy and gate status per tier | **Met** |
 
 ## Part 2: output contract
 
@@ -83,7 +83,7 @@ Paths are relative to the repo root. Results are in `bench/results/`. Our gate I
 |---|---|---|---|---|
 | 5.1 | Commit as you work | git history | 70+ commits, each with its own evidence; predictions committed before results | **Met** |
 | D.1 | Compliance matrix | `docs/compliance_matrix.md` | This file | **Met** |
-| D.2 | Capture route and device matrix | `docs/capture_protocol.md` | One page plus matrix | **Met** |
+| D.2 | Capture route and device matrix | `docs/capture_protocol.md` (+ `.pdf`, one A4 page), `docs/device_matrix.md` | One-page protocol, checked by rendering it (`scripts/report_pdf.py docs/capture_protocol.md 1`), plus the matrix | **Met** |
 | D.3 | README to running on a fresh capture in < 15 min on a clean machine, one command per capture | `README.md`, `scripts/install.sh`, `scripts/fetch_models.py` | Tested in a fresh venv: install 87 s with warm caches; at `caefd8c` all 114 tests pass there, and LiDAR and photo captures run. Cold download about 3.3 GB | **Met** on macOS/Apple silicon; Linux untested |
 | D.4 | Reproduction bundle: regenerate every number from raw inputs; caches must replay and the live path must run | `bench/reproduce.sh`, `scripts/fetch_external.py`, `data/README.md` | One script for every benchmark. Model caches are keyed by input content and replay exactly (fix-off rerun = before run, to the cm²); the live path regenerates them | **Met** (caches regenerate; they are not shipped) |
 | D.5 | Benchmark report: gates at all three tiers, repeatability table, head-to-head table, timing | `docs/benchmark_report.md`, `bench/README.md` | Tables with source files | **Partial**: the head-to-head table is empty (3.1) |
