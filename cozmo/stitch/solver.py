@@ -10,14 +10,12 @@ explained and tries every compatible door of every room not yet placed, and also
 (outside, or a room without photos). Each candidate plan is scored:
   + a bonus per door pair, less a penalty for width disagreement
   + further door pairs that line up by themselves (confirmations)
-  + wall length shared with rooms already placed
-  + filling a concave spot of the plan rather than sticking out of it (homes are compact): the growth of the
-    plan's convex hull, less the room's own area
   - overlap with rooms already placed, beyond what outline noise explains (large overlaps are rejected)
   - doors that open into a placed room where that room has no door
   - leaving a door unexplained (small), and starting a separate island when no door fits (large)
 Turns are snapped to quarter turns of the neighbouring room when within SNAP_DEG, since the walls of one home
-meet at right angles almost everywhere.
+meet at right angles almost everywhere. Scores for shared walls and for compactness were tried and made door choices
+worse (bench/README.md), so geometry only rules placements out, through overlaps and doors that open into rooms.
 """
 from __future__ import annotations
 
@@ -35,9 +33,6 @@ SNAP_DEG = 8.0
 MATCH_BONUS = 5.0
 CONFIRM_BONUS = 3.0
 CONFIRM_REACH_M = 0.35
-SHARED_WALL_PER_M = 0.5
-HULL_PER_M2 = 0.0               # compactness weight: off until bench/stitch_benchmark.py settles it
-WALL_REACH_M = 0.35
 OVERLAP_SHRINK_M = 0.05
 OVERLAP_PER_M2 = 4.0
 MAX_OVERLAP_SHARE = 0.15
@@ -110,7 +105,6 @@ class _State:
     placements: dict
     polygons: dict
     union: object
-    near_walls: object
     pairs: list
     explained: frozenset                # (room, door): paired, or declared to lead elsewhere
     islands: int
@@ -157,9 +151,7 @@ def _add_room(rooms: list[Room], state: _State, b: int, placement: Placement, pa
     if overlap > MAX_OVERLAP_SHARE * poly.area:
         return None
     union = state.union.union(poly)
-    protrusion = (union.convex_hull.area - state.union.convex_hull.area) - poly.area
-    score = (state.score + MATCH_BONUS - 0.5 * (width_gap / WIDTH_SIGMA_M) ** 2 - OVERLAP_PER_M2 * overlap
-             + SHARED_WALL_PER_M * poly.exterior.intersection(state.near_walls).length - HULL_PER_M2 * protrusion)
+    score = state.score + MATCH_BONUS - 0.5 * (width_gap / WIDTH_SIGMA_M) ** 2 - OVERLAP_PER_M2 * overlap
     placements = {**state.placements, b: placement}
     pairs = state.pairs + [pair]
     explained = set(state.explained) | {(pair.room_a, pair.door_a), (pair.room_b, pair.door_b)}
@@ -186,8 +178,7 @@ def _add_room(rooms: list[Room], state: _State, b: int, placement: Placement, pa
                 cd, nd, _ = _door_in_plan(rooms, placements, r, i)
                 if poly.contains(Point(*(cd + nd * BEYOND_DOOR_M))):
                     score -= BLOCKED_DOOR_PENALTY
-    return _State(placements, {**state.polygons, b: poly}, union, union.buffer(WALL_REACH_M), pairs,
-                  frozenset(explained), state.islands, score)
+    return _State(placements, {**state.polygons, b: poly}, union, pairs, frozenset(explained), state.islands, score)
 
 
 def _meets(cd, nd, wd, ce, ne, we) -> bool:
@@ -200,13 +191,13 @@ def _start(rooms: list[Room], order: list[int], k: int, state: _State | None) ->
     if state is None:
         placement = Placement(0.0, (0.0, 0.0))
         poly = _plan_polygon(rooms[k], placement)
-        return _State({k: placement}, {k: poly}, poly, poly.buffer(WALL_REACH_M), [], frozenset(), 1, 0.0)
+        return _State({k: placement}, {k: poly}, poly, [], frozenset(), 1, 0.0)
     minx, miny, _, _ = Polygon(rooms[k].polygon).bounds
     placement = Placement(0.0, (state.union.bounds[2] + ISLAND_GAP_M - minx, state.union.bounds[1] - miny))
     poly = _plan_polygon(rooms[k], placement)
     union = state.union.union(poly)
-    return _State({**state.placements, k: placement}, {**state.polygons, k: poly}, union, union.buffer(WALL_REACH_M),
-                  list(state.pairs), state.explained, state.islands + 1, state.score - ISLAND_PENALTY)
+    return _State({**state.placements, k: placement}, {**state.polygons, k: poly}, union, list(state.pairs),
+                  state.explained, state.islands + 1, state.score - ISLAND_PENALTY)
 
 
 def _expand(rooms: list[Room], order: list[int], state: _State) -> list[_State] | None:
