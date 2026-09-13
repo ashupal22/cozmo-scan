@@ -39,7 +39,7 @@ being the team whose ranges mean what they say is the thing we can win today.
 
 | Tier | What arrives | Command | Cold time on an M4 |
 |---|---|---|---|
-| LiDAR | Stray Scanner export folder (AirDrop) | `cozmo run <folder>` | 19 s for a 3-room flat |
+| LiDAR | Stray Scanner export folder (AirDrop) | `cozmo run <folder>` | 22–30 s for a 3-room flat, about 100 s for a whole flat |
 | Video | one `.mov` (AirDrop) | `cozmo run <file>.mov` | about 6 s per second of clip; about 13 min for a 2 minute clip |
 | Photo | photos sorted into one folder per room | `cozmo run <folder>` | about 15 s per room |
 
@@ -72,8 +72,9 @@ rehearse it the evening before.
 
 ## Questions to have answers ready for, tools closed
 
-- **Why does video miss by so much?** The error is in the camera path, not the depth: with LiDAR poses and video
-  depth the footprint is unbiased.
+- **Why does video miss by so much?** Mostly the camera path: with ARKit's path and the same video depth, wall-map
+  agreement rises from 0.39–0.55 to 0.76–0.88. Room building on video depth still loses up to about 23% of footprint
+  (−11.1%, +2.0%, −22.6%), so the depth matters too.
 - **Your fix-loop prediction was wrong. What happened?** `docs/fix_loop.md` — root cause, the shipped fix, the
   measured result, and why it is switched off.
 - **Why walls first?** Repeatability. Rooms reach their walls behind furniture, so two walks of the same flat

@@ -10,7 +10,7 @@ One command (`cozmo run <capture>`) turns a Stray Scanner LiDAR export, an iPhon
 |---|---|---|---|
 | Runs cold from a fresh install | yes | yes | yes |
 | Accuracy we can show | Ceiling within 15 mm on 6/6 laser-truth walks; wall-to-wall distances within 1.36 cm of laser on 4 of 4 pairs; same flat walked twice agrees within 1.6% footprint | Walls 8–16% off LiDAR; 0 of 22 gate walls within 3% | Room boxes 26% off (median); 1 of 18 within 8% |
-| Intervals hold on our benchmark | ceiling interval carries the 13 mm bias | 6 of 7 walls (×4.5) | 17 of 18 dimensions (×5.1) |
+| Intervals hold on our benchmark | 6 of 6 laser-truth ceilings, 4 of 4 wall distances (at least ±3.0 cm) | 6 of 7 walls (×4.5) | 17 of 18 dimensions (×5.1) |
 | Gates met | G-CEIL (public data), G-DRIFT | — | — |
 
 The honest position: the LiDAR tier is the product today; the video and photo tiers run end to end and say how wrong they may be, but miss their gates. The fix loop targeted the worst gate (G-WALL-VIDEO), shipped a fix, measured it worse, and switched it off with a post-mortem (section 7). What we could not do without a device and a tape measure: tape ground truth, staged damage, and the head-to-head against a consumer app.
@@ -32,11 +32,11 @@ capture ─► ingest ─► per-frame depth + camera poses ─► fusion ─►
 - **Drift correction** (`cozmo/slam`) is described in section 4.
 - **Planes**: the floor and ceiling are the horizontal planes with the largest covered area, not the most points, which rejects table tops (a table top once moved a floor by 221 mm).
 - **Walls-first layout** (`cozmo/geometry/layout.py`): wall faces are fitted from points seen above an adaptive height, the plan is split into inside and outside by a min cut over line cells, faces are paired into walls, corners snapped, rooms split where the floor narrows at a doorway, and openings kept only with proof (the walk passed through, or floor was seen at the line). If the walls are not at right angles it falls back to rooms traced from the seen floor.
-- **Document** (`cozmo/export`): every measurement is a value with `ci_low`, `ci_high`, `confidence` and, when the sensor never saw it, `observed: false`.
+- **Document** (`cozmo/export`): every measurement is a value with `ci_low`, `ci_high`, `confidence` and, when the sensor never saw it, `observed: false`. Each run writes `result.json` (validated against our schema), `plan.svg` and `summary.md` (room width × length, ceiling height and door widths, with ranges). The formats are in `docs/data_formats.md`.
 
 ## 3. Tier design and device matrix
 
-**LiDAR.** The phone's depth is trusted and ARKit's poses are corrected (section 4). On ARKitScenes, whose laser scans are registered to every frame, device depth reads 9–16 mm short on every walk (median −11.9 mm), so 11.9 mm is added to every depth pixel along its ray (`LIDAR_DEPTH_OFFSET_M`). Measured leave-one-venue-out, this took ceiling height from 1/6 to 6/6 walks within 15 mm. On the same scans the distance between opposite walls went from -2.0 cm to -0.0 cm (median), all 4 measurable pairs within max(2 cm, 1%) (`bench/arkitscenes_wall_distances.py`; sensor and fusion only, the layout cannot run on these scans). The calibration comes from a 2020 iPad Pro; until a tape-measured iPhone room confirms it, ceiling intervals keep the full 13 mm bias term.
+**LiDAR.** The phone's depth is trusted and ARKit's poses are corrected (section 4). On ARKitScenes, whose laser scans are registered to every frame, device depth reads 9–16 mm short on every walk (median −11.9 mm), so 11.9 mm is added to every depth pixel along its ray (`LIDAR_DEPTH_OFFSET_M`). Measured leave-one-venue-out, this took ceiling height from 1/6 to 6/6 walks within 15 mm. On the same scans the distance between opposite walls went from −2.0 cm to 0.0 cm (median), all 4 measurable pairs within max(2 cm, 1%) (`bench/arkitscenes_wall_distances.py`; sensor and fusion only, the layout cannot run on these scans). The calibration comes from a 2020 iPad Pro; until a tape-measured iPhone room confirms it, ceiling intervals keep the full 13 mm bias term.
 
 **Video.** No sensor depth and no poses, so both come from Depth Anything 3 (DA3), Apache-licensed models only.
 - **Runs of 12 key frames**, sharing 4 frames with the next run, go through DA3-BASE, with cameras solved from its ray output. Inside a run DA3 is accurate: 1–2 cm and about 1° per frame pair. Longer runs fold opposite white walls together.
@@ -45,14 +45,14 @@ capture ─► ingest ─► per-frame depth + camera poses ─► fusion ─►
 - **Chaining**: runs are chained through their shared frames with per-run log scales solved jointly (Huber), levelled on floor and wall normals, and passed to the same fusion, drift correction and layout as LiDAR. The layout tolerances scale with wall scatter: 4.8 cm here against 2.0 cm for LiDAR.
 - **Found along the way**: Stray's video lags its poses by about 75 ms. This mattered for evaluation, not for the product.
 
-**Photo.** Each room folder is one DA3 run (2–8 views), scaled by DA3METRIC with the EXIF focal, and levelled.
+**Photo.** Each room folder is one DA3 run (2–8 views), scaled by DA3METRIC with the EXIF focal, and levelled. On real iPhone 12 Pro HEIC photos the EXIF focal length, which sets the scale, is read within 1% of the camera's own (`bench/iphone_photo_check.py`).
 - **Room box**: the room is modelled as a right-angled box. On each side the wall is the farthest face with at least half the best coverage (nearer faces are furniture).
 - **Unseen side**: a side no photo saw is closed at the camera, because the protocol has the photos taken from the doorway. It gets a 0.5 m face uncertainty.
 - **Doors**: wall gaps through which the photos see floor-level surfaces beyond (windows have sills, so they do not qualify), plus the doorway the photos were taken from, at a typical width.
 - **Stitching**: rooms are joined by a beam search over door pairings (`cozmo/stitch/solver.py`). Paired doors must face opposite ways a wall's thickness apart, with widths that agree; overlaps are penalised or rejected, and so are doors that open into another room's wall. Rooms no door joins are set beside the plan and flagged.
 
 **Damage, flags, scope** (all tiers, `cozmo/damage`).
-- **Damage regions**: CLIP ViT-B/32 scores 12 tiles per image against prompts for 5 damage classes and 22 undamaged things. A winning tile's depth pixels are placed on the plan with the corrected poses, assigned to the nearest wall, floor or ceiling, and measured on that surface. Tiles on one surface are merged, and two views are required.
+- **Damage regions**: CLIP ViT-B/32 scores 12 tiles per image against prompts for 5 damage classes and 22 undamaged things. A winning tile's depth pixels are placed on the plan with the corrected poses, assigned to the nearest wall, floor or ceiling, and measured on that surface. Tiles on one surface are merged, and two views are required. CLIP also gives the mirror, glass and wet-floor warnings (section 8). It never changes a measurement, and `--no-damage` switches it off.
 - **Concealed-damage flags**: six rules (ceiling water, low wall water, mold, peeling paint, long crack, hole), each naming its evidence.
 - **Scope**: repair line items keyed to surfaces, with quantities from the plan's intervals.
 
@@ -139,7 +139,7 @@ The root cause was partly right: the camera path is the main loss. But the mecha
 - **Long videos:** DA3 takes about 2.1 s per key frame on an M4, so a 2-minute clip (360 key frames at 3 fps) takes about 13 minutes cold. We tried capping at 120 key frames to keep runs short. On our 115 s walk (1.05 fps) the plan collapsed to 1 room at -86% footprint, and its interval missed the LiDAR value, against -13% with all frames. DA3 needs neighbouring key frames to overlap, so the cap is 360: the protocol's longest clip runs at full rate, and only longer clips are thinned.
 - **Fresh model runs are not bit-identical:** DA3 on Apple's GPU gives slightly different outputs on a fresh run, and room building on video depth is sensitive to them. c00a170fe1's video plan was 3 rooms and 19.82 m² from the cache, and 2 rooms and 20.32 m² on a fresh run. Cached runs replay exactly.
 - **Standing still and sweeping:** rooms are grown from where the phone walked. On two public ARKitScenes scans, where the phone stayed within about 1 m, the layout found a single 3 m² room in rooms of about 20 m². The protocol's walk along the walls avoids this. It is also why ARKitScenes can test where the sensor puts walls (section 3) but not our layout's wall lengths.
-- **Openings:** detection and widths do not repeat between two walks of the same flat: 23 vs 12 openings. Of 7 doors found in both, only one was measured jamb to jamb both times, and those widths differ by 13.0 cm. Doors walked through without both jambs in view get a typical width with a ±0.25 m interval. G-OPEN would fail; the fix is to see both jambs (the protocol's walk-through step) and to refine edges on the images.
+- **Openings:** windows are not detected; every opening found is a door or wall gap. Door detection and widths do not repeat between two walks of the same flat: 23 vs 12 openings. Of 7 doors found in both, only one was measured jamb to jamb both times, and those widths differ by 13.0 cm. Doors walked through without both jambs in view get a typical width with a ±0.25 m interval. G-OPEN would fail; the fix is to see both jambs (the protocol's walk-through step) and to refine edges on the images.
 - **Non-right-angled rooms:** the walls-first layout needs right angles; otherwise it falls back to floor-traced outlines, which stop at furniture.
 
 ## 9. What comes next

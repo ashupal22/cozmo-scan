@@ -2,7 +2,7 @@
 
 Turn iPhone photos, a video, or a LiDAR scan of a home into a measured floor plan. The plan comes with damage regions, concealed-damage flags, a repair scope, and a 90% interval on every number.
 
-Built for the Cozmo AI Applied AI case study. Start with the [compliance matrix](docs/compliance_matrix.md), then the [technical report](docs/technical_report.md).
+Built for the Cozmo AI Applied AI case study. Start with [`SUBMISSION.md`](SUBMISSION.md): what is submitted, the reading order, how the pipeline works, and a user guide. Then read the [compliance matrix](docs/compliance_matrix.md) and the [technical report](docs/technical_report.pdf).
 
 ## What each tier delivers today
 
@@ -37,7 +37,7 @@ cozmo run path/to/walkthrough.mov           # video tier
 cozmo run path/to/photos                    # photo tier: photos/kitchen/*.heic, photos/bedroom 1/*.heic, ...
 ```
 
-The tier is detected from the input. Each run writes `out/<name>/result.json` (schema: [`schema/output.schema.json`](schema/output.schema.json)) `out/<name>/plan.svg` and `out/<name>/summary.md` (each room's width × length, ceiling height and door widths, with ranges). It also prints that table and the warnings. Other commands:
+The tier is detected from the input. Each run writes `out/<name>/result.json` (schema: [`schema/output.schema.json`](schema/output.schema.json)), `out/<name>/plan.svg` and `out/<name>/summary.md` (each room's width × length, ceiling height and door widths, with ranges). It also prints that table and the warnings. Input and output formats, and why they were chosen, are in [`docs/data_formats.md`](docs/data_formats.md). Other commands:
 - `cozmo inspect <capture>` summarises a capture.
 - `cozmo validate <result.json>` checks a file against the schema.
 - `--no-drift` runs the drift ablation, and `--no-damage` skips damage detection.
@@ -79,7 +79,7 @@ bash bench/reproduce.sh                      # every benchmark below, writes ben
 | Number | Script | Result file | Explained in |
 |---|---|---|---|
 | Ceiling and floor vs laser, before and after bias correction | `bench/arkitscenes_planes.py` | `arkitscenes_planes*.json` | `bench/README.md` |
-| Drift on and off, footprint ablation | `bench/drift_ablation.py` | `drift_ablation.json`, `drift_*_on/off.svg` | `bench/README.md` |
+| Drift on and off: map sharpness, and the footprint ablation with the shipped pipeline | `bench/drift_ablation.py`, `bench/drift_footprint.py` | `drift_ablation.json`, `drift_*_on/off.svg`, `drift_footprint.json` | `bench/README.md`, `docs/benchmark_report.md` |
 | Same flat twice (repeatability) | `bench/same_flat_plans.py` | `same_flat_plans.json` | `bench/README.md` |
 | Video scale and focal | `bench/video_scale.py` | `video_scale.json` | `bench/README.md` |
 | Video plans vs LiDAR, interval factor | `bench/video_vs_lidar.py`, `bench/calibrate_intervals.py` | `video_vs_lidar.json`, `video_intervals.json` | `bench/README.md` |
@@ -89,6 +89,9 @@ bash bench/reproduce.sh                      # every benchmark below, writes ben
 | Opening widths, walk against walk | `bench/same_flat_openings.py` | `same_flat_openings.json` | `bench/README.md` |
 | LiDAR wall-to-wall distances vs laser (ARKitScenes) | `bench/arkitscenes_wall_distances.py` | `arkitscenes_wall_distances.json` | `bench/README.md` |
 | Synthetic staged damage on our walk | `bench/staged_damage.py` | `staged_damage.json` | `bench/README.md` |
+| Real iPhone photos: EXIF focal length | `bench/iphone_photo_check.py` | `iphone_photo_check.json` | `bench/README.md` |
+| Video key-frame cap: 120 frames against all | `bench/video_vs_lidar.py --max-keyframes 120` | `video_cap120_1a8384c3f6.json` | `bench/README.md` |
+| Clean-clone reproduction check | `bench/compare_results.py` | `video_vs_lidar_head.json` | `docs/reproduction_check.md` |
 | Tape truth and head-to-head (when measured) | `bench/tape_truth.py` | `tape_truth.json` | `docs/benchmark_report.md` |
 | Fix loop before, after, ablation | `bench/video_vs_lidar.py` at the listed commits | `fix_loop/` | [`docs/fix_loop.md`](docs/fix_loop.md) |
 
@@ -99,16 +102,18 @@ Model outputs are cached under `data/derived/` and keyed by input content, so a 
 | What | Licence | Used for |
 |---|---|---|
 | Depth Anything 3: DA3-BASE, DA3METRIC-LARGE (ByteDance Seed) | Apache 2.0 | Camera poses and depth for video and photos; metric scale |
-| CLIP ViT-B/32 (OpenAI) | MIT | Zero-shot damage detection |
+| CLIP ViT-B/32 (OpenAI) | MIT | Zero-shot damage detection, and the mirror, glass and wet-floor warnings; never used for measurements |
 | ARKitScenes, 2 venues, 6 walks (Apple) | ARKitScenes licence: evaluation and publishing results allowed | LiDAR accuracy against laser ground truth |
 | HouseLayout3D (MIT) | MIT | Stitch benchmark: real buildings cut into rooms |
 | BD3 building defects, test split, via `chandrabhuma/building_defect_vqa` (Kottari and Arjunan) | CC-BY-4.0 re-release; used locally, never redistributed | Damage detector on 793 real defect photos |
+| heic.digital sample photos: two iPhone 12 Pro HEIC files | Free test samples; downloaded when the check runs, never redistributed | Checks that the photo tier reads a real iPhone photo's focal length |
 
 Everything runs on the local machine. No call goes to our infrastructure or to any paid API.
 
 ## Repository map
 
 ```
+SUBMISSION.md    start here: what is submitted, reading order, how it works, user guide
 cozmo/ingest     inputs: Stray Scanner, ARKitScenes, photos (EXIF focal), tier detection
 cozmo/geometry   fusion, floor and ceiling planes, walls-first room layout, openings
 cozmo/slam       drift correction: submaps, loop closures, pose graph
@@ -118,5 +123,6 @@ cozmo/stitch     joins separately measured rooms through their doors
 cozmo/damage     damage regions, concealed-damage rules, scope
 cozmo/export     JSON document, error model and intervals, plan drawing, validation
 bench/           every benchmark; results in bench/results/
-docs/            capture protocol, gates, fix loop, compliance matrix, technical report
+docs/            compliance matrix, technical and benchmark reports, fix loop, capture protocol, device matrix,
+                 data formats, gates, reproduction check, walk-in runbook
 ```

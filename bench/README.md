@@ -37,9 +37,9 @@ Negative ceiling error means the ceiling reads too low; positive floor error mea
 - ARKitScenes was captured on a 2020 iPad Pro, not an iPhone 15 or newer.
 - Laser-rendered frames were pre-filtered to agree with the device depth, which may flatter the device slightly.
 
-### Next candidate fix
+### Next candidate fix (since done)
 
-Calibrate the depth bias (as a constant offset or proportional to range, whichever fits the residuals) on held-out walks, then re-run. This is a candidate for the brief's fix loop, pending the full benchmark on all gates.
+Done as a separate improvement, not the scored fix loop. The depth bias is calibrated leave-one-venue-out and added to every depth value, and ceiling height went from 1 of 6 to 6 of 6 walks within 15 mm. See "Depth bias correction for LiDAR ceilings" below.
 
 ## Drift correction on and off (our three walks)
 
@@ -390,7 +390,7 @@ Our layout cannot run on ARKitScenes scans: the phone stays within about 1 m, an
 | 41142280 | 1.828 m | -3.33 cm | -1.22 cm |
 
 - **As recorded:** 2/4 within max(2 cm, 1%), median -2.0 cm. The sensor reads walls 10.6 mm too close (median over walks).
-- **With the shipped correction:** **4/4** within the gate, median -0.0 cm, |error| p90 1.36 cm; walls sit 3.8 mm close. This matches the ceiling result: the sensor reads short, and the correction removes it.
+- **With the shipped correction:** **4/4** within the gate, median 0.0 cm, |error| p90 1.36 cm; walls sit 3.8 mm close. This matches the ceiling result: the sensor reads short, and the correction removes it.
 - **Caveats:**
   - Only 4 distances: these small scans rarely see two opposite walls well.
   - This tests the sensor and fusion, not our wall snapping and corners. Those still need tape on our own rooms.

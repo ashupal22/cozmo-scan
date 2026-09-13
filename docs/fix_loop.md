@@ -2,6 +2,8 @@
 
 Written and committed before the fix is built or benchmarked, so the prediction below is on record ahead of the result.
 
+> A one-page copy of sections 1–4, with no number changed, is `docs/fix_loop_declaration.pdf` (added when the submission was prepared).
+
 ## 1. The worst-performing gate
 
 **G-WALL-VIDEO: video wall lengths within ±3%.** Measured against the LiDAR plans of the same walks (`bench/results/video_vs_lidar.json`, code `1d00698`):

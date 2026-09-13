@@ -6,11 +6,21 @@ committed file.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 R = ROOT / "bench" / "results"
 load = lambda name: json.loads((R / name).read_text())  # noqa: E731
+
+
+def stitch_words(note: str) -> str:
+    """'3 door pair(s) join 7 rooms into 4 group(s); ...' as plain words."""
+    m = re.match(r"(\d+) door pair\(s\) join (\d+) rooms into (\d+) group\(s\)", note)
+    if not m:
+        return note.split(";")[0]
+    pairs, rooms, groups = (int(x) for x in m.groups())
+    return (f"{rooms} rooms in {groups} group{'s' if groups != 1 else ''}, joined by {pairs} door pair{'s' if pairs != 1 else ''}")
 
 
 def main():
@@ -31,7 +41,7 @@ def main():
         w = walls_laser["summary"]["corrected"]
         lidar_walls = (f"Laser truth, ARKitScenes (sensor and fusion only; the layout cannot run on these scans): "
                        f"{w['within_max_2cm_1pct']} wall-to-wall distances within max(2 cm, 1%), median error "
-                       f"{w['error_cm_median']:+.1f} cm. No tape of our own rooms")
+                       f"{round(w['error_cm_median'], 1) + 0.0:.1f} cm. No tape of our own rooms")
     else:
         lidar_walls = "Not measured (no tape)"
     if staged:
@@ -71,8 +81,10 @@ def main():
         "- Our three Stray Scanner walks of one flat (`c7d28f72c6` and `1a8384c3f6` cover the whole flat, "
         "`c00a170fe1` part of it). They are the input for all three tiers: the LiDAR data itself, its RGB stream as "
         "the video, and stills cut from it as per-room photo folders.",
-        "- ARKitScenes: six walks in two venues with laser ground truth, for LiDAR floor and ceiling.",
+        "- ARKitScenes: six walks in two venues with laser ground truth, for LiDAR floor, ceiling and wall-to-wall distances.",
         "- HouseLayout3D: 23 real buildings cut into rooms, for the stitch solver.",
+        "- BD3: 793 real phone photos of wall defects, for the damage detector's classes.",
+        "- Two iPhone 12 Pro HEIC photos, for the photo tier's focal length from EXIF.",
         "",
         "**What is missing.** We had no tape or laser measurements of our own rooms, no staged damage, and no "
         "consumer-app capture. Video and photo accuracy is therefore measured against our LiDAR plans of the same "
@@ -94,7 +106,7 @@ def main():
         f"{openings['openings']['1a8384c3f6']} openings, {openings['paired']} paired, {openings['both_measured']} measured in both "
         f"({openings['abs_difference_cm_median']} cm apart); the rest typical 0.80 m (fail) | Not measured | Not measured |",
         f"| Stitched plan (G-PHOTO-STITCH, A-ADJ) | One connected map per walk | One connected map per walk | "
-        + "; ".join(f"{c}: {w['stitch']['notes'].split(';')[0]}" for c, w in photo["walks"].items())
+        + "; ".join(f"{c}: {stitch_words(w['stitch']['notes'])}" for c, w in photo["walks"].items())
         + f". HouseLayout3D: all doors right in {stitch['exact']['all_doors_right']} noise-free runs, "
         f"{stitch['photo']['all_doors_right']} with photo-like noise (fail) |",
         f"| Calibration: nominal 90% interval holds (A-CALIB) | Every wall and ceiling interval at least ±3.0 cm: holds {ceil_ok} of {len(ceil_rows)} laser-truth ceilings and "
