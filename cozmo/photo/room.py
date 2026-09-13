@@ -87,15 +87,14 @@ def room_capture(files: list[Path], cache_dir: Path, fx_over_width: float | None
     images = [rgb for rgb, _ in loaded]
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache = cache_dir / f"{_file_key(files)}.npz"
-    if cache.is_file():
-        z = np.load(cache)
-        vs = da3.ViewSet(z["depth"].astype(np.float32), z["conf"].astype(np.float32), z["w2c"], z["K"], tuple(z["size"]))
-        unit_metric = z["m1"].astype(np.float32)
-    else:
+    if not cache.is_file():
         vs = da3.run_views(images, process_res=vc.PROCESS_RES, ray_pose=vc.RAY_POSE)
         unit_metric = da3.metric_depth(images, fx_over_width=1.0, process_res=vc.PROCESS_RES)
         np.savez(cache, depth=vs.depth.astype(np.float16), conf=vs.conf.astype(np.float16), w2c=vs.world_to_cam,
                  K=vs.K, size=np.array(vs.size), m1=unit_metric.astype(np.float16))
+    z = np.load(cache)              # a first run reads back what it saved, so it matches every later run exactly
+    vs = da3.ViewSet(z["depth"].astype(np.float32), z["conf"].astype(np.float32), z["w2c"], z["K"], tuple(z["size"]))
+    unit_metric = z["m1"].astype(np.float32)
     n, (h, w) = len(files), vs.depth.shape[1:]
 
     exif = [f for _, f in loaded if f]
