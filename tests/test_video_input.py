@@ -45,3 +45,10 @@ def test_keyframe_cap_lowers_the_rate_and_benchmarks_can_switch_it_off(tmp_path)
     assert abs(keyframe_fps(clip, max_frames=12) - 1.2) < 0.05     # 12 frames over 10 s
     assert keyframe_fps(clip, max_frames=None) == KEYFRAME_FPS
     assert keyframe_fps(clip, max_frames=1000) == KEYFRAME_FPS
+
+
+def test_cap_keeps_the_protocols_longest_clip_at_full_rate():
+    """At 120 key frames our 115 s walk collapsed to one room (bench/results/video_cap120_1a8384c3f6.json). The capture
+    protocol allows 2 minutes, which must still run at the full key-frame rate."""
+    from cozmo.video.capture import KEYFRAME_FPS, MAX_KEYFRAMES
+    assert MAX_KEYFRAMES >= 120 * KEYFRAME_FPS
