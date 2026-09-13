@@ -14,7 +14,8 @@ load = lambda name: json.loads((R / name).read_text())  # noqa: E731
 
 
 def main():
-    video = load("fix_loop/ablation_none_video_vs_lidar.json")        # the shipped video tier (fix off)
+    # the shipped video tier: the latest-code run when present, else the fix-off run of the fix loop (same measurements)
+    video = load("video_vs_lidar_head.json") if (R / "video_vs_lidar_head.json").is_file() else load("fix_loop/ablation_none_video_vs_lidar.json")
     photo = load("photo_vs_lidar.json")
     planes = load("arkitscenes_planes_bias_corrected.json")
     stitch = load("stitch_benchmark.json")["summary"]

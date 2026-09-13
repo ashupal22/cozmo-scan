@@ -1,6 +1,6 @@
 # cozmo-scan: technical report
 
-Cozmo AI Applied AI case study, Round 2. Repo: `ashupal22/cozmo-scan`. Every number below comes from a script in `bench/` and a result file in `bench/results/`; the [compliance matrix](compliance_matrix.md) maps each requirement to its evidence.
+Cozmo AI Applied AI case study, Round 2. Repo: `ashupal22/cozmo-scan`. Every number below comes from a script in `bench/` and a result file in `bench/results/`; the [compliance matrix](compliance_matrix.md) maps each requirement to its evidence. Re-run from a clean clone, 8 of 9 benchmarks give the same numbers. Video gives the same measurements with wider interval bounds (`docs/reproduction_check.md`).
 
 ## 1. Summary
 

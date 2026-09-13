@@ -91,7 +91,7 @@ bash bench/reproduce.sh                      # every benchmark below, writes ben
 | Tape truth and head-to-head (when measured) | `bench/tape_truth.py` | `tape_truth.json` | `docs/benchmark_report.md` |
 | Fix loop before, after, ablation | `bench/video_vs_lidar.py` at the listed commits | `fix_loop/` | [`docs/fix_loop.md`](docs/fix_loop.md) |
 
-Model outputs are cached under `data/derived/` and keyed by input content, so a rerun replays them exactly. A fresh capture runs the models live.
+Model outputs are cached under `data/derived/` and keyed by input content, so a rerun replays them exactly. A fresh capture runs the models live. A re-run from a clean clone is recorded in [`docs/reproduction_check.md`](docs/reproduction_check.md): 8 of 9 benchmarks give the same numbers, and video gives the same measurements with wider interval bounds.
 
 ## Models and data used (disclosed)
 
