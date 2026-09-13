@@ -35,10 +35,14 @@ def true_walk(laps=2):
     return np.arange(len(xz)) / FPS, np.column_stack([xz[:, 0], np.full(len(xz), 1.5), xz[:, 1]]), heading
 
 
-def record(true_positions, heading, creep_deg=4.0, rise_m=0.02, snap_at=None):
-    """Recorded ARKit-style path: heading creeps, height rises; at snap_at ARKit relocalises onto the truth."""
+def record(true_positions, heading, creep_deg=4.0, rise_m=0.02, snap_at=None, break_at=None, break_deg=0.0,
+           break_shift_m=0.0):
+    """Recorded ARKit-style path: heading creeps, height rises; at snap_at ARKit relocalises onto the truth.
+    At break_at a video tracking break turns the rest of the walk by break_deg and shifts it by break_shift_m."""
     n = len(true_positions)
     theta = -np.radians(creep_deg) * np.arange(n) / n
+    if break_at is not None:
+        theta[break_at:] -= np.radians(break_deg)
     rise = rise_m * np.arange(n) / n
     if snap_at is not None:
         theta[snap_at:] -= theta[snap_at]
@@ -50,6 +54,8 @@ def record(true_positions, heading, creep_deg=4.0, rise_m=0.02, snap_at=None):
             recorded[i + 1] = true_positions[i + 1]
             continue
         step = yaw_matrix(theta[i]).T @ (true_positions[i + 1] - true_positions[i])
+        if break_at is not None and i + 1 == break_at:
+            step = step + [break_shift_m, 0.0, 0.0]
         recorded[i + 1] = recorded[i] + step + [0.0, rise[i + 1] - rise[i], 0.0]
     rotations = np.array([yaw_matrix(theta[i]).T @ yaw_matrix(-heading[i]) for i in range(n)])
     return recorded, rotations, theta
@@ -208,3 +214,25 @@ def test_a_snap_far_from_the_start_is_not_tied_to_it():
     points, _ = observe(true_positions, recorded, theta, np.random.default_rng(1))
     _, report = estimate_drift(FakeCapture(t, recorded, rotations), points)
     assert report.relocalizations == 1 and report.anchors == 0
+
+
+def test_a_video_tracking_break_is_held_loosely_and_reattached():
+    # As in a video walk: tracking was lost for a moment, and everything after it came out turned and shifted
+    t, true_positions, heading = true_walk()
+    brk = len(t) // 3
+    recorded, rotations, theta = record(true_positions, heading, creep_deg=2.0, break_at=brk, break_deg=25.0,
+                                        break_shift_m=0.25)
+    points, truth = observe(true_positions, recorded, theta, np.random.default_rng(3))
+    capture = FakeCapture(t, recorded, rotations)
+    correction, report = estimate_drift(capture, points, jumps=[(brk - 1, brk)], relocalized=False)
+    undeclared, _ = estimate_drift(capture, points, jumps=[])
+
+    before = distortion(points.xyz, truth)
+    after = distortion(correction.apply(points).xyz, truth)
+    after_undeclared = distortion(undeclared.apply(points).xyz, truth)
+    assert np.percentile(before, 90) > 0.3
+    assert np.median(after) < 0.02 and np.percentile(after, 90) < 0.05
+    assert np.percentile(after_undeclared, 90) > 2 * np.percentile(after, 90)
+    assert report.jumps[0]["kind"] == "tracking break"
+    assert report.relocalizations == 0 and report.anchors == 0
+    assert "tracking break" in report.to_schema()["notes"]

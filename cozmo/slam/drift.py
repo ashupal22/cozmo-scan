@@ -55,6 +55,8 @@ LOOP_MAX_AMBIGUITY = 0.85
 LOOP_SIGMA = (0.03, 0.5)
 RELOCALIZATION_SIGMA = (0.05, 1.0)
 ACROSS_JUMP_ODOMETRY_SIGMA = (0.5, 10.0)
+BREAK_ODOMETRY_SIGMA = (0.5, 20.0)  # video: tracking lost for a few frames; the step across is a rough guess
+BREAK_LOOP_SHIFT_M = 0.5            # each tracking break between two places widens the loop search this much
 ANCHOR_SIGMA = (0.05, 1.0)
 EARLY_WALK_FRACTION = 0.2          # "early" = the first 20% of the distance walked: little drift yet
 MIN_EARLY_WALK_M = 5.0
@@ -187,8 +189,13 @@ class DriftReport:
             correction.append("wall_plane_factors")
         if self.floor_priors:
             correction.append("floor_plane_factor")
-        notes = (f"{len(self.jumps)} ARKit relocalisation jump(s) turned into links, "
-                 f"{self.anchors} tied back to the start of the walk; "
+        breaks = sum(j.get("kind") == "tracking break" for j in self.jumps)
+        if breaks:
+            moves = f"{breaks} video tracking break(s) held loosely; "
+        else:
+            moves = (f"{len(self.jumps)} ARKit relocalisation jump(s) turned into links, "
+                     f"{self.anchors} tied back to the start of the walk; ")
+        notes = (moves +
                  f"{self.loops_accepted} of {self.loops_proposed} loop candidates accepted; "
                  f"wall heading p90 {self._fmt(self.wall_heading_p90_before_deg)} -> "
                  f"{self._fmt(self.wall_heading_p90_after_deg)} deg; "
@@ -333,10 +340,12 @@ def _anchor_links(positions: np.ndarray, submaps: list[Submap], n_segments: int)
     return links, agreement
 
 
-def _loop_links(capture, submaps: list[Submap], correction: "FrameCorrection", first_pass):
+def _loop_links(capture, submaps: list[Submap], correction: "FrameCorrection", first_pass, breaks: bool = False):
     """Loop closures matched on maps already straightened by the first pass (walls, floor, snaps), so a
     20-second local map is not itself bent by drift; each match is then re-expressed in recorded
-    coordinates for the final graph."""
+    coordinates for the final graph. With `breaks` (video), segments are joined only loosely: the first
+    pass fixes their headings from the walls, but their placement is off by up to about half a metre per
+    break, so the search between places in different segments widens accordingly."""
     t = capture.timestamps
     positions = np.asarray(capture.positions, float)
     walked = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(positions, axis=0), axis=1))])
@@ -363,6 +372,8 @@ def _loop_links(capture, submaps: list[Submap], correction: "FrameCorrection", f
             if distance > LOOP_RADIUS_M:
                 break
             yaw_bound, shift_bound = drift_bounds(abs(walked[submaps[b].anchor] - walked[submaps[a].anchor]))
+            if breaks:
+                shift_bound += BREAK_LOOP_SHIFT_M * abs(submaps[b].segment - submaps[a].segment)
             tree = trees.setdefault(a, cKDTree(maps[a][0]))
             d0, _ = tree.query(maps[b][0], distance_upper_bound=min(max(0.3, shift_bound), 0.6))
             if np.mean(np.isfinite(d0)) < LOOP_MIN_SHARED_BEFORE:
@@ -419,13 +430,16 @@ def _map_area(xz: np.ndarray) -> float:
     return float(len(np.unique(np.floor(xz / MAP_CELL_M).astype(np.int64), axis=0)) * MAP_CELL_M ** 2)
 
 
-def estimate_drift(capture, points: PointSet, jumps: list[tuple[int, int]] | None = None
-                   ) -> tuple[FrameCorrection, DriftReport]:
+def estimate_drift(capture, points: PointSet, jumps: list[tuple[int, int]] | None = None,
+                   relocalized: bool = True) -> tuple[FrameCorrection, DriftReport]:
     """Per-frame corrections for a walk. `capture` needs timestamps, positions, rotation(i) and len();
-    `points` must come from that capture (frame indices are sorted here if needed). `jumps` are pose
-    relocalisations as (frame before, frame after); None finds them in the positions, which suits ARKit
-    at 60 fps. Video poses chained from key frames have large normal steps and no relocalisations, so
-    the video tier passes []."""
+    `points` must come from that capture (frame indices are sorted here if needed).
+
+    `jumps` are (frame before, frame after); frames strictly between are dropped. None finds them in the
+    positions, which suits ARKit at 60 fps. With `relocalized` (ARKit), the pose after a jump is ARKit's
+    relocalised pose: the jump becomes a link, and a return near the start an anchor. Without it (video),
+    a jump is a tracking break: the step across it is only a rough guess, so it is held loosely and wall
+    directions, floors and loop closures place what follows."""
     t0 = time.time()
     if np.any(np.diff(points.frame) < 0):
         order = np.argsort(points.frame, kind="stable")
@@ -446,14 +460,19 @@ def estimate_drift(capture, points: PointSet, jumps: list[tuple[int, int]] | Non
         distance = float(np.linalg.norm(b.node.anchor - a.node.anchor))
         if a.segment == b.segment:
             odometry.append(Odometry(k, k + 1, *odometry_sigmas(distance)))
+        elif not relocalized:
+            before, after = jumps[a.segment]
+            report.jumps.append({"frame": after, "kind": "tracking break", "frames_dropped": after - before - 1})
+            odometry.append(Odometry(k, k + 1, *BREAK_ODOMETRY_SIGMA, smooth=False))
         else:
             before, after = jumps[a.segment]
             yaw, shift, metres, degrees = relocalization(capture, before, after)
             report.jumps.append({"frame": after, "metres": round(metres, 3), "degrees": round(degrees, 2)})
             links.append(Link(k, k + 1, yaw, shift, *RELOCALIZATION_SIGMA, kind="relocalization"))
             odometry.append(Odometry(k, k + 1, *ACROSS_JUMP_ODOMETRY_SIGMA, smooth=False))
-    anchors, report.anchor_wall_agreement = _anchor_links(positions, submaps, len(segments))
-    links += anchors
+    if relocalized:
+        anchors, report.anchor_wall_agreement = _anchor_links(positions, submaps, len(segments))
+        links += anchors
 
     if len(submaps) < 2:
         n = len(capture)
@@ -463,7 +482,7 @@ def estimate_drift(capture, points: PointSet, jumps: list[tuple[int, int]] | Non
     nodes = [s.node for s in submaps]
     first_pass = solve(nodes, odometry, links)
     straightened = _frame_correction(capture, submaps, segments, jumps, first_pass)
-    loops, report.loops_proposed = _loop_links(capture, submaps, straightened, first_pass)
+    loops, report.loops_proposed = _loop_links(capture, submaps, straightened, first_pass, breaks=not relocalized)
     solution = solve(nodes, odometry, links + loops)
     report.heading_priors_used = solution.heading_priors_used
     report.loops_accepted = sum(l.kind == "loop" for l in solution.links_used)
