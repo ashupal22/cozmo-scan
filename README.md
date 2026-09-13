@@ -29,7 +29,7 @@ pytest -q                   # 111 unit tests on synthetic data, about 45 s
 
 ## Capture, then one command
 
-Follow [`docs/capture_protocol.md`](docs/capture_protocol.md) (one page), then:
+Follow [`docs/capture_protocol.md`](docs/capture_protocol.md) (one page), then run the command below. The defense-day steps are in [`docs/walk_in.md`](docs/walk_in.md).
 
 ```bash
 cozmo run path/to/StrayScannerExport        # LiDAR tier

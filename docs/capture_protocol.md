@@ -25,20 +25,20 @@ Follow these steps exactly. Every "why" comes from a measured failure, listed in
 
 ## Tier 2: Video (any iPhone 15 or newer)
 
-1. Open the **Camera** app and choose Video, 4K or 1080p at 30 fps. Use the 1× lens; do not zoom, and do not use Cinematic or Action mode.
-2. Walk the same route as for LiDAR: the ceiling sweep in every room, through every doorway, back to the start.
-3. **Turn slowly**: take about 3 seconds for a quarter turn. *Why: faster turns in front of plain walls broke the camera path in our tests.*
-4. Hand-off: AirDrop the `.mov` file to the Mac.
-5. Run `cozmo run <file>.mov`.
+1. In **Settings → Camera → Record Video**, choose **1080p HD at 30 fps** and turn **HDR Video off**. *Why: our tests used standard 8-bit video.*
+2. Open the **Camera** app, choose Video, use the 1× lens. Do not zoom; do not use Cinematic or Action mode.
+3. Walk the same route as for LiDAR: the ceiling sweep in every room, through every doorway, back to the start. Allow about **30 seconds per room**, and keep the clip **under 3 minutes**. *Why: processing takes about 10 s per second of video.*
+4. **Turn slowly**: take about 3 seconds for a quarter turn. *Why: faster turns in front of plain walls broke the camera path in our tests.*
+5. Hand-off: AirDrop the `.mov` file to the Mac, then run `cozmo run <file>.mov`.
 
 ## Tier 3: Photos (any iPhone 15 or newer)
 
-1. For each room, make a folder named after it, for example `kitchen` or `bedroom 1`.
-2. Stand in the doorway. Hold the phone level at chest height, 1× lens.
-3. Take **6 to 8 photos while turning from left to right**, each overlapping the previous one by about a third. Every photo should show some floor and some ceiling. *Why: unrelated views made the camera estimates fail (angle errors of 44–171°); overlapping sweeps kept errors to a few degrees.*
-4. Also photograph each door from inside the room, straight on. *Why: rooms are joined into one plan through their doors.*
-5. Hand-off: put all room folders in one folder.
-6. Run `cozmo run <folder>`.
+Go room by room, finishing one room before starting the next. **At most 8 photos per room.**
+1. Stand in the room's doorway. Hold the phone level at chest height, 1× lens.
+2. Take **5 or 6 photos while turning from left to right**, each overlapping the previous one by about a third. Every photo should show some floor and some ceiling. *Why: unrelated views made the camera estimates fail (angle errors of 44–171°); overlapping sweeps kept errors to a few degrees.*
+3. Then take one photo of each **other** door of the room, from inside, straight on, with the door open. *Why: rooms are joined into one plan through their doors.*
+4. Hand-off: AirDrop all photos to the Mac. Make one folder, for example `home`. Inside it make one folder per room, named after the room (`kitchen`, `bedroom 1`), and drag each room's photos into its folder. They arrive in shooting order.
+5. Run `cozmo run home`.
 
 ## Output
 
