@@ -1,0 +1,32 @@
+{
+  "check": "iphone_photo_check",
+  "pixel_pitch_mm": 0.0014,
+  "photos": [
+    {
+      "sample": "old-safe-wall.heic",
+      "camera": "iPhone 12 Pro",
+      "upright_size": [
+        3024,
+        4032
+      ],
+      "exif_focal_mm": 4.2,
+      "exif_35mm_equivalent": 26,
+      "focal_px_from_exif": 3028.7,
+      "focal_px_reference": 3000.0,
+      "scale_error_pct": 0.96
+    },
+    {
+      "sample": "classic-car.heic",
+      "camera": "iPhone 12 Pro",
+      "upright_size": [
+        3024,
+        4032
+      ],
+      "exif_focal_mm": 4.2,
+      "exif_35mm_equivalent": 26,
+      "focal_px_from_exif": 3028.7,
+      "focal_px_reference": 3000.0,
+      "scale_error_pct": 0.96
+    }
+  ]
+}

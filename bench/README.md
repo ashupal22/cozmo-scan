@@ -427,3 +427,14 @@ least 1.645 × √2 × 13 mm = ±3.0 cm wide. On laser truth, with the shipped d
 The intervals are conservative, roughly twice the largest error. The bias allowance stays until the correction is
 confirmed on a tape-measured iPhone room, since it was calibrated on a 2020 iPad Pro.
 
+## Real iPhone photos: the photo tier's scale input (`bench/iphone_photo_check.py`)
+
+Our photo sets are stills cut from video, with no EXIF, so the EXIF path had only synthetic tests. On two public HEIC
+photos from an iPhone 12 Pro (downloaded when the check runs, never redistributed):
+- `load_photo` decodes them and reads the camera and focal length (26 mm equivalent).
+- It computes a focal length of 3028.7 px.
+- The reference is 3000.0 px: a 4.2 mm lens with 1.4 µm pixels.
+
+Largest scale error: 1.0%. The photo tier's scale on real iPhone photos rests on this value, so its error stays
+within the 2% the error model allows for a given focal length.
+
