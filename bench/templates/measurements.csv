@@ -1,0 +1,15 @@
+room,item,tape_m,app_m,notes
+room A,length (longest wall to wall),,,
+room A,width (shortest wall to wall),,,
+room A,ceiling height,,,
+room A,door width (clear gap between the frame edges),,,
+room B,length (longest wall to wall),,,
+room B,width (shortest wall to wall),,,
+room B,ceiling height,,,
+room B,door width (clear gap between the frame edges),,,
+damage 1,width,,,what it is (e.g. brown stain paper) and which wall
+damage 1,height,,,
+damage 1,bottom above floor,,,
+damage 2,width,,,
+damage 2,height,,,
+damage 2,bottom above floor,,,

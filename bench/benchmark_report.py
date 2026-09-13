@@ -125,14 +125,26 @@ def main():
         "",
         "| Room | Dimension | Tape | cozmo-scan (LiDAR) error | App error | Beat or tie |",
         "|---|---|---|---|---|---|",
+    ]
+    tape_file = R / "tape_truth.json"
+    h2h = json.loads(tape_file.read_text()).get("head_to_head") if tape_file.is_file() else None
+    if h2h:
+        for r in h2h["rows"]:
+            lines.append(f"| {r['room']} | {r['item']} | {r['tape']:.3f} m | {100 * r['error_m']:+.1f} cm | "
+                         f"{100 * r['app_error_m']:+.1f} cm | {'yes' if r['beat_or_tie'] else 'no'} |")
+        lines += ["", f"App: {h2h['app']}. Beat or tie on **{h2h['beat_or_tie']} of {h2h['shared_dimensions']}** shared "
+                  f"dimensions ({100 * h2h['share']:.0f}%; gate 70%: {'met' if h2h['gate_met'] else 'not met'}). Truth: tape. "
+                  f"Tie: within 1 cm of the app's error. Script: `bench/tape_truth.py`."]
+    else:
+        lines += [
         "| — | — | — | — | — | — |",
         "",
-        "**Not done.** It needs two of our rooms captured with a consumer app, and a tape measure for the truth, and we "
-        "had neither at the end. The plan for it:",
-        "1. Capture with Polycam (free tier) and Stray Scanner in the same session.",
-        "2. Tape every wall and opening.",
-        "3. Export Polycam's floor plan.",
-        "4. Compare dimension by dimension.",
+        "**Not done.** It needs two of our rooms captured with a consumer app, and a tape measure for the truth. The "
+        "script is ready (`bench/tape_truth.py`, template `bench/templates/measurements.csv`):",
+        "1. Tape two rectangular rooms: length, width, ceiling height, a door width.",
+        "2. Scan the same rooms with magicplan (free) and read off its values.",
+        "3. Compare with our LiDAR plan of the same rooms, dimension by dimension."]
+    lines += [
         "",
         "## Timing (Apple M4, 16 GB)",
         "",

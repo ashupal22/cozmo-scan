@@ -58,11 +58,10 @@ Footprints 55.76 / 54.71 m² (1.9% apart); dimensions within the gate: 3/14. **G
 |---|---|---|---|---|---|
 | — | — | — | — | — | — |
 
-**Not done.** It needs two of our rooms captured with a consumer app, and a tape measure for the truth, and we had neither at the end. The plan for it:
-1. Capture with Polycam (free tier) and Stray Scanner in the same session.
-2. Tape every wall and opening.
-3. Export Polycam's floor plan.
-4. Compare dimension by dimension.
+**Not done.** It needs two of our rooms captured with a consumer app, and a tape measure for the truth. The script is ready (`bench/tape_truth.py`, template `bench/templates/measurements.csv`):
+1. Tape two rectangular rooms: length, width, ceiling height, a door width.
+2. Scan the same rooms with magicplan (free) and read off its values.
+3. Compare with our LiDAR plan of the same rooms, dimension by dimension.
 
 ## Timing (Apple M4, 16 GB)
 
