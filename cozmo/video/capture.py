@@ -53,6 +53,8 @@ METRIC_SAMPLE_EVERY = 4         # key frames between metric-depth samples
 METRIC_SIGMA = 0.07             # per-frame scatter of DA3METRIC's scale against LiDAR on c00a (6.3%)
 SEAM_SIGMA_MIN = 0.01
 MIN_FLOOR_NORMALS = 300         # below this a run is not levelled on its own floor (c00a: 36 -> 36 deg wrong, 417 -> 1.8 deg)
+BREAK_CONF = 2.0                # a key-frame pair is doubtful when a frame's median DA3 confidence is below this
+LONG_BREAK_PAIRS = 3            # a longer run of doubtful pairs drops the frames inside it
 FOCAL_SIGMA_GIVEN = 0.02
 FOCAL_SIGMA_LINES_MIN = 0.015   # room-line focal: bootstrap spread, but never below this (errors 0.0%, 1.6%)
 FOCAL_SIGMA_DA3 = 0.10          # DA3's own focal: 10% too long on both our walks
@@ -61,6 +63,11 @@ FOCAL_SIGMA_DA3 = 0.10          # DA3's own focal: 10% too long on both our walk
 # The walks cover two flats and one camera, so the calibration carries a 2% allowance.
 METRIC_DEPTH_GAIN = 1.07
 METRIC_BIAS_SIGMA = 0.02
+# After the gain, a small bias by range remains: video depth reads a few percent long up close and short far
+# away. Conditioned on the video depth itself (what is known when running), LiDAR / video = exp(a) video^b,
+# fitted on all three walks by bench/video_scale.py; applied inside the calibrated range only.
+RANGE_A, RANGE_B = -0.0119, 0.0253
+RANGE_CALIBRATED_M = (0.4, 3.6)
 
 
 @dataclass
@@ -76,6 +83,7 @@ class VideoCapture:
     scale_sigma: float           # relative uncertainty of the metric scale
     info: dict = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
+    breaks: list[tuple[int, int]] = field(default_factory=list)  # (frame before, frame after) per tracking break
 
     def __len__(self) -> int:
         return len(self.timestamps)
@@ -317,6 +325,33 @@ def solve_log_scales(n_runs: int, seams: list[tuple[int, float, float]], anchors
     return x
 
 
+def tracking_breaks(frame_conf: np.ndarray) -> list[tuple[int, int]]:
+    """(frame before, frame after) for each place where DA3 probably lost track.
+
+    DA3 loses track when the phone turns while facing a blank wall up close. A key-frame pair is doubtful
+    when either frame's median DA3 confidence is below BREAK_CONF: on c00a170fe1 and 1a8384c3f6 every
+    rotation error above 20 degrees had confidence 1.0-1.6, at the price of false alarms (25 of 111 and
+    40 of 343 pairs), which only loosen one step of the walk. Consecutive doubtful pairs form one break:
+    a short one is cut at its least confident pair and keeps every frame; a long one drops the frames
+    inside it."""
+    doubtful = np.minimum(frame_conf[:-1], frame_conf[1:]) < BREAK_CONF
+    breaks, k = [], 0
+    while k < len(doubtful):
+        if not doubtful[k]:
+            k += 1
+            continue
+        k0 = k
+        while k < len(doubtful) and doubtful[k]:
+            k += 1
+        if k - k0 <= LONG_BREAK_PAIRS:
+            pair_conf = np.minimum(frame_conf[k0:k], frame_conf[k0 + 1:k + 1])
+            worst = k0 + int(np.argmin(pair_conf))
+            breaks.append((worst, worst + 1))
+        else:
+            breaks.append((k0, k))
+    return breaks
+
+
 # ---- joining runs -----------------------------------------------------------------------------
 
 @dataclass
@@ -420,7 +455,13 @@ def chain_runs(views: list[da3.ViewSet], runs: list[tuple[int, int]], K: np.ndar
     return Chain(c2w, depth, conf, K, runs, scales, run_rotations, info)
 
 
-def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain: float | None = None) -> VideoCapture:
+def correct_range(depth: np.ndarray) -> np.ndarray:
+    """Depth with the calibrated range bias removed (zeros stay zeros)."""
+    return (depth * (np.exp(RANGE_A) * np.clip(depth, *RANGE_CALIBRATED_M) ** RANGE_B)).astype(depth.dtype)
+
+
+def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain: float | None = None,
+               range_correction: bool = True) -> VideoCapture:
     """`fx_over_width`: focal length in units of the upright frame width, when known (e.g. from
     metadata); otherwise estimated from the video. `metric_gain` overrides METRIC_DEPTH_GAIN (the
     calibration benchmark measures with 1.0)."""
@@ -453,15 +494,20 @@ def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain:
     confidences = np.zeros(chain.depth.shape, np.uint8)
     for i in range(n):
         confidences[i][_confident(chain.conf[i])] = 2
+    frame_conf = np.array([float(np.median(c)) for c in chain.conf])
+    breaks = tracking_breaks(frame_conf)
 
     info = {"frames": n, "runs": len(runs), "keyframe_fps": KEYFRAME_FPS, "depth_size": [w, h],
             "camera": "DA3 ray output" if RAY_POSE else "DA3 camera head",
             "fx_over_width": round(fx_over_width, 4), "focal_source": focal_source, "focal_sigma": round(focal_sigma, 4),
             "fx_over_width_da3_median": round(float(np.median(run_fx)), 4), "metric_gain": metric_gain,
             "fx_over_width_per_run": [round(v, 4) for v in run_fx],
-            "scale_sigma": round(scale_sigma, 4), **chain.info}
+            "scale_sigma": round(scale_sigma, 4), "range_correction": [RANGE_A, RANGE_B] if range_correction else None,
+            "tracking_breaks": len(breaks),
+            "frames_dropped_at_breaks": int(sum(b - a - 1 for a, b in breaks)), **chain.info}
     (work_dir / "video_capture.json").write_text(json.dumps(info, indent=2))
     timestamps = np.arange(n) / KEYFRAME_FPS
     Ks = np.repeat(K[None], n, axis=0)
+    depth = correct_range(chain.depth) if range_correction else chain.depth
     return VideoCapture(video, frames, timestamps, chain.c2w[:, :3, 3].copy(), chain.c2w[:, :3, :3].copy(),
-                        chain.depth, confidences, Ks, scale_sigma, info)
+                        depth, confidences, Ks, scale_sigma, info, breaks=breaks)

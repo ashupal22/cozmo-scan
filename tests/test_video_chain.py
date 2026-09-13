@@ -143,3 +143,22 @@ def test_yaw_part_and_mean_rotation():
     Rs = [Rotation.from_rotvec(np.array([0, 0.3, 0]) + 0.01 * np.random.default_rng(i).normal(size=3)).as_matrix()
           for i in range(20)]
     assert vc.angle_deg(vc.mean_rotation(Rs).T @ Rotation.from_rotvec([0, 0.3, 0]).as_matrix()) < 0.3
+
+
+def test_tracking_breaks_short_cut_long_dropped():
+    conf = np.array([5, 5, 1.2, 5, 5, 1.0, 1.1, 1.0, 1.3, 1.5, 5, 5, 1.9])
+    # pairs 1-2 doubtful (short: cut at the least confident pair), 4-9 (long: frames 5-9 dropped), 11 (short)
+    assert vc.tracking_breaks(conf) == [(1, 2), (4, 10), (11, 12)]
+    assert vc.tracking_breaks(np.full(10, 4.0)) == []
+
+
+def test_range_correction_stays_inside_its_calibrated_range():
+    d = np.array([0.0, 0.2, 1.0, 3.6, 10.0])
+    out = vc.correct_range(d)
+    assert out[0] == 0.0
+    factor = out[1:] / d[1:]
+    lo, hi = vc.RANGE_CALIBRATED_M
+    assert factor[0] == pytest.approx(np.exp(vc.RANGE_A) * lo ** vc.RANGE_B)
+    assert factor[3] == pytest.approx(factor[2])          # beyond the calibrated range: the edge factor
+    assert np.all(np.abs(factor - 1) < 0.05)
+
