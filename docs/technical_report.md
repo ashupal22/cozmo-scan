@@ -89,7 +89,7 @@ Typical 1-sigma sizes, and how each enters the output.
 | Global scale | 0 | 1.5–2.5% (metric model, focal, bias) | 3% per room | every length, ×2 for areas |
 | Camera path | small after drift correction | tracking breaks: 3 of 13 breaks off by 60–90° | per room only | room placement, merged or split rooms |
 | Room building on noisy depth | small | c7d2 walls about 15% short even on the true path | unseen walls, few views: boxes 26% small | wall lengths, areas |
-| Openings | 5 cm plan grid; nominal ±15 cm when jambs are unseen | 8 cm | typical width ±15 cm | widths |
+| Openings | jamb to jamb on wall points (5 cm modelled); nominal ±15 cm when a jamb is unseen | 8 cm | typical width ±15 cm | widths |
 
 The first three rows are modelled in `cozmo/export/document.py`. The last three are not modelled, which is why the video and photo tiers need the calibration factors in section 6.
 

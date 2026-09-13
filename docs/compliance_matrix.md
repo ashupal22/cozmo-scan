@@ -51,7 +51,7 @@ Paths are relative to the repo root. Results are in `bench/results/`. Our gate I
 
 | # | Gate | File path | Result | Status |
 |---|---|---|---|---|
-| G-OPEN | Opening widths ≤ 2 cm on ≥ 85%, missed and phantom openings count | `cozmo/geometry/layout.py` | Widths come from a 5 cm plan grid; no tape truth | **Not measured** |
+| G-OPEN | Opening widths ≤ 2 cm on ≥ 85%, missed and phantom openings count | `cozmo/geometry/layout.py` | Widths are measured between the nearest wall points at the two jambs, or reported as a typical 0.80 m with a ±0.25 m range when a jamb was not seen; no tape truth | **Not measured** |
 | G-CEIL | Ceiling height ≤ 1.5 cm per room | `bench/arkitscenes_planes.py`, `arkitscenes_planes_bias_corrected.json` | 6 of 6 ARKitScenes walks within 15 mm after depth-bias correction (mean −3.2 mm) | **Met** on public laser data. iPhone transfer unverified |
 | G-CEIL-SPREAD | Spread across captures ≤ 1 cm; say whether biased or unrepeatable | same | Before correction: repeatable but biased (−21.8 mm). After: venue 381644 spread 10.1 mm, venue 384651 43.9 mm (a two-level ceiling) | **Not met**: 0.1 mm over on one venue |
 | G-REPEAT | Same room twice: every wall within 1 cm or 0.5% | `bench/same_flat_plans.py` | Footprints agree within 1.6% (shipped pipeline, `drift_footprint.json`). 3 of 14 room dimensions within the gate (`same_flat_plans.json`). The best room is within 0.6 cm on both dimensions | **Not met** |

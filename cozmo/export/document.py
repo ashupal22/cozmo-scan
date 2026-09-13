@@ -105,7 +105,8 @@ def build_document(capture_info: dict, floor: HorizontalPlane, room_map: RoomMap
                    drift: dict | None = None, errors: ErrorModel = LIDAR_ERRORS) -> tuple[dict, list[str]]:
     """`drift` is DriftReport.to_schema(), or None when drift correction was switched off."""
     scale, widen = errors.scale_sigma, errors.interval_scale
-    warnings = ["opening widths are coarse (5 cm plan grid); image-edge refinement not built yet",
+    warnings = ["opening widths: measured between the nearest wall points at the two jambs when both were seen, "
+                "otherwise a typical door width with a wide range; not refined on image edges, so expect errors of a few cm",
                 "damage detection, concealed-damage rules and scope are not built yet"]
     if drift is None:
         warnings.insert(0, "drift correction switched off: phone poses used as recorded")
