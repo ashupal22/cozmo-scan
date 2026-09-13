@@ -49,6 +49,6 @@ Every command writes `out/<name>/result.json` and `out/<name>/plan.svg`. Warning
 |---|---|---|---|
 | LiDAR | iPhone 12 Pro+ (Pro models), iPad Pro 2020+ | Ceiling height within 15 mm on 6/6 walks (ARKitScenes laser truth, iPad Pro 2020, after depth-bias correction). Same flat walked twice: footprints agree within 1.9%. Drift correction ablated on 3 walks | G-CEIL met on public data. Walls and openings not yet checked against a tape measure |
 | Video | Any iPhone 15+ | Walls typically 8–16% off against LiDAR of the same walk; intervals widened 4.5× to stay honest | G-WALL-VIDEO (±3%) not met |
-| Photo | Any iPhone 15+ | Per-room reconstruction not yet reliable. Stitching rooms through their doors gets every door right in 26 of 46 noise-free test runs, and in 13 of 46 with photo-like noise | G-PHOTO-STITCH not met |
+| Photo | Any iPhone 15+ | Per-room reconstruction not yet reliable. Stitching rooms through their doors gets every door right in 40 of 46 noise-free test runs, and in 14 of 46 with photo-like noise | G-PHOTO-STITCH not met |
 
 *iPhone results are from our own three walks. The ceiling numbers come from a 2020 iPad Pro; their transfer to iPhone 15 Pro is unverified until a tape-measured room is captured.*

@@ -239,44 +239,55 @@ Before: code `33e470f`. After: code `c159802`. Device bias on all six walks: -11
 
 ```bash
 python bench/houselayout_properties.py      # once: 23 test cases, 130 rooms, from HouseLayout3D
-python bench/stitch_benchmark.py            # under a minute
+python bench/stitch_benchmark.py            # about a minute
 ```
 
 This tests the photo tier's stitch (G-PHOTO-STITCH, A-ADJ) separately from room reconstruction. Real buildings are cut into rooms that doors join. Each room is handed to the solver in its own frame, the way the photo tier reports it: a random quarter turn plus a small turn, a random shift, scale error, a jittered outline, noisy door widths and positions, missed doors and false doors. Levels are **exact** (no noise), **photo** (3% scale, 5 cm door noise, 10% missed and 5% false doors) and **hard** (twice that). Two random framings per case.
 
 A door pair counts as right only when both sides are the same real door. Rooms can be joined through the wrong doors and still count as adjacent, and that misplaces them.
 
-### The solver as committed: beam width 128 (code `20c3749`, run with the override that became the default)
+### The solver as committed (code `ac83422`): beam 128, no shared-wall or compactness score
 
 | Level | Runs | All doors right | Door precision / recall | Adjacency exact | One connected plan | Room placement error (median) | Time per case |
 |---|---|---|---|---|---|---|---|
-| exact | 46 | 26/46 | 0.78 / 0.781 | 38/46 | 46/46 | 0.054 m | 0.08 s |
-| photo | 46 | 13/46 | 0.55 / 0.599 | 17/46 | 22/46 | 1.425 m | 0.04 s |
-| hard | 46 | 11/46 | 0.427 / 0.511 | 9/46 | 17/46 | 1.122 m | 0.03 s |
+| exact | 46 | 40/46 | 0.939 / 0.939 | 40/46 | 46/46 | 0.026 m | 0.03 s |
+| photo | 46 | 14/46 | 0.556 / 0.607 | 15/46 | 22/46 | 1.633 m | 0.01 s |
+| hard | 46 | 8/46 | 0.404 / 0.485 | 9/46 | 17/46 | 1.318 m | 0.01 s |
 
-### Beam width
+### How the settings were chosen
 
-| Beam | Exact: all doors right | Exact: door precision | Exact: placement | Photo: all doors right | Photo: door precision / recall | Photo: placement |
+Beam width (shared-wall weight 0.5):
+
+| Setting | Exact: all doors right | Exact: door precision | Photo: all doors right | Photo: door precision | Photo: placement (m) | Hard: door precision |
 |---|---|---|---|---|---|---|
-| 8 | 22/46 | 0.718 | 0.266 m | 11/46 | 0.508 / 0.557 | 1.586 m |
-| 32 (exact only) | 22/46 | 0.752 | 0.266 m | — | — | — |
-| 128 (committed) | 26/46 | 0.78 | 0.054 m | 13/46 | 0.55 / 0.599 | 1.425 m |
-| 512 | 26/46 | 0.784 | 0.054 m | 13/46 | 0.551 / 0.605 | 1.425 m |
+| beam 8 | 22/46 | 0.718 | 11/46 | 0.508 | 1.586 | 0.437 |
+| beam 32 (exact only) | 22/46 | 0.752 | — | — | — | — |
+| beam 128 | 26/46 | 0.78 | 13/46 | 0.55 | 1.425 | 0.427 |
+| beam 512 | 26/46 | 0.784 | 13/46 | 0.551 | 1.425 | 0.427 |
 
-A wider beam recovers from early wrong choices; beyond 128 nothing changes. An assumed wall thickness of 0.20 m instead of 0.15 m made door precision worse (0.69 at zero noise, beam 8).
+Shared-wall weight (beam 128):
 
-### Compactness term, tried and not used (beam 8)
-
-A term favouring rooms that fill a concave spot of the plan over rooms that stick out fixed one case at zero noise (JmbYfDe2QKZ: 3.8 m to 0.2 m median placement error). Over all cases it made things worse:
-
-| HULL_PER_M2 | Exact: all doors right | Exact: door precision | Exact: placement | Photo: all doors right | Photo: door precision | Photo: one plan |
+| Setting | Exact: all doors right | Exact: door precision | Photo: all doors right | Photo: door precision | Photo: placement (m) | Hard: door precision |
 |---|---|---|---|---|---|---|
-| 0 (committed) | 22/46 | 0.718 | 0.266 m | 11/46 | 0.508 | 22/46 |
-| 0.5 | 16/46 | 0.525 | 0.723 m | 9/46 | 0.431 | 21/46 |
-| 1.0 | 10/46 | 0.388 | 1.796 m | 9/46 | 0.369 | 18/46 |
-| 0.5, shared wall 0.2 | 14/46 | 0.528 | 1.647 m | 8/46 | 0.424 | 19/46 |
+| shared wall 0.5 | 26/46 | 0.78 | 13/46 | 0.55 | 1.425 | 0.427 |
+| shared wall 0.25 | 26/46 | 0.788 | 13/46 | 0.528 | 1.425 | 0.451 |
+| shared wall 0.1 | 30/46 | 0.827 | 14/46 | 0.566 | 1.633 | 0.428 |
+| shared wall 0 (committed) | 40/46 | 0.939 | 14/46 | 0.556 | 1.633 | 0.404 |
+
+Compactness weight (beam 8, shared wall 0.5):
+
+| Setting | Exact: all doors right | Exact: door precision | Photo: all doors right | Photo: door precision | Photo: placement (m) | Hard: door precision |
+|---|---|---|---|---|---|---|
+| compactness 0 | 22/46 | 0.718 | 11/46 | 0.508 | 1.586 | 0.437 |
+| compactness 0.5 | 16/46 | 0.525 | 9/46 | 0.431 | 1.53 | 0.367 |
+| compactness 1.0 | 10/46 | 0.388 | 9/46 | 0.369 | 1.784 | 0.308 |
+| compactness 0.5, shared wall 0.2 | 14/46 | 0.528 | 8/46 | 0.424 | 1.53 | 0.371 |
+
+- **A wider beam** recovers from early wrong choices; beyond 128 nothing changes.
+- **The shared-wall bonus misled door choices.** A room attached next to two rooms through a wrong or imagined door out-scored the true door. Without the bonus, zero-noise runs get every door right 40 times in 46, against 26. With noise the bonus helped placement slightly (1.43 against 1.63 m), but not door choices. It is removed, and the unit test for an imagined door now passes.
+- **Compactness** fixed one case (JmbYfDe2QKZ) and hurt overall.
 
 ### What the numbers say
 
-- **The stitch solver does not meet G-PHOTO-STITCH.** Without noise it gets every door right in 26 of 46 runs, with one connected plan every time. With photo-like noise it builds one connected plan in fewer than half the runs, with rooms placed about 1.4 m off.
-- **Which door pairs with which is the hard part, not the geometry.** Door observations are consistent with the solver's model: opposite normals, and a gap across the wall of 0.16-0.26 m. But doors within a home are nearly the same width, and a small room can sit plausibly behind several doors of a large one.
+- **Without noise, the solver rejoins buildings through the right doors in 40 of 46 runs**, with rooms placed within a few centimetres.
+- **G-PHOTO-STITCH is not met.** With photo-like noise it builds one connected plan in 22/46 runs and gets every door right in 14/46, with rooms placed about 1.633 m off. Missed doors split the plan into islands, and noisy widths make doors interchangeable.
