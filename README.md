@@ -84,7 +84,8 @@ bash bench/reproduce.sh                      # every benchmark below, writes ben
 | Video plans vs LiDAR, interval factor | `bench/video_vs_lidar.py`, `bench/calibrate_intervals.py` | `video_vs_lidar.json`, `video_intervals.json` | `bench/README.md` |
 | Photo plans vs LiDAR, interval factor | `bench/photo_vs_lidar.py` | `photo_vs_lidar.json` | `bench/README.md` |
 | Stitch solver on real buildings | `bench/stitch_benchmark.py` | `stitch_benchmark.json`, `stitch_ablation/` | `bench/README.md` |
-| Damage detector checks | `bench/damage_sanity.py` | `damage_sanity.json` | `bench/README.md` |
+| Damage detector checks: our walks, and real defect photos (BD3) | `bench/damage_sanity.py`, `bench/damage_bd3.py` | `damage_sanity.json`, `damage_bd3.json` | `bench/README.md` |
+| Opening widths, walk against walk | `bench/same_flat_openings.py` | `same_flat_openings.json` | `bench/README.md` |
 | Fix loop before, after, ablation | `bench/video_vs_lidar.py` at the listed commits | `fix_loop/` | [`docs/fix_loop.md`](docs/fix_loop.md) |
 
 Model outputs are cached under `data/derived/` and keyed by input content, so a rerun replays them exactly. A fresh capture runs the models live.
@@ -97,6 +98,7 @@ Model outputs are cached under `data/derived/` and keyed by input content, so a 
 | CLIP ViT-B/32 (OpenAI) | MIT | Zero-shot damage detection |
 | ARKitScenes, 2 venues, 6 walks (Apple) | ARKitScenes licence: evaluation and publishing results allowed | LiDAR accuracy against laser ground truth |
 | HouseLayout3D (MIT) | MIT | Stitch benchmark: real buildings cut into rooms |
+| BD3 building defects, test split, via `chandrabhuma/building_defect_vqa` (Kottari and Arjunan) | CC-BY-4.0 re-release; used locally, never redistributed | Damage detector on 793 real defect photos |
 
 Everything runs on the local machine. No call goes to our infrastructure or to any paid API.
 

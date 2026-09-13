@@ -1,0 +1,257 @@
+{
+  "benchmark": "damage_bd3",
+  "dataset": "chandrabhuma/building_defect_vqa (data/test-00000-of-00001.parquet), derived from BD3",
+  "images": 793,
+  "p_min_shipped": 0.6,
+  "mapping": {
+    "stain": "water_stain",
+    "algae": "mold",
+    "major_crack": "crack",
+    "minor_crack": "crack",
+    "peeling": "peeling_paint",
+    "spalling": "hole",
+    "plain": null
+  },
+  "by_threshold": {
+    "0.3": {
+      "recall_any_damage": 0.931,
+      "right_class_share_of_damaged": 0.536,
+      "false_alarm_share_of_plain": 0.268,
+      "per_class": {
+        "algae": {
+          "images": 123,
+          "flagged": 102,
+          "flagged_share": 0.829,
+          "right_class": 82
+        },
+        "major_crack": {
+          "images": 113,
+          "flagged": 112,
+          "flagged_share": 0.991,
+          "right_class": 100
+        },
+        "minor_crack": {
+          "images": 117,
+          "flagged": 115,
+          "flagged_share": 0.983,
+          "right_class": 107
+        },
+        "peeling": {
+          "images": 105,
+          "flagged": 100,
+          "flagged_share": 0.952,
+          "right_class": 7
+        },
+        "plain": {
+          "images": 123,
+          "flagged": 33,
+          "flagged_share": 0.268
+        },
+        "spalling": {
+          "images": 100,
+          "flagged": 92,
+          "flagged_share": 0.92,
+          "right_class": 17
+        },
+        "stain": {
+          "images": 112,
+          "flagged": 103,
+          "flagged_share": 0.92,
+          "right_class": 46
+        }
+      }
+    },
+    "0.4": {
+      "recall_any_damage": 0.872,
+      "right_class_share_of_damaged": 0.509,
+      "false_alarm_share_of_plain": 0.187,
+      "per_class": {
+        "algae": {
+          "images": 123,
+          "flagged": 87,
+          "flagged_share": 0.707,
+          "right_class": 73
+        },
+        "major_crack": {
+          "images": 113,
+          "flagged": 109,
+          "flagged_share": 0.965,
+          "right_class": 99
+        },
+        "minor_crack": {
+          "images": 117,
+          "flagged": 112,
+          "flagged_share": 0.957,
+          "right_class": 104
+        },
+        "peeling": {
+          "images": 105,
+          "flagged": 95,
+          "flagged_share": 0.905,
+          "right_class": 6
+        },
+        "plain": {
+          "images": 123,
+          "flagged": 23,
+          "flagged_share": 0.187
+        },
+        "spalling": {
+          "images": 100,
+          "flagged": 86,
+          "flagged_share": 0.86,
+          "right_class": 16
+        },
+        "stain": {
+          "images": 112,
+          "flagged": 95,
+          "flagged_share": 0.848,
+          "right_class": 43
+        }
+      }
+    },
+    "0.5": {
+      "recall_any_damage": 0.763,
+      "right_class_share_of_damaged": 0.464,
+      "false_alarm_share_of_plain": 0.114,
+      "per_class": {
+        "algae": {
+          "images": 123,
+          "flagged": 73,
+          "flagged_share": 0.593,
+          "right_class": 62
+        },
+        "major_crack": {
+          "images": 113,
+          "flagged": 105,
+          "flagged_share": 0.929,
+          "right_class": 95
+        },
+        "minor_crack": {
+          "images": 117,
+          "flagged": 107,
+          "flagged_share": 0.915,
+          "right_class": 102
+        },
+        "peeling": {
+          "images": 105,
+          "flagged": 81,
+          "flagged_share": 0.771,
+          "right_class": 5
+        },
+        "plain": {
+          "images": 123,
+          "flagged": 14,
+          "flagged_share": 0.114
+        },
+        "spalling": {
+          "images": 100,
+          "flagged": 71,
+          "flagged_share": 0.71,
+          "right_class": 13
+        },
+        "stain": {
+          "images": 112,
+          "flagged": 74,
+          "flagged_share": 0.661,
+          "right_class": 34
+        }
+      }
+    },
+    "0.6": {
+      "recall_any_damage": 0.622,
+      "right_class_share_of_damaged": 0.418,
+      "false_alarm_share_of_plain": 0.065,
+      "per_class": {
+        "algae": {
+          "images": 123,
+          "flagged": 59,
+          "flagged_share": 0.48,
+          "right_class": 52
+        },
+        "major_crack": {
+          "images": 113,
+          "flagged": 98,
+          "flagged_share": 0.867,
+          "right_class": 93
+        },
+        "minor_crack": {
+          "images": 117,
+          "flagged": 104,
+          "flagged_share": 0.889,
+          "right_class": 100
+        },
+        "peeling": {
+          "images": 105,
+          "flagged": 62,
+          "flagged_share": 0.59,
+          "right_class": 3
+        },
+        "plain": {
+          "images": 123,
+          "flagged": 8,
+          "flagged_share": 0.065
+        },
+        "spalling": {
+          "images": 100,
+          "flagged": 45,
+          "flagged_share": 0.45,
+          "right_class": 10
+        },
+        "stain": {
+          "images": 112,
+          "flagged": 49,
+          "flagged_share": 0.438,
+          "right_class": 22
+        }
+      }
+    },
+    "0.7": {
+      "recall_any_damage": 0.485,
+      "right_class_share_of_damaged": 0.349,
+      "false_alarm_share_of_plain": 0.033,
+      "per_class": {
+        "algae": {
+          "images": 123,
+          "flagged": 40,
+          "flagged_share": 0.325,
+          "right_class": 34
+        },
+        "major_crack": {
+          "images": 113,
+          "flagged": 88,
+          "flagged_share": 0.779,
+          "right_class": 86
+        },
+        "minor_crack": {
+          "images": 117,
+          "flagged": 95,
+          "flagged_share": 0.812,
+          "right_class": 92
+        },
+        "peeling": {
+          "images": 105,
+          "flagged": 39,
+          "flagged_share": 0.371,
+          "right_class": 2
+        },
+        "plain": {
+          "images": 123,
+          "flagged": 4,
+          "flagged_share": 0.033
+        },
+        "spalling": {
+          "images": 100,
+          "flagged": 27,
+          "flagged_share": 0.27,
+          "right_class": 5
+        },
+        "stain": {
+          "images": 112,
+          "flagged": 36,
+          "flagged_share": 0.321,
+          "right_class": 15
+        }
+      }
+    }
+  }
+}

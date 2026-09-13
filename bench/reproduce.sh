@@ -18,3 +18,6 @@ python bench/photo_vs_lidar.py                                              # ph
 python bench/houselayout_properties.py                                      # stitch test cases from HouseLayout3D
 python bench/stitch_benchmark.py                                            # stitch solver (G-PHOTO-STITCH, A-ADJ)
 python bench/damage_sanity.py                                               # damage detector checks
+python bench/damage_bd3.py                                                  # damage detector on real defect photos (BD3)
+python bench/same_flat_openings.py                                          # opening widths, walk against walk
+python bench/drift_footprint.py                                             # G-DRIFT footprint, shipped pipeline

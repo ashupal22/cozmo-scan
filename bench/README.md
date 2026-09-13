@@ -350,3 +350,27 @@ No tape truth, so this checks repeatability. Both walks of the same flat go thro
 - **Most widths are not measured:** only 1 pair was measured jamb to jamb in both walks, and those widths differ by 13.0 cm. The others were walked through with a jamb out of view, so they carry the typical 0.80 m with a ±0.25 m interval. All 7 pairs' intervals overlap, so the uncertainty is reported honestly.
 - **G-OPEN (≤ 2 cm on 85%) would fail.** The next steps are seeing both jambs (the protocol's walk-through step) and edge refinement on the images.
 
+## Damage detector on real defect photos (`bench/damage_bd3.py`)
+
+```bash
+python bench/damage_bd3.py        # downloads the 157 MB test split once; about 3 min
+```
+
+BD3 (Kottari and Arjunan, 2024) has phone photos of building walls taken about 1 m away, one defect label each. We use the 793-image test split of its CC-BY-4.0 re-release on Hugging Face (`chandrabhuma/building_defect_vqa`). It is used locally and never redistributed. The detector runs exactly as shipped (12 tiles, threshold 0.6). BD3 classes map to ours: stain → water stain, algae → mold, cracks → crack, peeling → peeling paint, spalling → hole.
+
+| BD3 class | Images | Flagged as damage | Right class |
+|---|---|---|---|
+| algae | 123 | 48% | 52 (42%) |
+| major_crack | 113 | 87% | 93 (82%) |
+| minor_crack | 117 | 89% | 100 (85%) |
+| peeling | 105 | 59% | 3 (3%) |
+| plain | 123 | 6% | — (false alarms) |
+| spalling | 100 | 45% | 10 (10%) |
+| stain | 112 | 44% | 22 (20%) |
+
+- **Overall at the shipped threshold:** 62% of damaged photos flagged, 42% with the right class, and 6.5% of plain walls flagged.
+- **Cracks are found well** (about 88%, class right about 83%).
+- **Peeling paint is almost never named as peeling.** It is flagged, but as another class. Stains and spalling are found less than half the time.
+- **Threshold trade-off:** 0.3: 93% found, 26.8% false alarms / 0.4: 87% found, 18.7% false alarms / 0.5: 76% found, 11.4% false alarms / 0.6: 62% found, 6.5% false alarms / 0.7: 48% found, 3.3% false alarms. We keep 0.6: our undamaged walks gave 0 false regions with it.
+- **Caveat:** this checks classes on close-up photos. It does not check metric extent in a room; that still needs a staged-damage capture (A-DMG-DETECT).
+

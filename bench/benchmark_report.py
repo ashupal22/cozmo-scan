@@ -22,6 +22,7 @@ def main():
     same = load("same_flat_plans.json")["walls_first"]
     damage = load("damage_sanity.json")
     openings = load("same_flat_openings.json")
+    bd3 = load("damage_bd3.json")
     walks = ("c00a170fe1", "1a8384c3f6", "c7d28f72c6")
 
     v = {c: video["walks"][c]["video"] for c in walks}
@@ -80,8 +81,10 @@ def main():
         f"| Calibration: nominal 90% interval holds (A-CALIB) | Ceiling interval carries the full 13 mm bias | "
         f"{held_in} of {held_n} paired gate walls (factor 4.5) | {pheld} of {len(pdims)} dimensions, both footprints (factor 5.1) |",
         "| Drift (G-DRIFT) | Method and on/off ablation (below) (pass) | Drift correction on; the declared-break variant is the fix loop | Not applicable |",
-        f"| Damage (A-DMG-DETECT) | No staged damage: 0 false regions on our 3 walks; painted stains found in "
-        f"{sum(w['painted_found'] for w in damage['walks'].values())} of {sum(w['painted_images'] for w in damage['walks'].values())} images | same detector | same detector |",
+        f"| Damage (A-DMG-DETECT) | No staged damage. On {bd3['images']} real defect photos (BD3): "
+        f"{100 * bd3['by_threshold']['0.6']['recall_any_damage']:.0f}% flagged, {100 * bd3['by_threshold']['0.6']['right_class_share_of_damaged']:.0f}% "
+        f"right class, {100 * bd3['by_threshold']['0.6']['false_alarm_share_of_plain']:.1f}% false alarms on plain walls; 0 false regions on "
+        f"our 3 walks | same detector | same detector |",
         "",
         "## Drift correction on and off (G-DRIFT, shipped LiDAR pipeline)",
         "",
