@@ -11,8 +11,8 @@ python bench/arkitscenes_planes.py --bias-correction leave-one-venue-out    # ..
 python bench/drift_ablation.py                                              # G-DRIFT: footprint with drift on and off
 python bench/same_flat_plans.py                                             # repeatability: same flat, two walks
 python bench/video_scale.py                                                 # video focal and scale calibration
-python bench/video_vs_lidar.py --variants oracle                            # video plans vs LiDAR (G-WALL-VIDEO)
-python bench/calibrate_intervals.py                                         # video interval factor
+python bench/video_vs_lidar.py --variants oracle --out bench/results/video_vs_lidar_head.json   # video plans vs LiDAR at this code (bench/results/video_vs_lidar.json is the 1d00698 run the interval factor came from)
+python bench/calibrate_intervals.py                                         # video interval factor, from the committed 1d00698 run (VIDEO_INTERVAL_SCALE)
 python bench/make_photo_sets.py --sweep c00a170fe1 1a8384c3f6               # stand-in photo sets (if missing)
 python bench/photo_vs_lidar.py                                              # photo plans vs LiDAR (G-WALL-PHOTO)
 python bench/houselayout_properties.py                                      # stitch test cases from HouseLayout3D
@@ -23,3 +23,5 @@ python bench/same_flat_openings.py                                          # op
 python bench/drift_footprint.py                                             # G-DRIFT footprint, shipped pipeline
 python bench/arkitscenes_wall_distances.py                                 # LiDAR wall-to-wall distances vs laser
 python bench/staged_damage.py                                               # synthetic staged damage on our walk
+python bench/fix_loop_postmortem.py > bench/results/fix_loop/postmortem_drift.log   # fix-loop post-mortem: heading error per segment
+python bench/benchmark_report.py                                            # rewrites docs/benchmark_report.md from bench/results
