@@ -239,24 +239,35 @@ Before: code `33e470f`. After: code `c159802`. Device bias on all six walks: -11
 
 ```bash
 python bench/houselayout_properties.py      # once: 23 test cases, 130 rooms, from HouseLayout3D
-python bench/stitch_benchmark.py            # seconds
+python bench/stitch_benchmark.py            # under a minute
 ```
 
 This tests the photo tier's stitch (G-PHOTO-STITCH, A-ADJ) separately from room reconstruction. Real buildings are cut into rooms that doors join. Each room is handed to the solver in its own frame, the way the photo tier reports it: a random quarter turn plus a small turn, a random shift, scale error, a jittered outline, noisy door widths and positions, missed doors and false doors. Levels are **exact** (no noise), **photo** (3% scale, 5 cm door noise, 10% missed and 5% false doors) and **hard** (twice that). Two random framings per case.
 
 A door pair counts as right only when both sides are the same real door. Rooms can be joined through the wrong doors and still count as adjacent, and that misplaces them.
 
-### The solver as committed (code `b8c21bc`)
+### The solver as committed: beam width 128 (code `20c3749`, run with the override that became the default)
 
-| Level | Runs | All doors right | Door precision / recall | Adjacency exact | One connected plan | Room placement error (median) |
+| Level | Runs | All doors right | Door precision / recall | Adjacency exact | One connected plan | Room placement error (median) | Time per case |
+|---|---|---|---|---|---|---|---|
+| exact | 46 | 26/46 | 0.78 / 0.781 | 38/46 | 46/46 | 0.054 m | 0.08 s |
+| photo | 46 | 13/46 | 0.55 / 0.599 | 17/46 | 22/46 | 1.425 m | 0.04 s |
+| hard | 46 | 11/46 | 0.427 / 0.511 | 9/46 | 17/46 | 1.122 m | 0.03 s |
+
+### Beam width
+
+| Beam | Exact: all doors right | Exact: door precision | Exact: placement | Photo: all doors right | Photo: door precision / recall | Photo: placement |
 |---|---|---|---|---|---|---|
-| exact | 46 | 22/46 | 0.718 / 0.718 | 32/46 | 46/46 | 0.266 m |
-| photo | 46 | 11/46 | 0.508 / 0.557 | 14/46 | 22/46 | 1.586 m |
-| hard | 46 | 11/46 | 0.437 / 0.527 | 10/46 | 17/46 | 1.173 m |
+| 8 | 22/46 | 0.718 | 0.266 m | 11/46 | 0.508 / 0.557 | 1.586 m |
+| 32 (exact only) | 22/46 | 0.752 | 0.266 m | — | — | — |
+| 128 (committed) | 26/46 | 0.78 | 0.054 m | 13/46 | 0.55 / 0.599 | 1.425 m |
+| 512 | 26/46 | 0.784 | 0.054 m | 13/46 | 0.551 / 0.605 | 1.425 m |
 
-### Compactness term, tried and not used
+A wider beam recovers from early wrong choices; beyond 128 nothing changes. An assumed wall thickness of 0.20 m instead of 0.15 m made door precision worse (0.69 at zero noise, beam 8).
 
-Rooms can fill a concave spot of the plan or stick out of it. A term favouring the first fixed one case at zero noise, JmbYfDe2QKZ, from 3.8 m to 0.2 m median placement error. Over all cases it made things worse:
+### Compactness term, tried and not used (beam 8)
+
+A term favouring rooms that fill a concave spot of the plan over rooms that stick out fixed one case at zero noise (JmbYfDe2QKZ: 3.8 m to 0.2 m median placement error). Over all cases it made things worse:
 
 | HULL_PER_M2 | Exact: all doors right | Exact: door precision | Exact: placement | Photo: all doors right | Photo: door precision | Photo: one plan |
 |---|---|---|---|---|---|---|
@@ -267,5 +278,5 @@ Rooms can fill a concave spot of the plan or stick out of it. A term favouring t
 
 ### What the numbers say
 
-- **The stitch solver does not meet G-PHOTO-STITCH.** Even without noise, all doors are right in only 22 of 46 runs. With photo-like noise it builds one connected plan in fewer than half the runs, with rooms placed about 1.6 m off.
-- **Which door pairs with which is the hard part, not the geometry.** Door widths within a home are nearly identical, and a room can sit plausibly on either side of several walls. The next step is a failure-by-failure diagnosis of the zero-noise cases.
+- **The stitch solver does not meet G-PHOTO-STITCH.** Without noise it gets every door right in 26 of 46 runs, with one connected plan every time. With photo-like noise it builds one connected plan in fewer than half the runs, with rooms placed about 1.4 m off.
+- **Which door pairs with which is the hard part, not the geometry.** Door observations are consistent with the solver's model: opposite normals, and a gap across the wall of 0.16-0.26 m. But doors within a home are nearly the same width, and a small room can sit plausibly behind several doors of a large one.

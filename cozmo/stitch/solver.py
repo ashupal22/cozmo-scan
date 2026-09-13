@@ -46,7 +46,7 @@ BLOCKED_DOOR_PENALTY = 3.0
 LEAVE_OPEN_PENALTY = 1.0
 ISLAND_PENALTY = 12.0
 ISLAND_GAP_M = 1.0
-BEAM_WIDTH = 8
+BEAM_WIDTH = 128               # bench/results/stitch_ablation: 8 -> 128 fixes early wrong choices; 512 adds nothing
 
 
 def rot(angle: float) -> np.ndarray:
