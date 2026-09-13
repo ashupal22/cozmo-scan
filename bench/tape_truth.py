@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -27,28 +28,9 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "bench" / "results" / "tape_truth.json"
 TIE_M = 0.01
+sys.path.insert(0, str(ROOT))
 
-
-def dominant_angle(poly: np.ndarray) -> float:
-    edges = np.roll(poly, -1, axis=0) - poly
-    length = np.linalg.norm(edges, axis=1)
-    angle = np.arctan2(edges[:, 1], edges[:, 0])
-    return float(np.angle(np.sum(length * np.exp(4j * angle))) / 4)
-
-
-def main_dims(room: dict) -> tuple[list[float], list[list[float]]]:
-    """Sorted (width, length) of a room outline along its own wall directions, each with the interval of the wall
-    closest to it in length."""
-    poly = np.asarray(room["polygon"], float)
-    t = dominant_angle(poly)
-    R = np.array([[np.cos(t), np.sin(t)], [-np.sin(t), np.cos(t)]])
-    ext = np.sort(np.ptp(poly @ R.T, axis=0))
-    intervals = []
-    for e in ext:
-        w = min(room["walls"], key=lambda w: abs(w["length_m"]["value"] - e))["length_m"]
-        half_low, half_high = w["value"] - w["ci_low"], w["ci_high"] - w["value"]
-        intervals.append([round(e - half_low, 3), round(e + half_high, 3)])
-    return [round(float(e), 3) for e in ext], intervals
+from cozmo.export.summary import main_dimensions as main_dims  # noqa: E402
 
 
 def read_truth(path: Path) -> dict:

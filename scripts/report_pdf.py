@@ -1,6 +1,7 @@
 """Render docs/technical_report.md to docs/technical_report.pdf (A4) with headless Chrome, and print the page count.
 
-    python scripts/report_pdf.py
+    python scripts/report_pdf.py                                   # docs/technical_report.md, at most 6 pages
+    python scripts/report_pdf.py docs/capture_protocol.md 1        # any page, with its page limit
 """
 import subprocess
 import sys
@@ -41,18 +42,19 @@ def _list_breaks(text: str) -> str:
 
 
 def main():
-    src = ROOT / "docs" / "technical_report.md"
+    src = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / "docs" / "technical_report.md"
+    max_pages = int(sys.argv[2]) if len(sys.argv) > 2 else 6
     html = markdown.markdown(_list_breaks(src.read_text()), extensions=["tables", "fenced_code"])
-    page = ROOT / "docs" / "technical_report.html"
+    page = src.with_suffix(".html")
     page.write_text(f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{html}</body></html>")
-    out = ROOT / "docs" / "technical_report.pdf"
+    out = src.with_suffix(".pdf")
     subprocess.run([CHROME, "--headless", "--disable-gpu", "--no-pdf-header-footer", f"--print-to-pdf={out}", page.as_uri()],
                    check=True, capture_output=True)
     page.unlink()
     from pypdf import PdfReader
     pages = len(PdfReader(str(out)).pages)
     print(f"wrote {out}: {pages} pages")
-    return 0 if pages <= 6 else 1
+    return 0 if pages <= max_pages else 1
 
 
 if __name__ == "__main__":

@@ -57,7 +57,9 @@ def cmd_run(args) -> int:
           f"{doc['capture']['runtime_s']} s")
     for warning in doc["quality"]["warnings"]:
         print(f"  warning: {warning}")
-    print(f"wrote {result} and {result.parent / 'plan.svg'}")
+    table = (result.parent / "summary.md").read_text().split("\nWarnings:")[0].split("\n\n", 2)[-1]
+    print(table.rstrip())
+    print(f"wrote {result}, {result.parent / 'plan.svg'} and {result.parent / 'summary.md'}")
     return 0
 
 

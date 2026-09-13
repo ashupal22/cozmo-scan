@@ -216,4 +216,6 @@ def run(path, out_dir, drift: bool = True, damage: bool = True) -> Path:
         raise RuntimeError("output failed validation:\n  " + "\n  ".join(problems))
     (out_dir / "result.json").write_text(json.dumps(document, indent=2) + "\n")
     svg_path.write_text(render_svg(document, yaw))
+    from cozmo.export.summary import summary_markdown
+    (out_dir / "summary.md").write_text(summary_markdown(document))
     return out_dir / "result.json"
