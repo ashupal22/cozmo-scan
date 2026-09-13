@@ -56,8 +56,11 @@ MIN_FLOOR_NORMALS = 300         # below this a run is not levelled on its own fl
 FOCAL_SIGMA_GIVEN = 0.02
 FOCAL_SIGMA_LINES_MIN = 0.015   # room-line focal: bootstrap spread, but never below this (errors 0.0%, 1.6%)
 FOCAL_SIGMA_DA3 = 0.10          # DA3's own focal: 10% too long on both our walks
-METRIC_DEPTH_GAIN = 1.0         # DA3METRIC reads short; set from bench/video_scale.py (LiDAR as reference)
-METRIC_BIAS_SIGMA = 0.05        # provisional until calibrated against the LiDAR walks
+# With the room-line focal, the video tier's depth reads 1.062-1.075x short of LiDAR on all three walks
+# (bench/results/video_scale.json, commit 20a2318). Leave-one-walk-out, this gain leaves -1.1% to +0.8%.
+# The walks cover two flats and one camera, so the calibration carries a 2% allowance.
+METRIC_DEPTH_GAIN = 1.07
+METRIC_BIAS_SIGMA = 0.02
 
 
 @dataclass
