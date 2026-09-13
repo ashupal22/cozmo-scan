@@ -178,6 +178,9 @@ Each walk's video goes through the video tier, and its plan is compared with the
 
 ### Results (code `1d00698`)
 
+These are also the shipped video tier's numbers. The fix loop's change made them worse and is switched off, and the re-run with it off reproduces these video plans exactly ([`docs/fix_loop.md`](../docs/fix_loop.md)).
+
+
 | Walk | Variant | Rooms (video / LiDAR) | Rooms paired | Footprint | Gate walls within 3% | Paired walls, typical error | Interval held the LiDAR length | Wall-map agreement |
 |---|---|---|---|---|---|---|---|---|
 | c00a170fe1 | video | 3 / 3 | 1 | −18.6% | 0 of 6 (2 paired) | 8.5% | 1 of 2 | 0.47 |
@@ -291,3 +294,46 @@ Compactness weight (beam 8, shared wall 0.5):
 
 - **Without noise, the solver rejoins buildings through the right doors in 40 of 46 runs**, with rooms placed within a few centimetres.
 - **G-PHOTO-STITCH is not met.** With photo-like noise it builds one connected plan in 22/46 runs and gets every door right in 14/46, with rooms placed about 1.633 m off. Missed doors split the plan into islands, and noisy widths make doors interchangeable.
+
+## Photo tier: room boxes against LiDAR (`bench/photo_vs_lidar.py`)
+
+```bash
+python bench/make_photo_sets.py --sweep c00a170fe1 1a8384c3f6     # stand-in photo sets, once
+COZMO_DATA=/path/to/captures python bench/photo_vs_lidar.py       # about 5 min
+```
+
+We have no real iPhone photo sets with tape truth. The stand-in sets are stills cut from our walks, one folder per LiDAR room, taken as overlapping views while turning where possible (the protocol's sweep). Each photo room is compared with the LiDAR room it came from: the box's two dimensions against the room's extents along its own axes. The stills carry no EXIF, so the true focal length stands in for the EXIF value. Code `71cfbac-dirty`, interval factor 5.1.
+
+| Room | Photos | Walls seen | Box dimensions, photo vs LiDAR | Area error | Doors found |
+|---|---|---|---|---|---|
+| c00a170fe1 room_1 | 4 | 3/4 | 2.47 vs 3.45 m (-29%), 3.68 vs 4.71 m (-22%) | -22% | 1 |
+| c00a170fe1 room_2 | 6 | 3/4 | 1.87 vs 2.43 m (-23%), 2.14 vs 3.04 m (-30%) | -46% | 1 |
+| 1a8384c3f6 room_1 | 4 | 3/4 | 1.23 vs 5.49 m (-78%, interval missed), 1.84 vs 6.15 m (-70%) | -88% | 1 |
+| 1a8384c3f6 room_2 | 3 | 3/4 | 1.21 vs 3.35 m (-64%), 2.34 vs 3.64 m (-36%) | -70% | 1 |
+| 1a8384c3f6 room_3 | 4 | 3/4 | 2.35 vs 2.64 m (-11%), 4.76 vs 3.14 m (+52%) | +56% | 1 |
+| 1a8384c3f6 room_4 | 3 | 2/4 | 1.60 vs 1.72 m (-7%), 2.33 vs 3.10 m (-25%) | -30% | 1 |
+| 1a8384c3f6 room_5 | 6 | 3/4 | 2.16 vs 1.72 m (+26%), 2.61 vs 3.10 m (-16%) | +6% | 1 |
+| 1a8384c3f6 room_6 | 4 | 2/4 | 0.97 vs 1.17 m (-17%), 2.02 vs 3.51 m (-43%) | -49% | 1 |
+| 1a8384c3f6 room_7 | 4 | 3/4 | 1.67 vs 1.52 m (+10%), 2.00 vs 1.72 m (+16%) | +28% | 1 |
+
+- **G-WALL-PHOTO is not met:** 1 of 18 dimensions within 8%, and boxes are mostly too small. A box from a few views stops at the farthest wall it saw well. The stand-in sets were not shot from doorways, so the side closed at the camera is often too close.
+- **Footprint:** c00a170fe1: 13.07 m² vs 19.03 m² (-31%), interval [3.55, 48.21]; 1a8384c3f6: 30.93 m² vs 52.7 m² (-41%), interval [10.9, 87.79].
+- **Stitch:** c00a170fe1: 1 door pair(s) join 2 rooms into 1 group(s); 1a8384c3f6: 3 door pair(s) join 7 rooms into 4 group(s). G-PHOTO-STITCH is not met. The stitch benchmark below shows the solver needs doors on both sides to be seen.
+- **Intervals:** 18 dimensions, z = error / model sigma, sorted: [0.22, 0.29, 0.38, 0.54, 0.84, 1.06, 1.45, 1.58, 1.88, 2.54, 2.83, 4.1, 5.24, 5.48, 5.91, 7.1, 8.19, 27.58]. PHOTO_INTERVAL_SCALE = 5.1 is the smallest factor under which the nominal 90% interval holds on at least 90% of them (in-sample, the rule used for video). With it the shipped intervals hold on 17 of 18 dimensions and on both footprints. The finite-sample split-conformal rule would take the single worst dimension, a 1 m corridor boxed as 3 m: 16.77x.
+
+## Damage detection checks (`bench/damage_sanity.py`)
+
+```bash
+COZMO_DATA=/path/to/captures python bench/damage_sanity.py        # about 5 min
+```
+
+No damaged room was available, so A-DMG-DETECT (staged damage, two classes) cannot be scored yet. Two checks we can run:
+
+| Walk (undamaged) | Images | Tiles | Highest damage score | Tiles over 0.6 | Painted stains found |
+|---|---|---|---|---|---|
+| c00a170fe1 | 37 | 444 | 0.546 | 0 | 2 of 10 |
+| 1a8384c3f6 | 115 | 1380 | 0.545 | 0 | 2 of 29 |
+| c7d28f72c6 | 215 | 2580 | 0.763 | 8 | 12 of 54 |
+
+- **False alarms are rare but not zero:** 8 of 4404 tiles pass the threshold, all on c7d28f72c6. A region also needs two views on one surface, so fewer become regions (see `examples/`).
+- **Recall is low:** painted stains were found in 16 of 93 images. Painted stains are not real damage, so this only shows the detector can fire. The threshold was chosen for few false alarms; real recall needs staged damage.
