@@ -21,6 +21,7 @@ def main():
     drift = load("drift_footprint.json")
     same = load("same_flat_plans.json")["walls_first"]
     damage = load("damage_sanity.json")
+    openings = load("same_flat_openings.json")
     walks = ("c00a170fe1", "1a8384c3f6", "c7d28f72c6")
 
     v = {c: video["walks"][c]["video"] for c in walks}
@@ -69,7 +70,9 @@ def main():
         f"| Ceiling height (G-CEIL ≤ 1.5 cm) | **{ceil_ok} of {len(ceil_rows)}** ARKitScenes walks within 15 mm, mean {ceil_mean:+.1f} mm "
         f"(code `{planes['code_commit']}`) (pass) | Not measured | Not measured |",
         "| Ceiling spread (G-CEIL-SPREAD ≤ 1 cm) | 10.1 mm and 43.9 mm on the two venues (fail) | — | — |",
-        "| Opening widths (G-OPEN) | Not measured (no tape) | Not measured | Not measured |",
+        f"| Opening widths (G-OPEN) | No tape truth. Same flat, two walks: {openings['openings']['c7d28f72c6']} vs "
+        f"{openings['openings']['1a8384c3f6']} openings, {openings['paired']} paired, {openings['both_measured']} measured in both "
+        f"({openings['abs_difference_cm_median']} cm apart); the rest typical 0.80 m (fail) | Not measured | Not measured |",
         f"| Stitched plan (G-PHOTO-STITCH, A-ADJ) | One connected map per walk | One connected map per walk | "
         + "; ".join(f"{c}: {w['stitch']['notes'].split(';')[0]}" for c, w in photo["walks"].items())
         + f". HouseLayout3D: all doors right in {stitch['exact']['all_doors_right']} noise-free runs, "

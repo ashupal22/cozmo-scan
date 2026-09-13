@@ -337,3 +337,16 @@ No damaged room was available, so A-DMG-DETECT (staged damage, two classes) cann
 
 - **False alarms are rare but not zero:** 8 of 4404 tiles pass the threshold, all on c7d28f72c6. A region also needs two views on one surface: `cozmo run` on all three walks, at the LiDAR and video tiers, gives 0 damage regions (`bench/results/timing.json`).
 - **Recall is low:** painted stains were found in 16 of 93 images. Painted stains are not real damage, so this only shows the detector can fire. The threshold was chosen for few false alarms; real recall needs staged damage.
+
+## Opening widths, walk against walk (`bench/same_flat_openings.py`)
+
+```bash
+COZMO_DATA=/path/to/captures python bench/same_flat_openings.py     # about 2 min
+```
+
+No tape truth, so this checks repeatability. Both walks of the same flat go through `cozmo run` (LiDAR). The second plan is placed on the first by one rigid fit, and openings are paired when their centres are within 0.3 m (code `4c49191`).
+
+- **Detection does not repeat:** 23 openings in `c7d28f72c6`, 12 in `1a8384c3f6`, 7 pairs.
+- **Most widths are not measured:** only 1 pair was measured jamb to jamb in both walks, and those widths differ by 13.0 cm. The others were walked through with a jamb out of view, so they carry the typical 0.80 m with a ±0.25 m interval. All 7 pairs' intervals overlap, so the uncertainty is reported honestly.
+- **G-OPEN (≤ 2 cm on 85%) would fail.** The next steps are seeing both jambs (the protocol's walk-through step) and edge refinement on the images.
+

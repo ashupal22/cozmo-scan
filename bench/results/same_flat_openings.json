@@ -1,0 +1,89 @@
+{
+  "benchmark": "same_flat_openings",
+  "code_commit": "4c49191",
+  "walks": [
+    "c7d28f72c6",
+    "1a8384c3f6"
+  ],
+  "openings": {
+    "c7d28f72c6": 23,
+    "1a8384c3f6": 12
+  },
+  "paired": 7,
+  "both_measured": 1,
+  "abs_difference_cm_median": 13.0,
+  "within_2cm": "0/1",
+  "intervals_overlap": "7/7",
+  "pairs": [
+    {
+      "a": "R6.O1",
+      "b": "R6.O2",
+      "centre_gap_m": 0.048,
+      "width_a": 0.8,
+      "width_b": 0.8,
+      "difference_cm": 0.0,
+      "both_measured": false,
+      "intervals_overlap": true
+    },
+    {
+      "a": "R7.O1",
+      "b": "R7.O1",
+      "centre_gap_m": 0.172,
+      "width_a": 0.732,
+      "width_b": 0.8,
+      "difference_cm": -6.8,
+      "both_measured": false,
+      "intervals_overlap": true
+    },
+    {
+      "a": "R7.O2",
+      "b": "R7.O1",
+      "centre_gap_m": 0.263,
+      "width_a": 0.8,
+      "width_b": 0.8,
+      "difference_cm": 0.0,
+      "both_measured": false,
+      "intervals_overlap": true
+    },
+    {
+      "a": "R7.O3",
+      "b": "R7.O1",
+      "centre_gap_m": 0.255,
+      "width_a": 0.8,
+      "width_b": 0.8,
+      "difference_cm": 0.0,
+      "both_measured": false,
+      "intervals_overlap": true
+    },
+    {
+      "a": "R8.O1",
+      "b": "R5.O1",
+      "centre_gap_m": 0.109,
+      "width_a": 0.8,
+      "width_b": 0.8,
+      "difference_cm": 0.0,
+      "both_measured": false,
+      "intervals_overlap": true
+    },
+    {
+      "a": "R9.O2",
+      "b": "R6.O1",
+      "centre_gap_m": 0.069,
+      "width_a": 0.645,
+      "width_b": 0.775,
+      "difference_cm": -13.0,
+      "both_measured": true,
+      "intervals_overlap": true
+    },
+    {
+      "a": "R9.O3",
+      "b": "R6.O1",
+      "centre_gap_m": 0.116,
+      "width_a": 0.8,
+      "width_b": 0.775,
+      "difference_cm": 2.5,
+      "both_measured": false,
+      "intervals_overlap": true
+    }
+  ]
+}
