@@ -16,9 +16,9 @@ Paths are relative to the repo root. Results are in `bench/results/`. Our gate I
 |---|---|---|---|---|
 | 1.1 | Capture route: a stock capture protocol, one page, followable by a non-engineer | `docs/capture_protocol.md` | Route 2. Stray Scanner (LiDAR) and the iPhone Camera app (video, photos), with install, walk, duration, what to avoid and hand-off | **Met** |
 | 1.2 | Three input tiers, all mandatory, same output contract | `cozmo/pipeline.py` (`run_lidar`, `run_video`, `run_photos`), `cozmo/ingest/detect.py` | `cozmo run <capture>` detects the tier. All three write the same schema, validated on every run | **Met** (runs), accuracy per tier below |
-| 1.3 | Photos: 2–8 stills per room, per-room folders, stitched whole-property plan, wider intervals | `cozmo/photo/room.py`, `cozmo/stitch/solver.py`, `examples/photo_*` | Room box per folder from Depth Anything 3, joined through doors; intervals widened 5.1× | **Partial**: runs end to end, but stitching often leaves several groups (G-PHOTO-STITCH below) |
-| 1.4 | Video: handheld walkthrough, iPhone 15 or newer | `cozmo/video/`, `examples/video_*` | Key frames → DA3 poses and depth → metric scale → drift correction → layout | **Met** (runs); accuracy fails G-WALL-VIDEO |
-| 1.5 | LiDAR: depth, poses, intrinsics on Pro devices | `cozmo/ingest/stray.py`, `cozmo/geometry/`, `cozmo/slam/`, `examples/lidar_*` | Fusion, depth-bias correction, drift correction, walls-first layout | **Met** (runs) |
+| 1.3 | Photos: 2–8 stills per room, per-room folders, stitched whole-property plan, wider intervals | `cozmo/photo/room.py`, `cozmo/stitch/solver.py`, `bench/results/timing.json` | Room box per folder from Depth Anything 3, joined through doors; intervals widened 5.1× | **Partial**: runs end to end, but stitching often leaves several groups (G-PHOTO-STITCH below) |
+| 1.4 | Video: handheld walkthrough, iPhone 15 or newer | `cozmo/video/`, `bench/results/timing.json` | Key frames → DA3 poses and depth → metric scale → drift correction → layout | **Met** (runs); accuracy fails G-WALL-VIDEO |
+| 1.5 | LiDAR: depth, poses, intrinsics on Pro devices | `cozmo/ingest/stray.py`, `cozmo/geometry/`, `cozmo/slam/`, `bench/results/timing.json` | Fusion, depth-bias correction, drift correction, walls-first layout | **Met** (runs) |
 | 1.6 | Intervals widen honestly as sensor data thins | `cozmo/export/document.py`, `bench/calibrate_intervals.py`, `bench/photo_vs_lidar.py` | LiDAR: measured error model. Video ×4.5 (holds on 6 of 7 walls). Photo ×5.1 (holds on 17 of 18). Unseen values are marked `observed: false` with a wide range | **Met** on our benchmark; thin evidence (two flats) |
 | 1.7 | Device matrix: tier by hardware, and the accuracy each tier honestly delivers | `docs/capture_protocol.md` (bottom), `README.md` | Table with measured accuracy and gate status per tier | **Met** |
 
@@ -34,7 +34,7 @@ Paths are relative to the repo root. Results are in `bench/results/`. Our gate I
 | 2.6 | A confidence interval on every measurement | `schema/output.schema.json` (`measurement` requires `ci_low`, `ci_high`, `confidence`) | Nominal 90% intervals; log-scale when very uncertain, so they never go below zero | **Met** |
 | 2.7 | One command per capture | `cozmo/cli.py` | `cozmo run <capture>` | **Met** |
 | 2.8 | JSON to the published schema | `schema/output.schema.json`, `cozmo/export/validate.py` | Every run is validated before it is written; `cozmo validate` checks any file | **Met** (schema is ours: Cozmo did not publish one) |
-| 2.9 | Rendered plan | `cozmo/export/render.py` | `plan.svg` per run (`examples/*/plan.svg`) | **Met** |
+| 2.9 | Rendered plan | `cozmo/export/render.py` | `plan.svg` written next to `result.json` by every run | **Met** |
 | 2.10 | Stitched plan from every tier, including photos | as 2.2 | | **Partial** (see 2.2) |
 
 ## Part 2: benchmark set composition
@@ -97,4 +97,4 @@ Paths are relative to the repo root. Results are in `bench/results/`. Our gate I
 | C.1 | Handheld consumer capture only; any pretrained model or dataset with disclosure; runs without our infrastructure | `README.md` "Models and data used" | DA3 (Apache 2.0), CLIP (MIT), ARKitScenes, HouseLayout3D; runs locally | **Met** |
 | C.2 | Weights and large binaries fetched by script | `scripts/fetch_models.py`, `scripts/fetch_external.py` | Hugging Face cache; nothing large in git | **Met** |
 | C.3 | Mirrors, glass, wet-look surfaces, low light: covered in the submission | `docs/capture_protocol.md`, `docs/technical_report.md` (failure modes) | Protocol steps (lights on, mirrors noted); failure modes described. No detector for mirrors or glass yet | **Partial** |
-| W.1 | Walk-in test: all three tiers ready to run cold on a new capture | `README.md`, `examples/` | All three tiers run from a fresh install; typical times 30 s–2 min per capture | **Met** (readiness); accuracy as above |
+| W.1 | Walk-in test: all three tiers ready to run cold on a new capture | `README.md`, `bench/results/timing.json` | All three tiers run from a fresh install. 23 s–2.3 min per capture; a cold 37 s video takes 6.3 min | **Met** (readiness); accuracy as above |

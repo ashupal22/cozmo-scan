@@ -1,0 +1,87 @@
+{
+  "benchmark": "timing",
+  "machine": "Apple M4, 16 GB",
+  "note": "cozmo run on our captures (photo: the stand-in sets from bench/make_photo_sets.py --sweep). Timing and counts only; the outputs themselves are not kept in the repo, since they show a private home.",
+  "runs": [
+    {
+      "capture": "1a8384c3f6",
+      "tier": "lidar",
+      "rooms": 8,
+      "pipeline_runtime_s": 27.2,
+      "wall_s_with_damage": 61,
+      "damage_regions": 0,
+      "pipeline_version": "ee69832-dirty",
+      "model_outputs": "live"
+    },
+    {
+      "capture": "c00a170fe1",
+      "tier": "lidar",
+      "rooms": 3,
+      "pipeline_runtime_s": 7.1,
+      "wall_s_with_damage": 30,
+      "damage_regions": 0,
+      "pipeline_version": "ee69832-dirty",
+      "model_outputs": "live"
+    },
+    {
+      "capture": "c7d28f72c6",
+      "tier": "lidar",
+      "rooms": 9,
+      "pipeline_runtime_s": 47.3,
+      "wall_s_with_damage": 100,
+      "damage_regions": 0,
+      "pipeline_version": "ee69832-dirty",
+      "model_outputs": "live"
+    },
+    {
+      "capture": "1a8384c3f6",
+      "tier": "photo",
+      "rooms": 7,
+      "pipeline_runtime_s": 83.1,
+      "wall_s_with_damage": 137,
+      "damage_regions": 0,
+      "pipeline_version": "ac0c0f6",
+      "model_outputs": "live"
+    },
+    {
+      "capture": "c00a170fe1",
+      "tier": "photo",
+      "rooms": 2,
+      "pipeline_runtime_s": 32.8,
+      "wall_s_with_damage": 43,
+      "damage_regions": 0,
+      "pipeline_version": "ac0c0f6",
+      "model_outputs": "live"
+    },
+    {
+      "capture": "1a8384c3f6",
+      "tier": "video",
+      "rooms": 7,
+      "pipeline_runtime_s": 26.6,
+      "wall_s_with_damage": 51,
+      "damage_regions": 0,
+      "pipeline_version": "ad1a550",
+      "model_outputs": "cached"
+    },
+    {
+      "capture": "c00a170fe1",
+      "tier": "video",
+      "rooms": 3,
+      "pipeline_runtime_s": 8.1,
+      "wall_s_with_damage": 23,
+      "damage_regions": 0,
+      "pipeline_version": "ad1a550",
+      "model_outputs": "cached"
+    },
+    {
+      "capture": "c7d28f72c6",
+      "tier": "video",
+      "rooms": 12,
+      "pipeline_runtime_s": 64.0,
+      "wall_s_with_damage": 114,
+      "damage_regions": 0,
+      "pipeline_version": "ad1a550-dirty",
+      "model_outputs": "cached"
+    }
+  ]
+}

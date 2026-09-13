@@ -335,5 +335,5 @@ No damaged room was available, so A-DMG-DETECT (staged damage, two classes) cann
 | 1a8384c3f6 | 115 | 1380 | 0.545 | 0 | 2 of 29 |
 | c7d28f72c6 | 215 | 2580 | 0.763 | 8 | 12 of 54 |
 
-- **False alarms are rare but not zero:** 8 of 4404 tiles pass the threshold, all on c7d28f72c6. A region also needs two views on one surface, so fewer become regions (see `examples/`).
+- **False alarms are rare but not zero:** 8 of 4404 tiles pass the threshold, all on c7d28f72c6. A region also needs two views on one surface: `cozmo run` on all three walks, at the LiDAR and video tiers, gives 0 damage regions (`bench/results/timing.json`).
 - **Recall is low:** painted stains were found in 16 of 93 images. Painted stains are not real damage, so this only shows the detector can fire. The threshold was chosen for few false alarms; real recall needs staged damage.

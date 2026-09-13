@@ -50,7 +50,7 @@ Typical run times on an Apple M4, with damage detection:
 | 2 / 7 room folders | Photo | 43 s / 137 s |
 | 37 s video | Video | 378 s the first time (DA3 on 111 key frames, about 10 s per second of video), 23 s when cached |
 
-Example outputs from our own captures, every tier: [`examples/`](examples/).
+Outputs of our own captures are not kept in the repo, because they show a private home. Run `cozmo run` on the Google Drive captures to regenerate them; their timings are in [`bench/results/timing.json`](bench/results/timing.json).
 
 ## What is in the output
 

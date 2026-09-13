@@ -7,10 +7,8 @@ data/*
 *.heic
 *.HEIC
 
-# Generated outputs, caches, model weights. From example runs only the JSON and the plan drawing are kept
-examples/*/*
-!examples/*/result.json
-!examples/*/plan.svg
+# Generated outputs, caches, model weights. Outputs of our captures show a private home: never committed
+examples/
 explore/out/
 out/
 cache/
