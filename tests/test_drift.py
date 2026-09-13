@@ -236,3 +236,20 @@ def test_a_video_tracking_break_is_held_loosely_and_reattached():
     assert report.jumps[0]["kind"] == "tracking break"
     assert report.relocalizations == 0 and report.anchors == 0
     assert "tracking break" in report.to_schema()["notes"]
+
+
+@pytest.mark.parametrize("break_deg", [62.0, 90.0])
+def test_a_quarter_turned_tracking_break_is_reattached(break_deg):
+    # A tracking break can leave the rest of a video walk turned by 60-90 degrees. Wall directions cannot tell a
+    # quarter turn from none, so loop closures across the break try every quarter turn (docs/fix_loop.md).
+    t, true_positions, heading = true_walk()
+    brk = len(t) // 3
+    recorded, rotations, theta = record(true_positions, heading, creep_deg=2.0, break_at=brk, break_deg=break_deg,
+                                        break_shift_m=0.25)
+    points, truth = observe(true_positions, recorded, theta, np.random.default_rng(3))
+    correction, report = estimate_drift(FakeCapture(t, recorded, rotations), points, jumps=[(brk - 1, brk)],
+                                        relocalized=False)
+    after = distortion(correction.apply(points).xyz, truth)
+    assert report.segment_turns_deg
+    assert np.median(after) < 0.02 and np.percentile(after, 90) < 0.05
+

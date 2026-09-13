@@ -116,8 +116,12 @@ class _Problem:
         self.floor = np.array([nodes[i].floor_y for i in self.floor_idx], float)
         self.has_phi, self.has_h = len(self.heading_idx) > 0, len(self.floor_idx) > 0
 
-    def x0(self):
-        parts = [np.zeros(4 * (self.S - 1))]
+    def x0(self, start=None):
+        if start is None:
+            parts = [np.zeros(4 * (self.S - 1))]
+        else:
+            theta, delta = (np.asarray(v, float) for v in start)
+            parts = [theta[1:] - theta[0], (delta[1:] - delta[0]).ravel()]
         if self.has_phi:
             parts.append([_circular_mean_mod90(self.heading[:5])])
         if self.has_h:
@@ -188,7 +192,11 @@ class _Problem:
         return np.maximum(np.abs(trans).max(axis=1), np.abs(rot))
 
 
-def solve(nodes: list[Node], odometry: list[Odometry], links: list[Link]) -> Solution:
+def solve(nodes: list[Node], odometry: list[Odometry], links: list[Link],
+          start: tuple[np.ndarray, np.ndarray] | None = None) -> Solution:
+    """`start`: optional (theta, delta) per node to start from, e.g. a stretch of the walk already turned by the
+    quarter turn its loop closures agree on. Heading priors wrap every 90 degrees, so least squares cannot turn
+    a stretch that far by itself."""
     links = list(links)
     rejected: list[Link] = []
     use_heading = any(n.wall_yaw_deg is not None for n in nodes)
@@ -196,7 +204,7 @@ def solve(nodes: list[Node], odometry: list[Odometry], links: list[Link]) -> Sol
         problem = _Problem(nodes, odometry, links, use_heading)
         if len(nodes) < 2:
             break
-        fit = least_squares(problem.residuals, problem.x0(), loss="soft_l1", f_scale=3.0, x_scale="jac")
+        fit = least_squares(problem.residuals, problem.x0(start), loss="soft_l1", f_scale=3.0, x_scale="jac")
         errors = problem.link_errors(fit.x)
         prunable = [i for i, e in enumerate(errors) if e > PRUNE_SIGMAS and links[i].kind == "loop"]
         if prunable:

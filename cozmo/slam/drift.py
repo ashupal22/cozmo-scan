@@ -57,6 +57,8 @@ RELOCALIZATION_SIGMA = (0.05, 1.0)
 ACROSS_JUMP_ODOMETRY_SIGMA = (0.5, 10.0)
 BREAK_ODOMETRY_SIGMA = (0.5, 20.0)  # video: tracking lost for a few frames; the step across is a rough guess
 BREAK_LOOP_SHIFT_M = 0.5            # each tracking break between two places widens the loop search this much
+QUARTER_TURN_MARGIN = 0.9           # across a break, the best quarter turn must beat the next best clearly
+BREAK_YAW_WINDOW_DEG = 45.0         # across a break, search this far around each quarter turn: the whole circle
 ANCHOR_SIGMA = (0.05, 1.0)
 EARLY_WALK_FRACTION = 0.2          # "early" = the first 20% of the distance walked: little drift yet
 MIN_EARLY_WALK_M = 5.0
@@ -171,6 +173,7 @@ class DriftReport:
     relocalizations: int = 0
     anchors: int = 0
     anchor_wall_agreement: list = field(default_factory=list)
+    segment_turns_deg: dict = field(default_factory=dict)
     max_heading_correction_deg: float = 0.0
     max_position_correction_m: float = 0.0
     wall_heading_p90_before_deg: float | None = None
@@ -345,7 +348,11 @@ def _loop_links(capture, submaps: list[Submap], correction: "FrameCorrection", f
     20-second local map is not itself bent by drift; each match is then re-expressed in recorded
     coordinates for the final graph. With `breaks` (video), segments are joined only loosely: the first
     pass fixes their headings from the walls, but their placement is off by up to about half a metre per
-    break, so the search between places in different segments widens accordingly."""
+    break, so the search between places in different segments widens accordingly. A break can also leave the rest
+    of the walk turned about the break by a quarter turn or more, which wall directions cannot see: across a
+    break, places are paired where they land after each quarter turn about the break's first place, matched
+    within BREAK_YAW_WINDOW_DEG of that turn, and a quarter turn is kept only when it clearly beats the others
+    (a square room fits two)."""
     t = capture.timestamps
     positions = np.asarray(capture.positions, float)
     walked = np.concatenate([[0.0], np.cumsum(np.linalg.norm(np.diff(positions, axis=0), axis=1))])
@@ -363,17 +370,27 @@ def _loop_links(capture, submaps: list[Submap], correction: "FrameCorrection", f
     delta_xz = first_pass.delta[:, [0, 2]]
     trees: dict[int, cKDTree] = {}
     links, proposed = [], 0
+    first_of: dict[int, int] = {}
+    for i, sm in enumerate(submaps):
+        first_of.setdefault(sm.segment, i)
+
+    def accept(m, centre, window_deg, shift_bound):
+        moved = float(np.linalg.norm(m.apply(centre[None])[0] - centre))
+        return (m.overlap_fraction >= LOOP_MIN_OVERLAP and m.overlap_median_m <= LOOP_MAX_OVERLAP_RESIDUAL_M
+                and m.inlier_fraction >= LOOP_MIN_INLIERS and m.ambiguity <= LOOP_MAX_AMBIGUITY
+                and abs(m.yaw_deg) <= window_deg and moved <= shift_bound + 0.05)
+
     for b in range(len(submaps)):
         if not usable[b]:
             continue
+        seg_b = submaps[b].segment
         near = [(float(np.linalg.norm(here[b] - here[a])), a) for a in range(b)
-                if usable[a] and t[submaps[b].anchor] - t[submaps[a].anchor] >= LOOP_MIN_GAP_S]
+                if usable[a] and t[submaps[b].anchor] - t[submaps[a].anchor] >= LOOP_MIN_GAP_S
+                and not (breaks and submaps[a].segment != seg_b)]
         for distance, a in sorted(near)[:LOOP_CANDIDATES]:
             if distance > LOOP_RADIUS_M:
                 break
             yaw_bound, shift_bound = drift_bounds(abs(walked[submaps[b].anchor] - walked[submaps[a].anchor]))
-            if breaks:
-                shift_bound += BREAK_LOOP_SHIFT_M * abs(submaps[b].segment - submaps[a].segment)
             tree = trees.setdefault(a, cKDTree(maps[a][0]))
             d0, _ = tree.query(maps[b][0], distance_upper_bound=min(max(0.3, shift_bound), 0.6))
             if np.mean(np.isfinite(d0)) < LOOP_MIN_SHARED_BEFORE:
@@ -381,16 +398,92 @@ def _loop_links(capture, submaps: list[Submap], correction: "FrameCorrection", f
             proposed += 1
             m = match_walls(maps[a][0], maps[a][1], maps[b][0], yaw_range_deg=(-yaw_bound, yaw_bound),
                             max_shift_m=shift_bound)
-            if m is None:
-                continue
-            centre = maps[b][0].mean(axis=0)
-            moved = float(np.linalg.norm(m.apply(centre[None])[0] - centre))
-            if (m.overlap_fraction >= LOOP_MIN_OVERLAP and m.overlap_median_m <= LOOP_MAX_OVERLAP_RESIDUAL_M
-                    and m.inlier_fraction >= LOOP_MIN_INLIERS and m.ambiguity <= LOOP_MAX_AMBIGUITY
-                    and abs(m.yaw_deg) <= yaw_bound and moved <= shift_bound + 0.05):
+            if m is not None and accept(m, maps[b][0].mean(axis=0), yaw_bound, shift_bound):
                 links.append(to_recorded_link(a, b, m.yaw_deg, m.shift, anchors_xz, first_pass.theta, delta_xz,
                                               LOOP_SIGMA))
+        if not breaks or seg_b == submaps[0].segment:
+            continue
+        # Across tracking breaks: the rest of the walk may be turned about the break by any quarter turn, so
+        # places are paired where they land after each quarter turn about where the camera was at the break.
+        pivot = correction.positions[int(submaps[first_of[seg_b]].frames[0])][[0, 2]]
+        across = []
+        for a in range(b):
+            if (not usable[a] or submaps[a].segment == seg_b
+                    or t[submaps[b].anchor] - t[submaps[a].anchor] < LOOP_MIN_GAP_S):
+                continue
+            for k in range(4):
+                landed = rot2(k * np.pi / 2) @ (here[b] - pivot) + pivot
+                gap = float(np.linalg.norm(landed - here[a]))
+                if gap <= LOOP_RADIUS_M:
+                    across.append((gap, a, k))
+        options: dict[int, list] = {}
+        for _, a, k in sorted(across)[:4 * LOOP_CANDIDATES]:
+            _, shift_bound = drift_bounds(abs(walked[submaps[b].anchor] - walked[submaps[a].anchor]))
+            shift_bound += BREAK_LOOP_SHIFT_M * abs(seg_b - submaps[a].segment)
+            turn = rot2(k * np.pi / 2)
+            source = (maps[b][0] - pivot) @ turn.T + pivot
+            tree = trees.setdefault(a, cKDTree(maps[a][0]))
+            d0, _ = tree.query(source, distance_upper_bound=min(max(0.3, shift_bound), 0.6))
+            if np.mean(np.isfinite(d0)) < LOOP_MIN_SHARED_BEFORE:
+                continue
+            proposed += 1
+            m = match_walls(maps[a][0], maps[a][1], source,
+                            yaw_range_deg=(-BREAK_YAW_WINDOW_DEG, BREAK_YAW_WINDOW_DEG), max_shift_m=shift_bound)
+            if m is not None and accept(m, source.mean(axis=0), BREAK_YAW_WINDOW_DEG, shift_bound):
+                # source turned by k quarter turns about the pivot, then matched: compose back
+                shift = m.shift + rot2(np.radians(m.yaw_deg)) @ (pivot - turn @ pivot)
+                options.setdefault(a, []).append((m.score, m.yaw_deg + 90.0 * k, shift))
+        for a, found in options.items():
+            found.sort(key=lambda f: -f[0])
+            if len(found) > 1 and found[1][0] >= QUARTER_TURN_MARGIN * found[0][0]:
+                continue  # two quarter turns fit about equally well (a square room): do not guess
+            links.append(to_recorded_link(a, b, found[0][1], found[0][2], anchors_xz, first_pass.theta, delta_xz,
+                                          LOOP_SIGMA))
     return links, proposed
+
+
+def segment_turns(submaps: list[Submap], loops: list[Link], theta: np.ndarray) -> dict[int, float]:
+    """Turn (degrees) each segment needs on top of the first pass, from the loop closures across tracking breaks
+    (circular mean per pair of segments), chained outwards from the first segment. A loop from place a to place
+    b asks for theta[b] - theta[a] = its turn, so turn - (theta[b] - theta[a]) is what b's segment still needs
+    relative to a's."""
+    votes: dict[tuple[int, int], list[float]] = {}
+    for link in loops:
+        ga, gb = submaps[link.target].segment, submaps[link.source].segment
+        if ga != gb:
+            votes.setdefault((ga, gb), []).append(np.radians(link.yaw_deg) - (theta[link.source] - theta[link.target]))
+    edges = {pair: float(np.arctan2(np.mean(np.sin(v)), np.mean(np.cos(v)))) for pair, v in votes.items()}
+    segments = sorted({s.segment for s in submaps})
+    turns, frontier = {segments[0]: 0.0}, [segments[0]]
+    while frontier:
+        g = frontier.pop()
+        for (ga, gb), turn in edges.items():
+            if ga == g and gb not in turns:
+                turns[gb] = turns[g] + turn
+                frontier.append(gb)
+            elif gb == g and ga not in turns:
+                turns[ga] = turns[g] - turn
+                frontier.append(ga)
+    return {g: float(np.degrees(wrap(turns.get(g, 0.0), 2 * np.pi))) for g in segments}
+
+
+def _turned_start(submaps: list[Submap], first_pass, turns_deg: dict[int, float],
+                  pivots: dict[int, np.ndarray]) -> tuple[np.ndarray, np.ndarray]:
+    """First-pass solution with each segment turned rigidly, about where the camera was at its break (plan x, z in
+    the first pass), by the turn its loops agree on."""
+    theta, delta = first_pass.theta.copy(), first_pass.delta.copy()
+    anchors = np.array([s.node.anchor for s in submaps], float)
+    for g, turn_deg in turns_deg.items():
+        ids = [i for i, s in enumerate(submaps) if s.segment == g]
+        if abs(turn_deg) < 1.0 or not ids:
+            continue
+        angle = np.radians(turn_deg)
+        corrected = anchors[ids][:, [0, 2]] + delta[ids][:, [0, 2]]
+        moved = (corrected - pivots[g]) @ rot2(angle).T + pivots[g]
+        theta[ids] += angle
+        delta[ids, 0] = moved[:, 0] - anchors[ids, 0]
+        delta[ids, 2] = moved[:, 1] - anchors[ids, 2]
+    return theta, delta
 
 
 def _frame_correction(capture, submaps, segments, jumps, solution) -> FrameCorrection:
@@ -483,7 +576,14 @@ def estimate_drift(capture, points: PointSet, jumps: list[tuple[int, int]] | Non
     first_pass = solve(nodes, odometry, links)
     straightened = _frame_correction(capture, submaps, segments, jumps, first_pass)
     loops, report.loops_proposed = _loop_links(capture, submaps, straightened, first_pass, breaks=not relocalized)
-    solution = solve(nodes, odometry, links + loops)
+    start = None
+    if not relocalized and len(segments) > 1:
+        turns = segment_turns(submaps, loops, first_pass.theta)
+        report.segment_turns_deg = {int(g): round(t, 1) for g, t in turns.items() if abs(t) >= 1.0}
+        if report.segment_turns_deg:
+            pivots = {g: straightened.positions[first][[0, 2]] for g, (first, _) in enumerate(segments)}
+            start = _turned_start(submaps, first_pass, turns, pivots)
+    solution = solve(nodes, odometry, links + loops, start=start)
     report.heading_priors_used = solution.heading_priors_used
     report.loops_accepted = sum(l.kind == "loop" for l in solution.links_used)
     report.loops_rejected_by_graph = sum(l.kind == "loop" for l in solution.links_rejected)

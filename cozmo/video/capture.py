@@ -55,6 +55,7 @@ SEAM_SIGMA_MIN = 0.01
 MIN_FLOOR_NORMALS = 300         # below this a run is not levelled on its own floor (c00a: 36 -> 36 deg wrong, 417 -> 1.8 deg)
 BREAK_CONF = 2.0                # a key-frame pair is doubtful when a frame's median DA3 confidence is below this
 LONG_BREAK_PAIRS = 3            # a longer run of doubtful pairs drops the frames inside it
+UNSURE_FRAME_CONF = 1.2         # depth of frames DA3 is very unsure about (blank walls up close) is not fused
 FOCAL_SIGMA_GIVEN = 0.02
 FOCAL_SIGMA_LINES_MIN = 0.015   # room-line focal: bootstrap spread, but never below this (errors 0.0%, 1.6%)
 FOCAL_SIGMA_DA3 = 0.10          # DA3's own focal: 10% too long on both our walks
@@ -497,6 +498,8 @@ def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain:
         confidences[i][_confident(chain.conf[i])] = 2
     frame_conf = np.array([float(np.median(c)) for c in chain.conf])
     breaks = tracking_breaks(frame_conf)
+    unsure = frame_conf < UNSURE_FRAME_CONF
+    confidences[unsure] = 0     # their ghost walls turn loosely held stretches of the walk the wrong way
 
     info = {"frames": n, "runs": len(runs), "keyframe_fps": KEYFRAME_FPS, "depth_size": [w, h],
             "camera": "DA3 ray output" if RAY_POSE else "DA3 camera head",
@@ -504,7 +507,7 @@ def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain:
             "fx_over_width_da3_median": round(float(np.median(run_fx)), 4), "metric_gain": metric_gain,
             "fx_over_width_per_run": [round(v, 4) for v in run_fx],
             "scale_sigma": round(scale_sigma, 4), "range_correction": [RANGE_A, RANGE_B] if range_correction else None,
-            "tracking_breaks": len(breaks),
+            "tracking_breaks": len(breaks), "frames_depth_ignored": int(unsure.sum()),
             "frames_dropped_at_breaks": int(sum(b - a - 1 for a, b in breaks)), **chain.info}
     (work_dir / "video_capture.json").write_text(json.dumps(info, indent=2))
     timestamps = np.arange(n) / KEYFRAME_FPS

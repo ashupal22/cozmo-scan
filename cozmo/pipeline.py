@@ -97,16 +97,16 @@ VIDEO_FACE_SCATTER_M = 0.048  # video wall points across their wall, true poses,
 
 
 def plan_video_capture(capture, path: Path, t0: float, drift: bool = True) -> Plan:
-    """Video walks are not cut at their tracking breaks (capture.breaks). On our three walks, cutting there and
-    re-attaching the pieces made the wall map agree better with LiDAR (1a8384c3f6 0.55 -> 0.63, c7d28f72c6
-    0.39 -> 0.49) but did not improve the plans (bench/README.md), so the breaks are only reported."""
-    plan = plan_capture(capture, path, "video", t0, drift=drift, jumps=[], relocalized=False,
+    """Video walks are cut at their tracking breaks (capture.breaks) and drift correction re-attaches the pieces:
+    wall directions fix small heading errors, and loop closures across a break try every quarter turn, since a
+    break can leave the rest of the walk turned by 60-90 degrees (docs/fix_loop.md)."""
+    plan = plan_capture(capture, path, "video", t0, drift=drift, jumps=list(capture.breaks), relocalized=False,
                         errors=video_errors(capture.scale_sigma), face_scatter_m=VIDEO_FACE_SCATTER_M)
     document, info = plan.document, capture.info
     document["quality"]["warnings"] += [
         f"no depth sensor: wall positions come from a learned depth model (Depth Anything 3) on {info['frames']} "
-        f"key frames; camera tracking was doubtful at {len(capture.breaks)} place(s), where parts of the plan may be "
-        f"turned or shifted",
+        f"key frames; camera tracking was doubtful at {len(capture.breaks)} place(s), where the walk was cut and "
+        f"re-attached by wall directions and loop closures",
         f"real size set by a monocular metric-depth model, focal length from {info['focal_source']}: scale "
         f"uncertainty {100 * capture.scale_sigma:.1f}% (1 sigma), applied to every length",
     ]
