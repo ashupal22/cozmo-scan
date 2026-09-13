@@ -125,6 +125,12 @@ def plan_video_capture(capture, path: Path, t0: float, drift: bool = True) -> Pl
         f"real size set by a monocular metric-depth model, focal length from {info['focal_source']}: scale "
         f"uncertainty {100 * capture.scale_sigma:.1f}% (1 sigma), applied to every length",
     ]
+    from cozmo.video.capture import KEYFRAME_FPS
+    if info["keyframe_fps"] < KEYFRAME_FPS - 1e-6:
+        document["quality"]["warnings"].append(
+            f"long clip: key frames taken at {info['keyframe_fps']:.2f}/s instead of {KEYFRAME_FPS:.1f}/s, to keep the "
+            f"run inside the 10 minute budget. Frames are further apart, so the camera path is less certain than on a "
+            f"shorter clip of the same space")
     document["quality"]["low_confidence"] = True
     return plan
 

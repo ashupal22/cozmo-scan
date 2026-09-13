@@ -1,25 +1,77 @@
 # Walk-in test runbook
 
-What we do at the defense, on the demo laptop (Apple silicon Mac, set up with `bash scripts/install.sh`).
+What we do at the defense, on the demo laptop (Apple silicon Mac). The examiners capture a space we have
+never seen, choose the tier on the day, and measure it with a laser while the pipeline runs.
 
-## Before the examiners arrive
+## The evening before
 
-1. `cd cozmo-scan && source .venv/bin/activate && pytest -q`: 114 tests, about 30 s.
-2. Warm the models so the first run does not pay for loading: `python scripts/fetch_models.py`. The weights are already cached, so this is instant.
-3. Check free disk space (a video run writes key frames and model outputs, about 1 GB for 3 minutes of video) and plug in power.
+```bash
+cd cozmo-scan && bash scripts/install.sh      # creates .venv and installs pinned dependencies
+source .venv/bin/activate
+pytest -q                                     # 114 tests, about 24 s
+python scripts/fetch_models.py                # DA3 weights into the local cache; instant when already there
+df -h .                                       # need 5 GB free: a video run writes about 1.2 GB
+```
+
+Then rehearse: run one capture of each tier end to end, offline (`HF_HUB_OFFLINE=1`), and time it. The first
+invocation of the day must never be the examiners'.
+
+## Opening, before anything runs
+
+Say the failures first. They are in `docs/benchmark_report.md` and they will be found anyway:
+
+> LiDAR is our measuring tier and it holds: ceiling within 15 mm on 6 of 6 public walks with laser truth,
+> and two walks of the same flat agree to 1.9% on footprint. Video and photo miss their wall gates, and our
+> fix-loop prediction was wrong — the fix is shipped but switched off, and the post-mortem says why.
+> Every number carries an interval widened from measured error, not guessed. Please check the intervals,
+> not only the values.
+
+This is the ground we are actually strong on. The brief caps the score for confident garbage on thin input;
+being the team whose ranges mean what they say is the thing we can win today.
 
 ## When the capture arrives
 
-| Tier they choose | What we receive | Command | Expected time on an M4 |
+1. `cozmo inspect <path>` — one second. Shows the tier it detected and the capture summary.
+2. **Say the prediction out loud before the laser touches a wall.** LiDAR: walls within 2 cm, ceiling within
+   1.5 cm. Video: expect several percent out, and the interval will be wide enough to say so. Photo: wider still.
+3. Run it:
+
+| Tier | What arrives | Command | Cold time on an M4 |
 |---|---|---|---|
-| LiDAR | Stray Scanner export folder (AirDrop or Files) | `cozmo run <folder>` | 30 s for a 1-room walk, about 2 min for a whole flat |
-| Video | One `.mov` (AirDrop) | `cozmo run <file>.mov` | about 10 s per second of video on first run |
-| Photo | Photos (AirDrop), sorted into one folder per room | `cozmo run <folder>` | about 15–20 s per room |
+| LiDAR | Stray Scanner export folder (AirDrop) | `cozmo run <folder>` | 19 s for a 3-room flat |
+| Video | one `.mov` (AirDrop) | `cozmo run <file>.mov` | under 7 min, any clip length |
+| Photo | photos sorted into one folder per room | `cozmo run <folder>` | about 15 s per room |
 
-`--no-damage` saves 20–60 s if time is short. Every run writes `out/<name>/result.json` and `plan.svg`. Open the SVG in a browser to show the plan.
+Video is capped at 120 key frames, so a longer walk costs accuracy, not time (`cozmo/video/capture.py`).
+`--no-damage` saves 20–60 s if the clock is against us.
 
-## Reading the output with the examiners
+4. Narrate while it runs: fuse depth into points → drift correction → floor → walls-first layout → rooms split
+   at doorways → openings → damage → JSON and SVG.
+5. Open `plan.svg` in a browser. Read each value **with its interval** before they measure.
+6. Show `result.json`: one wall, one opening, one damage region, one concealed flag with the rule that fired,
+   one scope line. That is the output contract, item by item.
+7. Show `bench/results/drift_*_on.svg` against `_off.svg`. Pre-computed — never run the ablation live.
 
-- **Rooms:** each room lists its walls (`R1.W1`, ...) with a length and a 90% interval. Compare each laser reading with the interval, not only with the value.
-- **Warnings:** `quality.warnings` says what was not seen: a ceiling (its height is then a prior, `observed: false`), a wall behind the photographer, a tracking break in a video. These are the places to expect larger errors.
-- **Tier trust:** LiDAR is the measuring tier. Video and photo intervals are widened 4.5× and 5.1×, because those tiers miss their gates (`docs/benchmark_report.md`).
+## If it fails
+
+Say "the fallback is in the pipeline", and run the same capture one tier down. A Stray export contains the
+video, so a LiDAR failure re-runs as `cozmo run <folder>/rgb.mp4`. Rehearse the sentence and the command.
+
+## Reading the output with them
+
+- **Rooms**: walls (`R1.W1`, ...) with a length and a 90% interval. Compare the laser reading with the interval.
+- **Warnings**: `quality.warnings` names what was not seen — an unobserved ceiling (`observed: false`), a wall
+  behind the photographer, a tracking break, glass or a wet-look floor in view. These are where to expect error,
+  and we said so before they measured.
+- **Tier trust**: LiDAR is the measuring tier. Video and photo intervals are widened 4.5x and 5.1x because those
+  tiers miss their gates (`docs/benchmark_report.md`).
+
+## Questions to have answers ready for, tools closed
+
+- **Why does video miss by so much?** The error is in the camera path, not the depth: with LiDAR poses and video
+  depth the footprint is unbiased.
+- **Your fix-loop prediction was wrong. What happened?** `docs/fix_loop.md` — root cause, the shipped fix, the
+  measured result, and why it is switched off.
+- **Why walls first?** Repeatability. Rooms reach their walls behind furniture, so two walks of the same flat
+  went from 10.2% to 1.9% apart on footprint.
+- **What do you do about drift?** Pose graph over wall directions and loop closures, with the on/off ablation.

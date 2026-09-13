@@ -27,7 +27,7 @@ Follow these steps exactly. Every "why" comes from a measured failure, listed in
 
 1. In **Settings → Camera → Record Video**, choose **1080p HD at 30 fps** and turn **HDR Video off**. *Why: our tests used standard 8-bit video.*
 2. Open the **Camera** app, choose Video, use the 1× lens. Do not zoom; do not use Cinematic or Action mode.
-3. Walk the same route as for LiDAR: the ceiling sweep in every room, through every doorway, back to the start. Allow about **30 seconds per room**, and keep the clip **under 3 minutes**. *Why: processing takes about 10 s per second of video.*
+3. Walk the same route as for LiDAR: the ceiling sweep in every room, through every doorway, back to the start. Allow about **30 seconds per room**, and keep the clip **under 2 minutes**. *Why: a run costs about 3.4 s per key frame, so the pipeline caps a clip at 120 key frames to stay inside the 10 minute budget. A longer walk is not refused, but its key frames are spaced further apart and the camera path gets less certain; the output says when this happened.*
 4. **Turn slowly**: take about 3 seconds for a quarter turn. *Why: faster turns in front of plain walls broke the camera path in our tests.*
 5. Hand-off: AirDrop the `.mov` file to the Mac, then run `cozmo run <file>.mov`.
 

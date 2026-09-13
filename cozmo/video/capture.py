@@ -43,6 +43,12 @@ from cozmo.video import da3
 from cozmo.video.focal import estimate_focal
 
 KEYFRAME_FPS = 3.0
+# A cold video run costs about 3.4 s of Apple-silicon GPU time per key frame (bench/results/timing_cold_video.json:
+# 111 frames, 378 s). The runtime gate is 10 minutes per capture (docs/gates.md, A-RUNTIME), and the capture protocol
+# allows a 3 minute clip, which at 3 fps is 540 frames and over half an hour. So the frame count is capped and the
+# key-frame rate drops instead: runtime is bounded by the cap, not by how long the examiner chose to walk. Frames are
+# spaced further apart on a long clip, which costs pose accuracy; the output says so.
+MAX_KEYFRAMES = 120
 FRAME_LONG_SIDE = 960
 RUN, OVERLAP = 12, 4            # longer runs fold opposite white walls together on our walks (bench/README.md)
 PROCESS_RES = 504
@@ -122,6 +128,27 @@ def video_key(video: Path, fps: float = KEYFRAME_FPS, long_side: int = FRAME_LON
         f.seek(max(size - (1 << 20), 0))
         h.update(f.read(1 << 20))
     return h.hexdigest()[:12]
+
+
+def video_duration_s(video: Path) -> float | None:
+    """Clip length in seconds from ffprobe, or None when it cannot be read."""
+    if not shutil.which("ffprobe"):
+        return None
+    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0",
+                          str(video)], capture_output=True, text=True)
+    try:
+        return float(out.stdout.strip())
+    except ValueError:
+        return None
+
+
+def keyframe_fps(video: Path, fps: float = KEYFRAME_FPS, max_frames: int = MAX_KEYFRAMES) -> float:
+    """The key-frame rate to use: KEYFRAME_FPS, lowered so a long clip still gives at most `max_frames`
+    frames and so finishes inside the runtime gate."""
+    duration = video_duration_s(video)
+    if duration is None or duration <= 0:
+        return fps
+    return min(fps, max_frames / duration)
 
 
 def extract_keyframes(video: Path, out_dir: Path, fps: float = KEYFRAME_FPS, long_side: int = FRAME_LONG_SIDE) -> list[Path]:
@@ -466,7 +493,8 @@ def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain:
     calibration benchmark measures with 1.0)."""
     metric_gain = METRIC_DEPTH_GAIN if metric_gain is None else metric_gain
     video, work_dir = Path(video), Path(work_dir)
-    frames = extract_keyframes(video, work_dir / "frames")
+    fps = keyframe_fps(video)
+    frames = extract_keyframes(video, work_dir / "frames", fps=fps)
     n = len(frames)
     runs = runs_for(n)
     cache = cache_dir(work_dir, video)
@@ -501,7 +529,7 @@ def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain:
     else:
         unsure = np.zeros(n, bool)
 
-    info = {"frames": n, "runs": len(runs), "keyframe_fps": KEYFRAME_FPS, "depth_size": [w, h],
+    info = {"frames": n, "runs": len(runs), "keyframe_fps": round(fps, 3), "depth_size": [w, h],
             "camera": "DA3 ray output" if RAY_POSE else "DA3 camera head",
             "fx_over_width": round(fx_over_width, 4), "focal_source": focal_source, "focal_sigma": round(focal_sigma, 4),
             "fx_over_width_da3_median": round(float(np.median(run_fx)), 4), "metric_gain": metric_gain,
@@ -510,7 +538,7 @@ def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain:
             "tracking_breaks": len(breaks), "frames_depth_ignored": int(unsure.sum()),
             "frames_dropped_at_breaks": int(sum(b - a - 1 for a, b in breaks)), **chain.info}
     (work_dir / "video_capture.json").write_text(json.dumps(info, indent=2))
-    timestamps = np.arange(n) / KEYFRAME_FPS
+    timestamps = np.arange(n) / fps
     Ks = np.repeat(K[None], n, axis=0)
     depth = correct_range(chain.depth) if range_correction else chain.depth
     return VideoCapture(video, frames, timestamps, chain.c2w[:, :3, 3].copy(), chain.c2w[:, :3, :3].copy(),
