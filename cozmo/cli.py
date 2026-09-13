@@ -102,7 +102,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--json", action="store_true", help="print the summary as JSON")
     p.set_defaults(func=cmd_inspect)
 
-    p = sub.add_parser("run", help="measure a capture: writes result.json and plan.svg")
+    p = sub.add_parser("run", help="measure a capture: writes result.json, plan.svg, summary.md, report.png and report.pdf")
     p.add_argument("path", help="capture to measure: Stray Scanner LiDAR folder, video file, or folder of room photo folders")
     p.add_argument("--out", help="output folder (default: out/<capture name>)")
     p.add_argument("--no-drift", action="store_true", help="skip drift correction (for the on/off ablation)")
