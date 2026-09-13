@@ -1,0 +1,86 @@
+{
+  "c00a170fe1": {
+    "camera_matrix.csv": {
+      "bytes": 63,
+      "sha256": "b5e057974960214e81afe766656df50f72d8d0d6818d2ae5c4c9676f7b9f7d84"
+    },
+    "confidence/": {
+      "files": 1715,
+      "bytes": 8142225,
+      "sha256": "fc20871e34aaa5fc8492b299047d461e07d960fc15bf203298b2762f2796a940"
+    },
+    "depth/": {
+      "files": 1715,
+      "bytes": 35865476,
+      "sha256": "a0b505821a2fa1b696daecccc7447b0e659dd949b68c18683d8c206fcde6055a"
+    },
+    "imu.csv": {
+      "bytes": 512501,
+      "sha256": "087c08b20da1eab7e82c035d93e252ea2d5c0c1d7162fc35aa2c58dd3cc5b7de"
+    },
+    "odometry.csv": {
+      "bytes": 266631,
+      "sha256": "4ff57818e7353af9c0fdf318bdd8d23140a42fddde11a30ec509ae93310affb1"
+    },
+    "rgb.mp4": {
+      "bytes": 43716638,
+      "sha256": "778648a6b2c749a16d52c9649dd579b396b0ee26fa788e5c1c021c46ace47662"
+    }
+  },
+  "1a8384c3f6": {
+    "camera_matrix.csv": {
+      "bytes": 64,
+      "sha256": "ab0ee09a069fce6b3623edaeba6c96f118fdd033367243a17390627d1e99ca61"
+    },
+    "confidence/": {
+      "files": 5251,
+      "bytes": 26072112,
+      "sha256": "ea1a4a7c2c0386b10e8c70d562e1595703c85b0d1e04940d960d85eaa977045f"
+    },
+    "depth/": {
+      "files": 5251,
+      "bytes": 113533452,
+      "sha256": "1a0e4c7e8abc2ce0ae5d0cc3b577d12554c9da5fbad6184898b978d898cf415b"
+    },
+    "imu.csv": {
+      "bytes": 1588468,
+      "sha256": "e273351c5329cb8417db76d84a9b421ea8a3c1fdc5e3381ec7dc07e02ff9d37f"
+    },
+    "odometry.csv": {
+      "bytes": 810936,
+      "sha256": "2ee32c3f351c5806a1fab7e2eb6736fa7424c9b9d105366be4d99eadec44dc12"
+    },
+    "rgb.mp4": {
+      "bytes": 134726501,
+      "sha256": "0f11d2b56e50d7859d3c5dfa0e2a85726c263ed61685b3adce054d858d55f4e7"
+    }
+  },
+  "c7d28f72c6": {
+    "camera_matrix.csv": {
+      "bytes": 64,
+      "sha256": "ff897e412bb279920a98d6257554334a7df6b36abc4a053c782a0c403b06e108"
+    },
+    "confidence/": {
+      "files": 9745,
+      "bytes": 47784231,
+      "sha256": "2184360ae853885711b7a3f0c4d4033ca4c9184aed55bad2b7fd57f02dd7f1a4"
+    },
+    "depth/": {
+      "files": 9745,
+      "bytes": 203857543,
+      "sha256": "bdc7ec61736694f3d3900a274234ea9754fd50c74b14e0f37560bd4f8a7ccd8f"
+    },
+    "imu.csv": {
+      "bytes": 2973457,
+      "sha256": "dbef36b7e75b96c72e29bcbbdbae47e66179fd5b0c852fe1e409c0182f479904"
+    },
+    "odometry.csv": {
+      "bytes": 1498253,
+      "sha256": "27fff9796d5bb0a73c96c923588ff8e3ce0b3a33abe7e6a1164e3324021d0843"
+    },
+    "rgb.mp4": {
+      "bytes": 252331542,
+      "sha256": "dad93c96d6255e7d9e344c772c1dad287198a0d1800dc64ee31ad8f91a54ae7c"
+    }
+  }
+}

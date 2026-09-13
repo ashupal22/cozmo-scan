@@ -37,3 +37,13 @@ Public datasets with ground truth are downloaded into `data/external/`, which gi
 python scripts/fetch_external.py arkitscenes     # ~1 GB: LiDAR walks with laser-scanner depth
 python scripts/fetch_external.py houselayout3d   # ~32 MB: multi-room layout annotations
 ```
+
+## Check your copies
+
+`data/captures_manifest.json` holds the SHA-256 of every file of the three captures. It gives one digest per `depth/` and
+`confidence/` folder. To confirm that your Google Drive copies are the ones every result used:
+
+```bash
+python scripts/capture_manifest.py /path/to/captures --check
+```
+

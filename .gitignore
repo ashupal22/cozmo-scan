@@ -1,6 +1,7 @@
 # Capture data lives on Google Drive, never in git (see data/README.md)
 data/*
 !data/README.md
+!data/captures_manifest.json
 *.mp4
 *.mov
 *.MOV
