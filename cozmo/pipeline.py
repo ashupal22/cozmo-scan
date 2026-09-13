@@ -7,14 +7,14 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from cozmo.export.document import LIDAR_ERRORS, ErrorModel, build_document, video_errors
+from cozmo.export.document import LIDAR_ERRORS, ErrorModel, build_document, photo_errors, video_errors
 from cozmo.export.render import render_svg
 from cozmo.export.validate import validate_output
 from cozmo.geometry.fusion import fuse
 from cozmo.geometry.layout import LIDAR_FACE_SCATTER_M, NotManhattan, build_layout
-from cozmo.geometry.planes import find_floors
+from cozmo.geometry.planes import HorizontalPlane, find_floors
 from cozmo.geometry.rooms import build_room_map, room_ceilings
-from cozmo.geometry.walls import attach_doorways, outline_rooms
+from cozmo.geometry.walls import OpeningOnWall, RoomOutline, WallSegment, attach_doorways, outline_rooms
 from cozmo.ingest.detect import VIDEO_EXT, detect_tier
 from cozmo.ingest.stray import CaptureError, StrayCapture
 from cozmo.slam.drift import estimate_drift
@@ -58,6 +58,7 @@ class Plan:
     floor: object       # HorizontalPlane
     outlines: dict      # room id -> RoomOutline
     correction: object = None  # FrameCorrection (per-frame corrected camera positions), None without drift correction
+    photo_rooms: list = None   # photo tier: the per-room models (cozmo/photo/room.py), each in its own frame
 
 
 def plan_capture(capture, path: Path, tier: str, t0: float, drift: bool = True, jumps=None, relocalized: bool = True,
@@ -133,6 +134,57 @@ def run_video(path: Path, work_dir: Path, drift: bool = True, fx_over_width: flo
     return plan_video_capture(load_video(path, work_dir, fx_over_width=fx_over_width), path, t0, drift=drift)
 
 
+def run_photos(path: Path, work_dir: Path, fx_over_width: float | None = None) -> Plan:
+    """One folder per room: each room measured on its own (cozmo/photo/room.py), then joined through its doors."""
+    import math
+
+    from cozmo.ingest.photos import photo_rooms, photo_warnings
+    from cozmo.photo.room import build_room
+    from cozmo.stitch.solver import Room, stitch
+    t0 = time.time()
+    folders = photo_rooms(path)
+    rooms = [build_room(name, files, Path(work_dir) / "cache", k + 1, fx_over_width)
+             for k, (name, files) in enumerate(folders.items())]
+    result = stitch([Room(r.name, r.outline.vertices, r.doors) for r in rooms])
+    other = {}
+    for pair in result.pairs:
+        other[(pair.room_a, pair.door_a)] = pair.room_b
+        other[(pair.room_b, pair.door_b)] = pair.room_a
+    outlines, openings, ceilings = {}, [], {}
+    for k, r in enumerate(rooms):
+        at = result.placements[k]
+        walls = [WallSegment(at.apply(w.start), at.apply(w.end), w.length_m, w.face_spread_m, w.support)
+                 for w in r.outline.walls]
+        outlines[k + 1] = RoomOutline(k + 1, r.outline.yaw_deg + math.degrees(at.angle), at.apply(r.outline.vertices), walls)
+        for d in range(len(r.doors)):
+            o = other.get((k, d))
+            openings.append(OpeningOnWall(k + 1, r.door_walls[d], r.door_offsets[d], r.doors[d].width_m,
+                                          None if o is None else o + 1, d, r.door_measured[d]))
+        ceilings[k + 1] = HorizontalPlane(r.ceiling_m, r.ceiling_sigma_m, 1) if r.ceiling_m is not None else None
+    info = {"id": Path(path).name, "tier": "photo", "device": None, "input_path": str(path),
+            "pipeline_version": _code_version()}
+    document, _ = build_document(info, HorizontalPlane(0.0, 0.0, 1), None, outlines, ceilings, openings,
+                                 time.time() - t0, drift=None, errors=photo_errors(max(r.scale_sigma for r in rooms)))
+    for room, r in zip(document["rooms"], rooms):
+        room["label"] = r.name
+    plan = document["plan"]
+    plan["drift"] = {"enabled": False, "correction": [], "notes": "not applicable: each room is measured from its own photos"}
+    plan["stitch"] = {"method": "door_matching", "low_confidence": True,
+                      "notes": f"{len(result.pairs)} door pair(s) join {len(rooms)} rooms into {result.islands} group(s); "
+                               f"groups not joined by a door are set beside the plan, where they really are is unknown"}
+    warnings = document["quality"]["warnings"]
+    warnings[:] = [w for w in warnings if not w.startswith("drift correction switched off")]
+    warnings += photo_warnings(folders) + [w for r in rooms for w in r.warnings] + [
+        "no depth sensor and no camera poses: each room's walls come from a learned depth model (Depth Anything 3) "
+        "on its own photos, sized by a monocular metric-depth model; focal length from "
+        + ", ".join(sorted({r.focal_source for r in rooms})),
+        f"rooms joined through their doors: {result.islands} group(s); the photo tier's stitch is not yet reliable "
+        f"(bench/README.md), so check the adjacency"]
+    document["quality"]["low_confidence"] = True
+    yaw = next(iter(outlines.values())).yaw_deg
+    return Plan(document, yaw, None, None, outlines, None, rooms)
+
+
 def run(path, out_dir, drift: bool = True) -> Path:
     path, out_dir = Path(path), Path(out_dir)
     tier = detect_tier(path)
@@ -142,7 +194,7 @@ def run(path, out_dir, drift: bool = True) -> Path:
         video = path if path.is_file() else next(c for c in sorted(path.iterdir()) if c.suffix.lower() in VIDEO_EXT)
         plan = run_video(video, out_dir / "video_work", drift=drift)
     else:
-        raise NotBuiltYet(f"the {tier} tier is not built yet")
+        plan = run_photos(path, out_dir / "photo_work")
     document, yaw = plan.document, plan.yaw_deg
     out_dir.mkdir(parents=True, exist_ok=True)
     svg_path = out_dir / "plan.svg"

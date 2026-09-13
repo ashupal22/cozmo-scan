@@ -1,0 +1,477 @@
+{
+  "benchmark": "photo_vs_lidar",
+  "code_commit": "71cfbac-dirty",
+  "photo_interval_scale": 5.1,
+  "walks": {
+    "c00a170fe1": {
+      "rooms": [
+        {
+          "room": "room_1",
+          "photos": 4,
+          "sides_seen": 3,
+          "focal": "given",
+          "lidar_room_area_m2": 11.66,
+          "photo_area_m2": 9.08,
+          "area_interval": [
+            2.05,
+            40.24
+          ],
+          "area_error_pct": -22.2,
+          "doors": 1,
+          "dimensions": [
+            {
+              "photo": 2.466,
+              "lidar": 3.452,
+              "interval": [
+                1.466,
+                4.148
+              ],
+              "error_pct": -28.6,
+              "holds": true,
+              "z": 5.48
+            },
+            {
+              "photo": 3.682,
+              "lidar": 4.709,
+              "interval": [
+                1.459,
+                9.292
+              ],
+              "error_pct": -21.8,
+              "holds": true,
+              "z": 1.88
+            }
+          ]
+        },
+        {
+          "room": "room_2",
+          "photos": 6,
+          "sides_seen": 3,
+          "focal": "given",
+          "lidar_room_area_m2": 7.37,
+          "photo_area_m2": 3.99,
+          "area_interval": [
+            0.61,
+            25.99
+          ],
+          "area_error_pct": -45.8,
+          "doors": 1,
+          "dimensions": [
+            {
+              "photo": 1.868,
+              "lidar": 2.427,
+              "interval": [
+                0.431,
+                8.087
+              ],
+              "error_pct": -23.0,
+              "holds": true,
+              "z": 1.06
+            },
+            {
+              "photo": 2.138,
+              "lidar": 3.035,
+              "interval": [
+                1.217,
+                3.756
+              ],
+              "error_pct": -29.6,
+              "holds": true,
+              "z": 5.24
+            }
+          ]
+        }
+      ],
+      "dimensions_within_8pct": "0/4",
+      "dimension_abs_error_pct_median": 25.8,
+      "intervals_hold": "4/4",
+      "footprint": {
+        "photo": 13.07,
+        "interval": [
+          3.55,
+          48.21
+        ],
+        "lidar_rooms_with_photos": 19.03,
+        "error_pct": -31.3
+      },
+      "stitch": {
+        "method": "door_matching",
+        "low_confidence": true,
+        "notes": "1 door pair(s) join 2 rooms into 1 group(s); groups not joined by a door are set beside the plan, where they really are is unknown"
+      },
+      "adjacency": [
+        {
+          "room_a": "R1",
+          "room_b": "R2",
+          "via": [
+            "R1.O1",
+            "R2.O1"
+          ]
+        }
+      ],
+      "seconds": 0.7,
+      "z": [
+        5.48,
+        1.88,
+        1.06,
+        5.24
+      ]
+    },
+    "1a8384c3f6": {
+      "rooms": [
+        {
+          "room": "room_1",
+          "photos": 4,
+          "sides_seen": 3,
+          "focal": "given",
+          "lidar_room_area_m2": 19.16,
+          "photo_area_m2": 2.26,
+          "area_interval": [
+            0.25,
+            20.75
+          ],
+          "area_error_pct": -88.2,
+          "doors": 1,
+          "dimensions": [
+            {
+              "photo": 1.231,
+              "lidar": 5.485,
+              "interval": [
+                0.546,
+                2.775
+              ],
+              "error_pct": -77.6,
+              "holds": false,
+              "z": 27.58
+            },
+            {
+              "photo": 1.836,
+              "lidar": 6.154,
+              "interval": [
+                0.416,
+                8.1
+              ],
+              "error_pct": -70.2,
+              "holds": true,
+              "z": 8.19
+            }
+          ]
+        },
+        {
+          "room": "room_2",
+          "photos": 3,
+          "sides_seen": 3,
+          "focal": "given",
+          "lidar_room_area_m2": 9.29,
+          "photo_area_m2": 2.83,
+          "area_interval": [
+            0.34,
+            23.7
+          ],
+          "area_error_pct": -69.5,
+          "doors": 1,
+          "dimensions": [
+            {
+              "photo": 1.208,
+              "lidar": 3.35,
+              "interval": [
+                0.177,
+                8.22
+              ],
+              "error_pct": -63.9,
+              "holds": true,
+              "z": 4.1
+            },
+            {
+              "photo": 2.343,
+              "lidar": 3.64,
+              "interval": [
+                1.351,
+                4.064
+              ],
+              "error_pct": -35.6,
+              "holds": true,
+              "z": 7.1
+            }
+          ]
+        },
+        {
+          "room": "room_3",
+          "photos": 4,
+          "sides_seen": 3,
+          "focal": "given",
+          "lidar_room_area_m2": 7.16,
+          "photo_area_m2": 11.17,
+          "area_interval": [
+            2.63,
+            47.38
+          ],
+          "area_error_pct": 55.9,
+          "doors": 1,
+          "dimensions": [
+            {
+              "photo": 2.348,
+              "lidar": 2.637,
+              "interval": [
+                0.664,
+                8.311
+              ],
+              "error_pct": -10.9,
+              "holds": true,
+              "z": 0.54
+            },
+            {
+              "photo": 4.756,
+              "lidar": 3.137,
+              "interval": [
+                3.113,
+                7.265
+              ],
+              "error_pct": 51.6,
+              "holds": true,
+              "z": 5.91
+            }
+          ]
+        },
+        {
+          "room": "room_4",
+          "photos": 3,
+          "sides_seen": 2,
+          "focal": "given",
+          "lidar_room_area_m2": 5.32,
+          "photo_area_m2": 3.72,
+          "area_interval": [
+            0.34,
+            41.31
+          ],
+          "area_error_pct": -30.1,
+          "doors": 1,
+          "dimensions": [
+            {
+              "photo": 1.6,
+              "lidar": 1.716,
+              "interval": [
+                0.317,
+                8.075
+              ],
+              "error_pct": -6.8,
+              "holds": true,
+              "z": 0.22
+            },
+            {
+              "photo": 2.326,
+              "lidar": 3.099,
+              "interval": [
+                0.652,
+                8.299
+              ],
+              "error_pct": -24.9,
+              "holds": true,
+              "z": 1.45
+            }
+          ]
+        },
+        {
+          "room": "room_5",
+          "photos": 6,
+          "sides_seen": 3,
+          "focal": "given",
+          "lidar_room_area_m2": 5.32,
+          "photo_area_m2": 5.65,
+          "area_interval": [
+            1.03,
+            31.05
+          ],
+          "area_error_pct": 6.2,
+          "doors": 1,
+          "dimensions": [
+            {
+              "photo": 2.164,
+              "lidar": 1.716,
+              "interval": [
+                0.57,
+                8.216
+              ],
+              "error_pct": 26.1,
+              "holds": true,
+              "z": 0.84
+            },
+            {
+              "photo": 2.613,
+              "lidar": 3.099,
+              "interval": [
+                1.55,
+                4.405
+              ],
+              "error_pct": -15.7,
+              "holds": true,
+              "z": 2.54
+            }
+          ]
+        },
+        {
+          "room": "room_6",
+          "photos": 4,
+          "sides_seen": 2,
+          "focal": "given",
+          "lidar_room_area_m2": 3.84,
+          "photo_area_m2": 1.96,
+          "area_interval": [
+            0.11,
+            35.05
+          ],
+          "area_error_pct": -49.0,
+          "doors": 1,
+          "dimensions": [
+            {
+              "photo": 0.974,
+              "lidar": 1.171,
+              "interval": [
+                0.111,
+                8.502
+              ],
+              "error_pct": -16.8,
+              "holds": true,
+              "z": 0.38
+            },
+            {
+              "photo": 2.017,
+              "lidar": 3.513,
+              "interval": [
+                0.499,
+                8.156
+              ],
+              "error_pct": -42.6,
+              "holds": true,
+              "z": 2.83
+            }
+          ]
+        },
+        {
+          "room": "room_7",
+          "photos": 4,
+          "sides_seen": 3,
+          "focal": "given",
+          "lidar_room_area_m2": 2.61,
+          "photo_area_m2": 3.34,
+          "area_interval": [
+            0.46,
+            24.08
+          ],
+          "area_error_pct": 27.9,
+          "doors": 1,
+          "dimensions": [
+            {
+              "photo": 1.671,
+              "lidar": 1.517,
+              "interval": [
+                0.346,
+                8.076
+              ],
+              "error_pct": 10.2,
+              "holds": true,
+              "z": 0.29
+            },
+            {
+              "photo": 1.995,
+              "lidar": 1.722,
+              "interval": [
+                1.095,
+                3.637
+              ],
+              "error_pct": 15.8,
+              "holds": true,
+              "z": 1.58
+            }
+          ]
+        }
+      ],
+      "dimensions_within_8pct": "1/14",
+      "dimension_abs_error_pct_median": 25.5,
+      "intervals_hold": "13/14",
+      "footprint": {
+        "photo": 30.93,
+        "interval": [
+          10.9,
+          87.79
+        ],
+        "lidar_rooms_with_photos": 52.7,
+        "error_pct": -41.3
+      },
+      "stitch": {
+        "method": "door_matching",
+        "low_confidence": true,
+        "notes": "3 door pair(s) join 7 rooms into 4 group(s); groups not joined by a door are set beside the plan, where they really are is unknown"
+      },
+      "adjacency": [
+        {
+          "room_a": "R1",
+          "room_b": "R2",
+          "via": [
+            "R1.O1",
+            "R2.O1"
+          ]
+        },
+        {
+          "room_a": "R3",
+          "room_b": "R5",
+          "via": [
+            "R3.O1",
+            "R5.O1"
+          ]
+        },
+        {
+          "room_a": "R4",
+          "room_b": "R7",
+          "via": [
+            "R4.O1",
+            "R7.O1"
+          ]
+        }
+      ],
+      "seconds": 1.9,
+      "z": [
+        27.58,
+        8.19,
+        4.1,
+        7.1,
+        0.54,
+        5.91,
+        0.22,
+        1.45,
+        0.84,
+        2.54,
+        0.38,
+        2.83,
+        0.29,
+        1.58
+      ]
+    }
+  },
+  "calibration": {
+    "dimensions": 18,
+    "z_sorted": [
+      0.22,
+      0.29,
+      0.38,
+      0.54,
+      0.84,
+      1.06,
+      1.45,
+      1.58,
+      1.88,
+      2.54,
+      2.83,
+      4.1,
+      5.24,
+      5.48,
+      5.91,
+      7.1,
+      8.19,
+      27.58
+    ],
+    "scale_in_sample_90": 4.98,
+    "scale_split_conformal_90": 16.77,
+    "note": "z = |error| / model sigma before widening. scale_in_sample_90: smallest factor with the nominal 90% interval holding on at least 90% of these dimensions (used for PHOTO_INTERVAL_SCALE). With 18 dimensions the split-conformal rule needs the single worst one."
+  }
+}

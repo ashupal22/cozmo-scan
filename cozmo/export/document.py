@@ -27,6 +27,7 @@ from cozmo.geometry.rooms import RoomMap
 from cozmo.geometry.walls import OpeningOnWall, RoomOutline
 
 Z90 = 1.645
+RELATIVE_SIGMA_LOG = 0.25
 DEPTH_BIAS_M = 0.013
 UNSNAPPED_FACE_M = 0.05
 POINTS_PER_SAMPLE = 100
@@ -40,6 +41,15 @@ VIDEO_OPENING_M = 0.08
 # held the LiDAR length before. Thin evidence (no leave-one-walk-out check was possible): re-measure after
 # any change to the video tier.
 VIDEO_INTERVAL_SCALE = 4.5
+# Photo tier (cozmo/photo/room.py): each room's scale comes from a monocular metric model on its own few photos,
+# and walls no photo saw are closed at the camera. Face and opening terms are larger than video, and the model is
+# widened by PHOTO_INTERVAL_SCALE from bench/photo_vs_lidar.py (stand-in photo sets cut from our walks).
+PHOTO_FACE_M = 0.10
+PHOTO_OPENING_M = 0.10
+# From bench/photo_vs_lidar.py (commit before this one): 18 box dimensions on two flats, z = |error| / sigma sorted
+# 0.06 ... 7.08, 8.45, 28.71. The factor holds 17 of 18 in-sample (the rule used for video). The worst, a 1 m corridor
+# boxed as 3 m, would need 17.5x. Thin evidence from stand-in photo sets; re-measure on real iPhone photos.
+PHOTO_INTERVAL_SCALE = 5.1
 
 
 @dataclass(frozen=True)
@@ -50,6 +60,7 @@ class ErrorModel:
     opening_m: float = DOORWAY_WIDTH_SIGMA_M
     scale_sigma: float = 0.0
     interval_scale: float = 1.0      # widens every interval of the tier, from calibration on benchmark errors
+    rooms_independent: bool = False  # photo tier: each room has its own scale and fit, so footprint errors add in quadrature
 
 
 LIDAR_ERRORS = ErrorModel()
@@ -59,9 +70,20 @@ def video_errors(scale_sigma: float) -> ErrorModel:
     return ErrorModel(VIDEO_FACE_M, VIDEO_OPENING_M, scale_sigma, VIDEO_INTERVAL_SCALE)
 
 
+def photo_errors(scale_sigma: float) -> ErrorModel:
+    return ErrorModel(PHOTO_FACE_M, PHOTO_OPENING_M, scale_sigma, PHOTO_INTERVAL_SCALE, rooms_independent=True)
+
+
 def measurement(value: float, sigma: float, digits: int = 3, observed: bool = True, method: str | None = None) -> dict:
-    m = {"value": round(value, digits), "ci_low": round(value - Z90 * sigma, digits),
-         "ci_high": round(value + Z90 * sigma, digits), "confidence": 0.9}
+    """value +/- 1.645 sigma. Beyond RELATIVE_SIGMA_LOG of the value (thin photo and video input), the interval is
+    taken on a log scale instead, value / f to value x f with f = (1 + sigma / value) ** 1.645: a length or area
+    cannot go below zero, and our large errors are mostly underestimates."""
+    if value > 0 and sigma > RELATIVE_SIGMA_LOG * value:
+        f = (1 + sigma / value) ** Z90
+        low, high = value / f, value * f
+    else:
+        low, high = value - Z90 * sigma, value + Z90 * sigma
+    m = {"value": round(value, digits), "ci_low": round(low, digits), "ci_high": round(high, digits), "confidence": 0.9}
     if not observed:
         m["observed"] = False
     if method:
@@ -105,7 +127,7 @@ def build_document(capture_info: dict, floor: HorizontalPlane, room_map: RoomMap
                                                   method="corner to corner, inside faces")})
         area_sigma = widen * float(np.hypot(outline.perimeter_m * np.mean(sig), 2 * scale * outline.area_m2))
         footprint += outline.area_m2
-        footprint_sigma += area_sigma
+        footprint_sigma = float(np.hypot(footprint_sigma, area_sigma)) if errors.rooms_independent else footprint_sigma + area_sigma
 
         ceiling = ceilings.get(rid)
         if ceiling is not None:

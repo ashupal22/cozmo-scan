@@ -52,8 +52,9 @@ def cmd_run(args) -> int:
         return 3
     doc = json.loads(result.read_text())
     footprint = doc["plan"]["footprint_area_m2"]
-    print(f"{args.path}: {len(doc['rooms'])} rooms, footprint {footprint['value']} m2 "
-          f"[{footprint['ci_low']}, {footprint['ci_high']}], {doc['capture']['runtime_s']} s")
+    print(f"{args.path}: {doc['capture']['tier']} tier, {len(doc['rooms'])} rooms, footprint {footprint['value']} m2 "
+          f"[{footprint['ci_low']}, {footprint['ci_high']}], "
+          f"{doc['capture']['runtime_s']} s")
     for warning in doc["quality"]["warnings"]:
         print(f"  warning: {warning}")
     print(f"wrote {result} and {result.parent / 'plan.svg'}")
@@ -87,7 +88,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.set_defaults(func=cmd_inspect)
 
     p = sub.add_parser("run", help="measure a capture: writes result.json and plan.svg")
-    p.add_argument("path", help="capture to measure (LiDAR export folder for now)")
+    p.add_argument("path", help="capture to measure: Stray Scanner LiDAR folder, video file, or folder of room photo folders")
     p.add_argument("--out", help="output folder (default: out/<capture name>)")
     p.add_argument("--no-drift", action="store_true", help="skip drift correction (for the on/off ablation)")
     p.set_defaults(func=cmd_run)
