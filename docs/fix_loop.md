@@ -65,3 +65,64 @@ git diff 1d00698 <fix commit> -- cozmo/                                         
 ```
 
 Model outputs are cached under `data/derived/<walk>_video_work/cache/`, and both runs replay them identically.
+
+---
+
+# Fix loop outcome and post-mortem
+
+Written after the runs. Everything below can be regenerated (see the end).
+
+## 5. Result: the prediction was badly wrong
+
+The fix shipped in `7bbd7c5`, and run #1 collapsed: footprints −65/−59/−59%, 1 room paired. The cause was an implementation error. `tracking_breaks` still dropped the frames inside long breaks (24, 37 and 73 frames), which the earlier ablation had already shown to be harmful. `63e77ed` corrected only that (frames are never dropped), with no tuning, and run #2 is the after run.
+
+| | Before (`1d00698`) | Predicted | After #2 (`63e77ed`) |
+|---|---|---|---|
+| **Gate walls within 3%** | 0 of 23 | 2 (1–4) | **0 of 6** (only one room left to count walls in) |
+| Rooms paired with LiDAR | 6 of 19 | 9 (8–12) | **1 of 19** |
+| Footprint error c00a / 1a83 / c7d2 | −18.6 / −9.4 / −4.9% | better | **−18.8 / −35.3 / −48.2%** |
+| Wall-map agreement c00a / 1a83 / c7d2 | 0.47 / 0.55 / 0.39 | 0.47 / 0.63 / 0.60 | 0.47 / 0.49 / 0.48 |
+
+G-WALL-VIDEO still fails, and every other number moved the wrong way. The prediction was badly wrong.
+
+## 6. Post-mortem: why it went wrong
+
+**Which part did the damage.** The same code was re-run on the same walks with each part switched on or off (`bench/results/fix_loop/ablation_*`, code `321d5d5` plus the switches). With the fix off, the video plans come out identical to the before run's (footprints 19.82, 49.57 and 53.02 m², same room counts), so the cached model outputs replay exactly. Only the LiDAR reference moved, because it now includes the +11.9 mm depth correction:
+
+| Setting | Footprint c00a / 1a83 / c7d2 | Rooms paired | Gate walls within 3% |
+|---|---|---|---|
+| Fix off (the before behaviour) | −19.5 / −13.0 / −5.4% | 6 of 20 | 0 of 22 |
+| Part 3 only: ignore depth of unsure frames | −16.6 / −17.0 / −12.9% | 5 of 20 | 1 of 20 |
+| Parts 1–3: the shipped fix (after #2) | −18.8 / −35.3 / −48.2% | 1 of 19 | 0 of 6 |
+
+Declaring the breaks (parts 1 and 2) did the damage. Part 3 on its own is mixed: the first gate wall ever within 3%, but two footprints got worse.
+
+**Why declaring breaks hurt.** `bench/fix_loop_postmortem.py` compares each walk's heading with ARKit's, with breaks declared and without:
+1. **The quarter-turn search never engaged.** Loops across breaks were proposed 1, 109 and 178 times on the three walks, and 0, 5 and 27 were accepted. They never agreed on a turn for any stretch, so no quarter turn was applied on any walk. The synthetic test had a clean loop at every break. Our real walks rarely look at the same place from both sides of a break.
+2. **Declaring a break also throws away what held the walk together there.** Before the fix, most breaks were nearly right: the median error over 13 breaks was 7.2°, and only 3 were 60–90° off. Held loosely, the stretches were free to turn, and wall directions (blind modulo 90°) let them settle a quarter or half turn off. On c7d2 the second stretch went from 1° off to 178° off, and on 1a83 the fifth from 96° to −170°. We gave up correct information at ten breaks to fix three, and fixed none.
+
+**Was the root cause right?** Partly. Camera-path errors are the main loss: with ARKit's path, wall-map agreement is 0.77–0.88 against 0.39–0.55. But the mechanism we predicted, loops across breaks, needs revisits our walks do not have.
+
+**What we should have done.** Count the loops available across each real break before predicting. Evidence 4 was synthetic, and its walks revisited everything.
+
+## 7. What ships
+
+The fix is switched off (`DECLARE_TRACKING_BREAKS = False`, `IGNORE_UNSURE_DEPTH = False`), which restores the before behaviour, the best we measured. The code and its tests stay, and the after run regenerates at any commit with the switches turned on. G-WALL-VIDEO stays failed. The video intervals stay widened 4.5×, and they hold on 6 of 7 paired gate walls in the fix-off run.
+
+The next attempt should re-attach a stretch only where evidence says it is turned: a loop closure that disagrees with the chain, or a big turn in the phone's gyroscope. Held stretches should never be loosened on DA3 confidence alone.
+
+## 8. The ceiling fix (separate from the scored loop)
+
+For G-CEIL the order was the same: prediction committed first (`c159802`, 14:04: "6 of 6 walks within 15 mm, mean ceiling height error about −6 mm"), then the run (`7dac386`, 14:15). Result: **6 of 6 walks within 15 mm, mean −3.2 mm** (before: 1 of 6, −21.8 mm). There the root cause was measured directly: device depth reads 12 mm short of laser depth on every walk. That is why the prediction held. It has shipped since `ac83422` (`LIDAR_DEPTH_OFFSET_M`).
+
+## How to regenerate every run
+
+```bash
+export COZMO_DATA=/path/to/captures        # the three Stray Scanner folders (Google Drive, data/README.md)
+git checkout 1d00698 && python bench/video_vs_lidar.py --variants oracle --out before.json   # before
+git checkout 63e77ed && python bench/video_vs_lidar.py --variants oracle --out after.json    # after #2
+git checkout main   # ablation: set cozmo.pipeline.DECLARE_TRACKING_BREAKS / cozmo.video.capture.IGNORE_UNSURE_DEPTH
+```
+
+The readable diff of the fix and its correction is `bench/results/fix_loop/fix.diff` (`git diff 7dac386 63e77ed -- cozmo/video cozmo/slam cozmo/pipeline.py tests`). Code commits in between touch only the stitch solver.
+The committed results are `bench/results/fix_loop/{before,after,after2,ablation_none,ablation_unsure_only}_video_vs_lidar.json`.

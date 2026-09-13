@@ -1,0 +1,45 @@
+c00a170fe1 no breaks      : heading error |median|  86.5 deg, p90  89.9; position error median  44.5 cm (scale 0.80); loops 0/1, rejected by graph 0; turns {}
+c00a170fe1 breaks declared: heading error |median|  88.1 deg, p90  91.5; position error median  44.4 cm (scale 0.80); loops 0/1, rejected by graph 0; turns {}
+  6 segments; per segment (first frame): recorded error, after (no breaks), after (breaks declared), turn applied
+    segment  2 frames  63- 81: recorded   +82.9, no breaks   +80.3, breaks declared   +83.6, turn None
+    segment  3 frames  82- 90: recorded   +91.9, no breaks   +88.5, breaks declared   +88.6, turn None
+    segment  4 frames  91-106: recorded   +87.6, no breaks   +83.8, breaks declared   +85.3, turn None
+    segment  5 frames 107-111: recorded   +82.3, no breaks   +77.7, breaks declared   +57.5, turn None
+1a8384c3f6 no breaks      : heading error |median|  99.7 deg, p90 105.9; position error median  36.3 cm (scale 0.92); loops 0/18, rejected by graph 0; turns {}
+1a8384c3f6 breaks declared: heading error |median|  96.3 deg, p90 167.2; position error median 205.2 cm (scale 0.54); loops 5/109, rejected by graph 7; turns {}
+  10 segments; per segment (first frame): recorded error, after (no breaks), after (breaks declared), turn applied
+    segment  3 frames 116-138: recorded  +101.6, no breaks   +97.1, breaks declared   +88.3, turn None
+    segment  4 frames 139-188: recorded  +114.0, no breaks  +108.6, breaks declared  +102.7, turn None
+    segment  5 frames 189-239: recorded  +103.7, no breaks   +96.0, breaks declared  -169.9, turn None
+    segment  6 frames 240-242: recorded  +114.8, no breaks  +103.8, breaks declared  +102.9, turn None
+    segment  7 frames 243-277: recorded  +119.2, no breaks  +108.0, breaks declared  +100.1, turn None
+    segment  8 frames 278-342: recorded  +104.2, no breaks   +90.2, breaks declared   +84.0, turn None
+    segment  9 frames 343-343: recorded  +114.8, no breaks   +96.0, breaks declared  +114.8, turn None
+c7d28f72c6 no breaks      : heading error |median|  96.0 deg, p90 105.6; position error median 198.0 cm (scale 0.54); loops 0/46, rejected by graph 0; turns {}
+c7d28f72c6 breaks declared: heading error |median|  93.1 deg, p90 174.1; position error median 244.6 cm (scale 0.47); loops 27/178, rejected by graph 7; turns {}
+  26 segments; per segment (first frame): recorded error, after (no breaks), after (breaks declared), turn applied
+    segment  1 frames   4- 30: recorded    +1.2, no breaks    +1.2, breaks declared  +178.0, turn None
+    segment  2 frames  31- 67: recorded   +91.8, no breaks   +91.8, breaks declared    +2.1, turn None
+    segment  3 frames  68- 74: recorded   +98.6, no breaks   +98.6, breaks declared   +91.1, turn None
+    segment  4 frames  75- 98: recorded  +107.3, no breaks  +107.3, breaks declared   +92.6, turn None
+    segment  5 frames  99-130: recorded  +110.1, no breaks  +110.1, breaks declared   +98.6, turn None
+    segment  6 frames 131-149: recorded  -166.7, no breaks  -166.7, breaks declared  +177.2, turn None
+    segment  7 frames 150-188: recorded  -103.3, no breaks  -103.3, breaks declared  -104.6, turn None
+    segment  8 frames 189-194: recorded   +88.1, no breaks   +88.1, breaks declared   +88.9, turn None
+    segment  9 frames 195-235: recorded   +86.8, no breaks   +86.8, breaks declared   +82.7, turn None
+    segment 10 frames 236-255: recorded  +100.8, no breaks  +100.8, breaks declared   +74.4, turn None
+    segment 11 frames 256-282: recorded  +102.7, no breaks  +102.7, breaks declared  +174.2, turn None
+    segment 12 frames 283-295: recorded  +105.6, no breaks  +105.6, breaks declared   -53.8, turn None
+    segment 13 frames 296-314: recorded   +97.0, no breaks   +97.0, breaks declared   +92.5, turn None
+    segment 14 frames 315-336: recorded   +98.9, no breaks   +98.9, breaks declared    +6.9, turn None
+    segment 15 frames 337-362: recorded   +90.9, no breaks   +90.9, breaks declared   +87.2, turn None
+    segment 16 frames 363-426: recorded   +98.9, no breaks   +98.9, breaks declared   +97.3, turn None
+    segment 17 frames 427-499: recorded   +98.2, no breaks   +98.2, breaks declared   +96.8, turn None
+    segment 18 frames 500-504: recorded   +88.8, no breaks   +88.8, breaks declared   +82.3, turn None
+    segment 19 frames 505-559: recorded  +100.9, no breaks  +100.9, breaks declared   +88.6, turn None
+    segment 20 frames 560-594: recorded   +94.9, no breaks   +94.9, breaks declared  -174.7, turn None
+    segment 21 frames 595-603: recorded   +93.7, no breaks   +93.7, breaks declared   +98.2, turn None
+    segment 22 frames 604-618: recorded   +53.2, no breaks   +53.2, breaks declared   +72.9, turn None
+    segment 23 frames 619-639: recorded   +74.3, no breaks   +74.3, breaks declared    +5.0, turn None
+    segment 24 frames 640-643: recorded   +62.7, no breaks   +62.7, breaks declared    -7.9, turn None
+    segment 25 frames 644-644: recorded   +98.3, no breaks   +98.3, breaks declared   +98.3, turn None

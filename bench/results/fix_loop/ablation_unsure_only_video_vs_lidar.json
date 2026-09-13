@@ -1,0 +1,1495 @@
+{
+  "benchmark": "video_vs_lidar",
+  "code_commit": "321d5d5-dirty",
+  "walks": {
+    "c00a170fe1": {
+      "video": {
+        "rooms": {
+          "lidar": 3,
+          "video": 2,
+          "paired": 1,
+          "paired_iou": [
+            0.646
+          ],
+          "paired_area_share": 0.474
+        },
+        "footprint_m2": {
+          "lidar": 24.62,
+          "video": 20.53,
+          "error_pct": -16.6,
+          "video_interval": [
+            9.9,
+            31.16
+          ],
+          "interval_holds_lidar": true
+        },
+        "gate_walls": {
+          "walls": 6,
+          "paired": 2,
+          "within_3pct": "0/6",
+          "error_pct_median": 3.3,
+          "abs_error_pct_median": 8.7,
+          "abs_error_pct_p90": 11.3,
+          "interval_holds_lidar": "2/2"
+        },
+        "all_walls": {
+          "walls": 8,
+          "paired": 2,
+          "within_3pct": "0/8",
+          "error_pct_median": 3.3,
+          "abs_error_pct_median": 8.7,
+          "abs_error_pct_p90": 11.3,
+          "interval_holds_lidar": "2/2"
+        },
+        "dimensions": {
+          "count": 2,
+          "within_3pct": "0/2",
+          "abs_error_pct_median": 25.4,
+          "error_pct_median": -25.4
+        },
+        "fit": {
+          "yaw_deg": -59.9,
+          "overlap_fraction": 0.46,
+          "overlap_median_cm": 1.8
+        },
+        "wall_pairs": [
+          {
+            "room": "L1",
+            "lidar_m": 0.867,
+            "lidar_ci": [
+              0.836,
+              0.898
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L1",
+            "lidar_m": 2.751,
+            "lidar_ci": [
+              2.72,
+              2.782
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L1",
+            "lidar_m": 3.065,
+            "lidar_ci": [
+              3.034,
+              3.096
+            ],
+            "reference_ok": true,
+            "video_m": 2.9,
+            "error_pct": -5.4,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              2.23,
+              3.571
+            ],
+            "corner_offset_m": 0.21
+          },
+          {
+            "room": "L1",
+            "lidar_m": 2.423,
+            "lidar_ci": [
+              2.392,
+              2.454
+            ],
+            "reference_ok": true,
+            "video_m": 2.714,
+            "error_pct": 12.0,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              2.078,
+              3.35
+            ],
+            "corner_offset_m": 0.245
+          },
+          {
+            "room": "L1",
+            "lidar_m": 1.644,
+            "lidar_ci": [
+              1.613,
+              1.675
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L1",
+            "lidar_m": 1.029,
+            "lidar_ci": [
+              0.998,
+              1.06
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L1",
+            "lidar_m": 3.842,
+            "lidar_ci": [
+              3.811,
+              3.873
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L1",
+            "lidar_m": 0.701,
+            "lidar_ci": [
+              0.67,
+              0.731
+            ],
+            "reference_ok": true,
+            "video_m": null
+          }
+        ],
+        "dimension_pairs": [
+          {
+            "room": "L1",
+            "lidar_m": 3.452,
+            "video_m": 2.714,
+            "error_pct": -21.4
+          },
+          {
+            "room": "L1",
+            "lidar_m": 4.709,
+            "video_m": 3.322,
+            "error_pct": -29.5
+          }
+        ],
+        "video_capture": {
+          "frames": 112,
+          "runs": 14,
+          "keyframe_fps": 3.0,
+          "depth_size": [
+            378,
+            504
+          ],
+          "camera": "DA3 ray output",
+          "fx_over_width": 1.1217,
+          "focal_source": "room lines (94 frames)",
+          "focal_sigma": 0.015,
+          "fx_over_width_da3_median": 1.2303,
+          "metric_gain": 1.07,
+          "scale_sigma": 0.0273,
+          "range_correction": [
+            -0.0119,
+            0.0253
+          ],
+          "tracking_breaks": 5,
+          "frames_depth_ignored": 9,
+          "frames_dropped_at_breaks": 0,
+          "runs_levelled_on_floor": "13/14",
+          "level_change_deg_median": 2.02,
+          "seam_rotation_spread_deg_median": 1.51,
+          "seam_position_spread_m_median": 0.038,
+          "seam_depth_ratio_spread_median": 0.0095,
+          "metric_anchors": 41,
+          "metric_anchor_scatter": 0.0751
+        },
+        "true_fx_over_width": 1.1096,
+        "video_interval_scale": 4.5,
+        "seconds": 19.4
+      },
+      "oracle": {
+        "rooms": {
+          "lidar": 3,
+          "video": 3,
+          "paired": 0,
+          "paired_iou": [],
+          "paired_area_share": 0.0
+        },
+        "footprint_m2": {
+          "lidar": 24.62,
+          "video": 18.73,
+          "error_pct": -23.9,
+          "video_interval": [
+            6.11,
+            31.35
+          ],
+          "interval_holds_lidar": true
+        },
+        "gate_walls": {
+          "walls": 0,
+          "paired": 0,
+          "within_3pct": "0/0",
+          "error_pct_median": null,
+          "abs_error_pct_median": null,
+          "abs_error_pct_p90": null,
+          "interval_holds_lidar": "0/0"
+        },
+        "all_walls": {
+          "walls": 0,
+          "paired": 0,
+          "within_3pct": "0/0",
+          "error_pct_median": null,
+          "abs_error_pct_median": null,
+          "abs_error_pct_p90": null,
+          "interval_holds_lidar": "0/0"
+        },
+        "dimensions": {
+          "count": 0,
+          "within_3pct": "0/0",
+          "abs_error_pct_median": null,
+          "error_pct_median": null
+        },
+        "fit": {
+          "yaw_deg": 0.6,
+          "overlap_fraction": 0.901,
+          "overlap_median_cm": 1.5
+        },
+        "wall_pairs": [],
+        "dimension_pairs": [],
+        "video_capture": {
+          "frames": 112,
+          "runs": 14,
+          "keyframe_fps": 3.0,
+          "depth_size": [
+            378,
+            504
+          ],
+          "camera": "DA3 ray output",
+          "fx_over_width": 1.1096,
+          "focal_source": "given",
+          "focal_sigma": 0.02,
+          "fx_over_width_da3_median": 1.2303,
+          "metric_gain": 1.07,
+          "scale_sigma": 0.0303,
+          "range_correction": [
+            -0.0119,
+            0.0253
+          ],
+          "tracking_breaks": 5,
+          "frames_depth_ignored": 9,
+          "frames_dropped_at_breaks": 0,
+          "runs_levelled_on_floor": "13/14",
+          "level_change_deg_median": 2.01,
+          "seam_rotation_spread_deg_median": 1.51,
+          "seam_position_spread_m_median": 0.037,
+          "seam_depth_ratio_spread_median": 0.0095,
+          "metric_anchors": 41,
+          "metric_anchor_scatter": 0.0751
+        },
+        "true_fx_over_width": 1.1096,
+        "video_interval_scale": 4.5,
+        "seconds": 31.8
+      }
+    },
+    "1a8384c3f6": {
+      "video": {
+        "rooms": {
+          "lidar": 8,
+          "video": 8,
+          "paired": 2,
+          "paired_iou": [
+            0.579,
+            0.551
+          ],
+          "paired_area_share": 0.139
+        },
+        "footprint_m2": {
+          "lidar": 56.98,
+          "video": 47.28,
+          "error_pct": -17.0,
+          "video_interval": [
+            18.31,
+            76.24
+          ],
+          "interval_holds_lidar": true
+        },
+        "gate_walls": {
+          "walls": 8,
+          "paired": 1,
+          "within_3pct": "0/8",
+          "error_pct_median": -26.2,
+          "abs_error_pct_median": 26.2,
+          "abs_error_pct_p90": 26.2,
+          "interval_holds_lidar": "0/1"
+        },
+        "all_walls": {
+          "walls": 8,
+          "paired": 1,
+          "within_3pct": "0/8",
+          "error_pct_median": -26.2,
+          "abs_error_pct_median": 26.2,
+          "abs_error_pct_p90": 26.2,
+          "interval_holds_lidar": "0/1"
+        },
+        "dimensions": {
+          "count": 4,
+          "within_3pct": "1/4",
+          "abs_error_pct_median": 22.3,
+          "error_pct_median": 15.2
+        },
+        "fit": {
+          "yaw_deg": 10.2,
+          "overlap_fraction": 0.586,
+          "overlap_median_cm": 1.9
+        },
+        "wall_pairs": [
+          {
+            "room": "L5",
+            "lidar_m": 1.716,
+            "lidar_ci": [
+              1.68,
+              1.753
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L5",
+            "lidar_m": 3.099,
+            "lidar_ci": [
+              3.068,
+              3.131
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L5",
+            "lidar_m": 1.716,
+            "lidar_ci": [
+              1.68,
+              1.753
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L5",
+            "lidar_m": 3.099,
+            "lidar_ci": [
+              3.068,
+              3.131
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.517,
+            "lidar_ci": [
+              1.485,
+              1.548
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.722,
+            "lidar_ci": [
+              1.691,
+              1.753
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.517,
+            "lidar_ci": [
+              1.485,
+              1.548
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.722,
+            "lidar_ci": [
+              1.691,
+              1.753
+            ],
+            "reference_ok": true,
+            "video_m": 1.271,
+            "error_pct": -26.2,
+            "within_gate": false,
+            "interval_holds_lidar": false,
+            "video_ci": [
+              0.832,
+              1.711
+            ],
+            "corner_offset_m": 0.226
+          }
+        ],
+        "dimension_pairs": [
+          {
+            "room": "L5",
+            "lidar_m": 1.716,
+            "video_m": 2.355,
+            "error_pct": 37.2
+          },
+          {
+            "room": "L5",
+            "lidar_m": 3.099,
+            "video_m": 3.165,
+            "error_pct": 2.1
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.517,
+            "video_m": 1.271,
+            "error_pct": -16.2
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.722,
+            "video_m": 2.212,
+            "error_pct": 28.4
+          }
+        ],
+        "video_capture": {
+          "frames": 344,
+          "runs": 43,
+          "keyframe_fps": 3.0,
+          "depth_size": [
+            378,
+            504
+          ],
+          "camera": "DA3 ray output",
+          "fx_over_width": 1.126,
+          "focal_source": "room lines (54 frames)",
+          "focal_sigma": 0.015,
+          "fx_over_width_da3_median": 1.2347,
+          "metric_gain": 1.07,
+          "scale_sigma": 0.0258,
+          "range_correction": [
+            -0.0119,
+            0.0253
+          ],
+          "tracking_breaks": 9,
+          "frames_depth_ignored": 21,
+          "frames_dropped_at_breaks": 0,
+          "runs_levelled_on_floor": "40/43",
+          "level_change_deg_median": 1.49,
+          "seam_rotation_spread_deg_median": 1.32,
+          "seam_position_spread_m_median": 0.042,
+          "seam_depth_ratio_spread_median": 0.0062,
+          "metric_anchors": 128,
+          "metric_anchor_scatter": 0.0718
+        },
+        "true_fx_over_width": 1.1084,
+        "video_interval_scale": 4.5,
+        "seconds": 56.2
+      },
+      "oracle": {
+        "rooms": {
+          "lidar": 8,
+          "video": 5,
+          "paired": 3,
+          "paired_iou": [
+            0.605,
+            0.581,
+            0.873
+          ],
+          "paired_area_share": 0.265
+        },
+        "footprint_m2": {
+          "lidar": 56.98,
+          "video": 50.45,
+          "error_pct": -11.4,
+          "video_interval": [
+            21.88,
+            79.03
+          ],
+          "interval_holds_lidar": true
+        },
+        "gate_walls": {
+          "walls": 11,
+          "paired": 6,
+          "within_3pct": "1/11",
+          "error_pct_median": 0.8,
+          "abs_error_pct_median": 5.9,
+          "abs_error_pct_p90": 8.3,
+          "interval_holds_lidar": "6/6"
+        },
+        "all_walls": {
+          "walls": 15,
+          "paired": 7,
+          "within_3pct": "2/15",
+          "error_pct_median": -0.4,
+          "abs_error_pct_median": 5.9,
+          "abs_error_pct_p90": 8.3,
+          "interval_holds_lidar": "7/7"
+        },
+        "dimensions": {
+          "count": 6,
+          "within_3pct": "0/6",
+          "abs_error_pct_median": 16.6,
+          "error_pct_median": 9.8
+        },
+        "fit": {
+          "yaw_deg": -1.5,
+          "overlap_fraction": 0.832,
+          "overlap_median_cm": 1.7
+        },
+        "wall_pairs": [
+          {
+            "room": "L4",
+            "lidar_m": 3.137,
+            "lidar_ci": [
+              3.052,
+              3.223
+            ],
+            "reference_ok": false,
+            "video_m": null
+          },
+          {
+            "room": "L4",
+            "lidar_m": 1.177,
+            "lidar_ci": [
+              1.145,
+              1.208
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L4",
+            "lidar_m": 0.553,
+            "lidar_ci": [
+              0.522,
+              0.584
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L4",
+            "lidar_m": 1.46,
+            "lidar_ci": [
+              1.426,
+              1.494
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L4",
+            "lidar_m": 2.584,
+            "lidar_ci": [
+              2.499,
+              2.669
+            ],
+            "reference_ok": false,
+            "video_m": 2.574,
+            "error_pct": -0.4,
+            "within_gate": true,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              1.872,
+              3.276
+            ],
+            "corner_offset_m": 0.077
+          },
+          {
+            "room": "L4",
+            "lidar_m": 1.014,
+            "lidar_ci": [
+              0.928,
+              1.099
+            ],
+            "reference_ok": false,
+            "video_m": null
+          },
+          {
+            "room": "L4",
+            "lidar_m": 1.174,
+            "lidar_ci": [
+              1.142,
+              1.207
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L5",
+            "lidar_m": 1.716,
+            "lidar_ci": [
+              1.68,
+              1.753
+            ],
+            "reference_ok": true,
+            "video_m": 1.785,
+            "error_pct": 4.0,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              1.288,
+              2.282
+            ],
+            "corner_offset_m": 0.061
+          },
+          {
+            "room": "L5",
+            "lidar_m": 3.099,
+            "lidar_ci": [
+              3.068,
+              3.131
+            ],
+            "reference_ok": true,
+            "video_m": 3.023,
+            "error_pct": -2.4,
+            "within_gate": true,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              2.302,
+              3.744
+            ],
+            "corner_offset_m": 0.075
+          },
+          {
+            "room": "L5",
+            "lidar_m": 1.716,
+            "lidar_ci": [
+              1.68,
+              1.753
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L5",
+            "lidar_m": 3.099,
+            "lidar_ci": [
+              3.068,
+              3.131
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.517,
+            "lidar_ci": [
+              1.485,
+              1.548
+            ],
+            "reference_ok": true,
+            "video_m": 1.642,
+            "error_pct": 8.3,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              1.165,
+              2.119
+            ],
+            "corner_offset_m": 0.081
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.722,
+            "lidar_ci": [
+              1.691,
+              1.753
+            ],
+            "reference_ok": true,
+            "video_m": 1.621,
+            "error_pct": -5.9,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              1.141,
+              2.101
+            ],
+            "corner_offset_m": 0.081
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.517,
+            "lidar_ci": [
+              1.485,
+              1.548
+            ],
+            "reference_ok": true,
+            "video_m": 1.642,
+            "error_pct": 8.3,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              1.165,
+              2.119
+            ],
+            "corner_offset_m": 0.081
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.722,
+            "lidar_ci": [
+              1.691,
+              1.753
+            ],
+            "reference_ok": true,
+            "video_m": 1.621,
+            "error_pct": -5.9,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              1.141,
+              2.101
+            ],
+            "corner_offset_m": 0.081
+          }
+        ],
+        "dimension_pairs": [
+          {
+            "room": "L4",
+            "lidar_m": 2.637,
+            "video_m": 1.994,
+            "error_pct": -24.4
+          },
+          {
+            "room": "L4",
+            "lidar_m": 3.137,
+            "video_m": 3.535,
+            "error_pct": 12.7
+          },
+          {
+            "room": "L5",
+            "lidar_m": 1.716,
+            "video_m": 2.699,
+            "error_pct": 57.3
+          },
+          {
+            "room": "L5",
+            "lidar_m": 3.099,
+            "video_m": 3.733,
+            "error_pct": 20.5
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.517,
+            "video_m": 1.621,
+            "error_pct": 6.9
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.722,
+            "video_m": 1.642,
+            "error_pct": -4.7
+          }
+        ],
+        "video_capture": {
+          "frames": 344,
+          "runs": 43,
+          "keyframe_fps": 3.0,
+          "depth_size": [
+            378,
+            504
+          ],
+          "camera": "DA3 ray output",
+          "fx_over_width": 1.1084,
+          "focal_source": "given",
+          "focal_sigma": 0.02,
+          "fx_over_width_da3_median": 1.2347,
+          "metric_gain": 1.07,
+          "scale_sigma": 0.029,
+          "range_correction": [
+            -0.0119,
+            0.0253
+          ],
+          "tracking_breaks": 9,
+          "frames_depth_ignored": 21,
+          "frames_dropped_at_breaks": 0,
+          "runs_levelled_on_floor": "40/43",
+          "level_change_deg_median": 1.57,
+          "seam_rotation_spread_deg_median": 1.32,
+          "seam_position_spread_m_median": 0.041,
+          "seam_depth_ratio_spread_median": 0.0062,
+          "metric_anchors": 128,
+          "metric_anchor_scatter": 0.0718
+        },
+        "true_fx_over_width": 1.1084,
+        "video_interval_scale": 4.5,
+        "seconds": 95.0
+      }
+    },
+    "c7d28f72c6": {
+      "video": {
+        "rooms": {
+          "lidar": 9,
+          "video": 12,
+          "paired": 2,
+          "paired_iou": [
+            0.884,
+            0.542
+          ],
+          "paired_area_share": 0.257
+        },
+        "footprint_m2": {
+          "lidar": 56.07,
+          "video": 48.87,
+          "error_pct": -12.9,
+          "video_interval": [
+            14.31,
+            83.42
+          ],
+          "interval_holds_lidar": true
+        },
+        "gate_walls": {
+          "walls": 6,
+          "paired": 3,
+          "within_3pct": "1/6",
+          "error_pct_median": -0.4,
+          "abs_error_pct_median": 10.2,
+          "abs_error_pct_p90": 18.1,
+          "interval_holds_lidar": "3/3"
+        },
+        "all_walls": {
+          "walls": 9,
+          "paired": 4,
+          "within_3pct": "1/9",
+          "error_pct_median": -4.2,
+          "abs_error_pct_median": 9.1,
+          "abs_error_pct_p90": 17.1,
+          "interval_holds_lidar": "4/4"
+        },
+        "dimensions": {
+          "count": 4,
+          "within_3pct": "0/4",
+          "abs_error_pct_median": 26.9,
+          "error_pct_median": -21.9
+        },
+        "fit": {
+          "yaw_deg": -145.9,
+          "overlap_fraction": 0.385,
+          "overlap_median_cm": 1.8
+        },
+        "wall_pairs": [
+          {
+            "room": "L1",
+            "lidar_m": 2.642,
+            "lidar_ci": [
+              2.608,
+              2.676
+            ],
+            "reference_ok": true,
+            "video_m": 2.631,
+            "error_pct": -0.4,
+            "within_gate": true,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              2.044,
+              3.217
+            ],
+            "corner_offset_m": 0.172
+          },
+          {
+            "room": "L1",
+            "lidar_m": 4.208,
+            "lidar_ci": [
+              4.123,
+              4.293
+            ],
+            "reference_ok": false,
+            "video_m": 3.868,
+            "error_pct": -8.1,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              3.075,
+              4.661
+            ],
+            "corner_offset_m": 0.172
+          },
+          {
+            "room": "L1",
+            "lidar_m": 1.32,
+            "lidar_ci": [
+              1.234,
+              1.406
+            ],
+            "reference_ok": false,
+            "video_m": null
+          },
+          {
+            "room": "L1",
+            "lidar_m": 3.962,
+            "lidar_ci": [
+              3.877,
+              4.047
+            ],
+            "reference_ok": false,
+            "video_m": null
+          },
+          {
+            "room": "L1",
+            "lidar_m": 4.308,
+            "lidar_ci": [
+              4.278,
+              4.339
+            ],
+            "reference_ok": true,
+            "video_m": 3.868,
+            "error_pct": -10.2,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              3.075,
+              4.661
+            ],
+            "corner_offset_m": 0.268
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.741,
+            "lidar_ci": [
+              1.71,
+              1.772
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.655,
+            "lidar_ci": [
+              1.625,
+              1.686
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.741,
+            "lidar_ci": [
+              1.71,
+              1.772
+            ],
+            "reference_ok": true,
+            "video_m": 2.092,
+            "error_pct": 20.1,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              1.498,
+              2.685
+            ],
+            "corner_offset_m": 0.175
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.655,
+            "lidar_ci": [
+              1.625,
+              1.686
+            ],
+            "reference_ok": true,
+            "video_m": null
+          }
+        ],
+        "dimension_pairs": [
+          {
+            "room": "L1",
+            "lidar_m": 3.962,
+            "video_m": 2.631,
+            "error_pct": -33.6
+          },
+          {
+            "room": "L1",
+            "lidar_m": 4.308,
+            "video_m": 3.868,
+            "error_pct": -10.2
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.655,
+            "video_m": 1.007,
+            "error_pct": -39.2
+          },
+          {
+            "room": "L7",
+            "lidar_m": 1.741,
+            "video_m": 2.092,
+            "error_pct": 20.1
+          }
+        ],
+        "video_capture": {
+          "frames": 645,
+          "runs": 80,
+          "keyframe_fps": 3.0,
+          "depth_size": [
+            378,
+            504
+          ],
+          "camera": "DA3 ray output",
+          "fx_over_width": 1.1247,
+          "focal_source": "room lines (52 frames)",
+          "focal_sigma": 0.015,
+          "fx_over_width_da3_median": 1.2215,
+          "metric_gain": 1.07,
+          "scale_sigma": 0.0254,
+          "range_correction": [
+            -0.0119,
+            0.0253
+          ],
+          "tracking_breaks": 25,
+          "frames_depth_ignored": 48,
+          "frames_dropped_at_breaks": 0,
+          "runs_levelled_on_floor": "77/80",
+          "level_change_deg_median": 1.57,
+          "seam_rotation_spread_deg_median": 1.2,
+          "seam_position_spread_m_median": 0.043,
+          "seam_depth_ratio_spread_median": 0.0104,
+          "metric_anchors": 241,
+          "metric_anchor_scatter": 0.0906
+        },
+        "true_fx_over_width": 1.098,
+        "video_interval_scale": 4.5,
+        "seconds": 114.7
+      },
+      "oracle": {
+        "rooms": {
+          "lidar": 9,
+          "video": 12,
+          "paired": 4,
+          "paired_iou": [
+            0.504,
+            0.706,
+            0.572,
+            0.926
+          ],
+          "paired_area_share": 0.406
+        },
+        "footprint_m2": {
+          "lidar": 56.07,
+          "video": 45.56,
+          "error_pct": -18.7,
+          "video_interval": [
+            13.93,
+            77.19
+          ],
+          "interval_holds_lidar": true
+        },
+        "gate_walls": {
+          "walls": 16,
+          "paired": 7,
+          "within_3pct": "2/16",
+          "error_pct_median": 2.0,
+          "abs_error_pct_median": 5.9,
+          "abs_error_pct_p90": 10.2,
+          "interval_holds_lidar": "7/7"
+        },
+        "all_walls": {
+          "walls": 23,
+          "paired": 9,
+          "within_3pct": "2/23",
+          "error_pct_median": -4.6,
+          "abs_error_pct_median": 5.9,
+          "abs_error_pct_p90": 17.4,
+          "interval_holds_lidar": "9/9"
+        },
+        "dimensions": {
+          "count": 8,
+          "within_3pct": "1/8",
+          "abs_error_pct_median": 12.9,
+          "error_pct_median": 3.6
+        },
+        "fit": {
+          "yaw_deg": -0.0,
+          "overlap_fraction": 0.822,
+          "overlap_median_cm": 1.6
+        },
+        "wall_pairs": [
+          {
+            "room": "L2",
+            "lidar_m": 1.536,
+            "lidar_ci": [
+              1.503,
+              1.57
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L2",
+            "lidar_m": 1.052,
+            "lidar_ci": [
+              0.966,
+              1.138
+            ],
+            "reference_ok": false,
+            "video_m": null
+          },
+          {
+            "room": "L2",
+            "lidar_m": 0.778,
+            "lidar_ci": [
+              0.693,
+              0.863
+            ],
+            "reference_ok": false,
+            "video_m": null
+          },
+          {
+            "room": "L2",
+            "lidar_m": 4.413,
+            "lidar_ci": [
+              4.328,
+              4.498
+            ],
+            "reference_ok": false,
+            "video_m": null
+          },
+          {
+            "room": "L2",
+            "lidar_m": 1.187,
+            "lidar_ci": [
+              1.155,
+              1.218
+            ],
+            "reference_ok": true,
+            "video_m": 1.004,
+            "error_pct": -15.4,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              0.624,
+              1.384
+            ],
+            "corner_offset_m": 0.194
+          },
+          {
+            "room": "L2",
+            "lidar_m": 0.526,
+            "lidar_ci": [
+              0.495,
+              0.557
+            ],
+            "reference_ok": true,
+            "video_m": 0.392,
+            "error_pct": -25.4,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              0.055,
+              0.73
+            ],
+            "corner_offset_m": 0.067
+          },
+          {
+            "room": "L2",
+            "lidar_m": 1.773,
+            "lidar_ci": [
+              1.739,
+              1.807
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L2",
+            "lidar_m": 2.316,
+            "lidar_ci": [
+              2.284,
+              2.349
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L2",
+            "lidar_m": 1.086,
+            "lidar_ci": [
+              1.053,
+              1.119
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L2",
+            "lidar_m": 1.654,
+            "lidar_ci": [
+              1.569,
+              1.74
+            ],
+            "reference_ok": false,
+            "video_m": null
+          },
+          {
+            "room": "L4",
+            "lidar_m": 1.031,
+            "lidar_ci": [
+              0.945,
+              1.116
+            ],
+            "reference_ok": false,
+            "video_m": null
+          },
+          {
+            "room": "L4",
+            "lidar_m": 2.304,
+            "lidar_ci": [
+              2.273,
+              2.335
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L4",
+            "lidar_m": 2.311,
+            "lidar_ci": [
+              2.28,
+              2.342
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L4",
+            "lidar_m": 2.546,
+            "lidar_ci": [
+              2.516,
+              2.577
+            ],
+            "reference_ok": true,
+            "video_m": 2.43,
+            "error_pct": -4.6,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              1.824,
+              3.037
+            ],
+            "corner_offset_m": 0.104
+          },
+          {
+            "room": "L4",
+            "lidar_m": 1.28,
+            "lidar_ci": [
+              1.195,
+              1.365
+            ],
+            "reference_ok": false,
+            "video_m": 1.164,
+            "error_pct": -9.1,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              0.664,
+              1.665
+            ],
+            "corner_offset_m": 0.081
+          },
+          {
+            "room": "L6",
+            "lidar_m": 3.124,
+            "lidar_ci": [
+              3.094,
+              3.155
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L6",
+            "lidar_m": 1.5,
+            "lidar_ci": [
+              1.464,
+              1.537
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L6",
+            "lidar_m": 3.124,
+            "lidar_ci": [
+              3.094,
+              3.155
+            ],
+            "reference_ok": true,
+            "video_m": 2.912,
+            "error_pct": -6.8,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              2.217,
+              3.607
+            ],
+            "corner_offset_m": 0.106
+          },
+          {
+            "room": "L6",
+            "lidar_m": 1.5,
+            "lidar_ci": [
+              1.464,
+              1.537
+            ],
+            "reference_ok": true,
+            "video_m": null
+          },
+          {
+            "room": "L9",
+            "lidar_m": 1.03,
+            "lidar_ci": [
+              0.998,
+              1.061
+            ],
+            "reference_ok": true,
+            "video_m": 1.051,
+            "error_pct": 2.0,
+            "within_gate": true,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              0.656,
+              1.445
+            ],
+            "corner_offset_m": 0.04
+          },
+          {
+            "room": "L9",
+            "lidar_m": 1.328,
+            "lidar_ci": [
+              1.293,
+              1.363
+            ],
+            "reference_ok": true,
+            "video_m": 1.406,
+            "error_pct": 5.9,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              0.965,
+              1.846
+            ],
+            "corner_offset_m": 0.04
+          },
+          {
+            "room": "L9",
+            "lidar_m": 1.03,
+            "lidar_ci": [
+              0.998,
+              1.061
+            ],
+            "reference_ok": true,
+            "video_m": 1.051,
+            "error_pct": 2.0,
+            "within_gate": true,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              0.656,
+              1.445
+            ],
+            "corner_offset_m": 0.04
+          },
+          {
+            "room": "L9",
+            "lidar_m": 1.328,
+            "lidar_ci": [
+              1.293,
+              1.363
+            ],
+            "reference_ok": true,
+            "video_m": 1.406,
+            "error_pct": 5.9,
+            "within_gate": false,
+            "interval_holds_lidar": true,
+            "video_ci": [
+              0.965,
+              1.846
+            ],
+            "corner_offset_m": 0.04
+          }
+        ],
+        "dimension_pairs": [
+          {
+            "room": "L2",
+            "lidar_m": 2.959,
+            "video_m": 2.166,
+            "error_pct": -26.8
+          },
+          {
+            "room": "L2",
+            "lidar_m": 5.464,
+            "video_m": 2.837,
+            "error_pct": -48.1
+          },
+          {
+            "room": "L4",
+            "lidar_m": 2.311,
+            "video_m": 2.43,
+            "error_pct": 5.2
+          },
+          {
+            "room": "L4",
+            "lidar_m": 2.546,
+            "video_m": 3.031,
+            "error_pct": 19.0
+          },
+          {
+            "room": "L6",
+            "lidar_m": 1.5,
+            "video_m": 2.516,
+            "error_pct": 67.7
+          },
+          {
+            "room": "L6",
+            "lidar_m": 3.124,
+            "video_m": 2.912,
+            "error_pct": -6.8
+          },
+          {
+            "room": "L9",
+            "lidar_m": 1.03,
+            "video_m": 1.051,
+            "error_pct": 2.0
+          },
+          {
+            "room": "L9",
+            "lidar_m": 1.328,
+            "video_m": 1.406,
+            "error_pct": 5.9
+          }
+        ],
+        "video_capture": {
+          "frames": 645,
+          "runs": 80,
+          "keyframe_fps": 3.0,
+          "depth_size": [
+            378,
+            504
+          ],
+          "camera": "DA3 ray output",
+          "fx_over_width": 1.098,
+          "focal_source": "given",
+          "focal_sigma": 0.02,
+          "fx_over_width_da3_median": 1.2215,
+          "metric_gain": 1.07,
+          "scale_sigma": 0.0286,
+          "range_correction": [
+            -0.0119,
+            0.0253
+          ],
+          "tracking_breaks": 25,
+          "frames_depth_ignored": 48,
+          "frames_dropped_at_breaks": 0,
+          "runs_levelled_on_floor": "77/80",
+          "level_change_deg_median": 1.78,
+          "seam_rotation_spread_deg_median": 1.2,
+          "seam_position_spread_m_median": 0.042,
+          "seam_depth_ratio_spread_median": 0.0104,
+          "metric_anchors": 241,
+          "metric_anchor_scatter": 0.0906
+        },
+        "true_fx_over_width": 1.098,
+        "video_interval_scale": 4.5,
+        "seconds": 272.4
+      }
+    }
+  }
+}

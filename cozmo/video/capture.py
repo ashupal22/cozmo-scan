@@ -55,6 +55,7 @@ SEAM_SIGMA_MIN = 0.01
 MIN_FLOOR_NORMALS = 300         # below this a run is not levelled on its own floor (c00a: 36 -> 36 deg wrong, 417 -> 1.8 deg)
 BREAK_CONF = 2.0                # a key-frame pair is doubtful when a frame's median DA3 confidence is below this
 UNSURE_FRAME_CONF = 1.2         # depth of frames DA3 is very unsure about (blank walls up close) is not fused
+IGNORE_UNSURE_DEPTH = False     # fix-loop part 3 (docs/fix_loop.md): mixed on its own, so off; read at call time
 FOCAL_SIGMA_GIVEN = 0.02
 FOCAL_SIGMA_LINES_MIN = 0.015   # room-line focal: bootstrap spread, but never below this (errors 0.0%, 1.6%)
 FOCAL_SIGMA_DA3 = 0.10          # DA3's own focal: 10% too long on both our walks
@@ -495,7 +496,10 @@ def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain:
     frame_conf = np.array([float(np.median(c)) for c in chain.conf])
     breaks = tracking_breaks(frame_conf)
     unsure = frame_conf < UNSURE_FRAME_CONF
-    confidences[unsure] = 0     # their ghost walls turn loosely held stretches of the walk the wrong way
+    if IGNORE_UNSURE_DEPTH:
+        confidences[unsure] = 0     # their ghost walls turn loosely held stretches of the walk the wrong way
+    else:
+        unsure = np.zeros(n, bool)
 
     info = {"frames": n, "runs": len(runs), "keyframe_fps": KEYFRAME_FPS, "depth_size": [w, h],
             "camera": "DA3 ray output" if RAY_POSE else "DA3 camera head",

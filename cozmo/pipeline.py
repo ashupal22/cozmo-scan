@@ -103,19 +103,23 @@ def run_lidar(path: Path, drift: bool = True) -> Plan:
 
 
 VIDEO_FACE_SCATTER_M = 0.048  # video wall points across their wall, true poses, c00a170fe1 (LiDAR: 0.020)
+# Fix-loop parts 1 and 2 (docs/fix_loop.md): declaring tracking breaks made every walk worse (footprint 1a83 -9.4 ->
+# -35.3%, c7d2 -4.9 -> -48.2%), so it is off. Read at call time: the after-run regenerates with it switched on.
+DECLARE_TRACKING_BREAKS = False
 
 
 def plan_video_capture(capture, path: Path, t0: float, drift: bool = True) -> Plan:
-    """Video walks are cut at their tracking breaks (capture.breaks) and drift correction re-attaches the pieces:
-    wall directions fix small heading errors, and loop closures across a break try every quarter turn, since a
-    break can leave the rest of the walk turned by 60-90 degrees (docs/fix_loop.md)."""
-    plan = plan_capture(capture, path, "video", t0, drift=drift, jumps=list(capture.breaks), relocalized=False,
+    """Video walks are corrected like LiDAR walks: tracking breaks (capture.breaks) are reported but not declared to
+    drift correction, which measured best (docs/fix_loop.md). With DECLARE_TRACKING_BREAKS the walk is cut there and
+    loop closures across a break try every quarter turn."""
+    jumps = list(capture.breaks) if DECLARE_TRACKING_BREAKS else []
+    plan = plan_capture(capture, path, "video", t0, drift=drift, jumps=jumps, relocalized=False,
                         errors=video_errors(capture.scale_sigma), face_scatter_m=VIDEO_FACE_SCATTER_M)
     document, info = plan.document, capture.info
     document["quality"]["warnings"] += [
         f"no depth sensor: wall positions come from a learned depth model (Depth Anything 3) on {info['frames']} "
-        f"key frames; camera tracking was doubtful at {len(capture.breaks)} place(s), where the walk was cut and "
-        f"re-attached by wall directions and loop closures",
+        f"key frames; camera tracking was doubtful at {len(capture.breaks)} place(s), where rooms seen before and after "
+        f"may be misplaced (a break can turn the rest of the walk by up to a quarter turn)",
         f"real size set by a monocular metric-depth model, focal length from {info['focal_source']}: scale "
         f"uncertainty {100 * capture.scale_sigma:.1f}% (1 sigma), applied to every length",
     ]
