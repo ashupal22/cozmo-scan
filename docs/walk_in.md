@@ -8,7 +8,7 @@ never seen, choose the tier on the day, and measure it with a laser while the pi
 ```bash
 cd cozmo-scan && bash scripts/install.sh      # creates .venv and installs pinned dependencies
 source .venv/bin/activate
-pytest -q                                     # 117 tests, about 30 s
+pytest -q                                     # 118 tests, about 30 s
 python scripts/fetch_models.py                # DA3 weights into the local cache; instant when already there
 df -h .                                       # need 5 GB free: a video run writes about 1.2 GB
 ```
