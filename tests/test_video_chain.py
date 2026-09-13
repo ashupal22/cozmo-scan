@@ -145,10 +145,10 @@ def test_yaw_part_and_mean_rotation():
     assert vc.angle_deg(vc.mean_rotation(Rs).T @ Rotation.from_rotvec([0, 0.3, 0]).as_matrix()) < 0.3
 
 
-def test_tracking_breaks_short_cut_long_dropped():
+def test_tracking_breaks_are_cut_at_the_least_confident_pair():
     conf = np.array([5, 5, 1.2, 5, 5, 1.0, 1.1, 1.0, 1.3, 1.5, 5, 5, 1.9])
-    # pairs 1-2 doubtful (short: cut at the least confident pair), 4-9 (long: frames 5-9 dropped), 11 (short)
-    assert vc.tracking_breaks(conf) == [(1, 2), (4, 10), (11, 12)]
+    # doubtful pairs 1-2, 4-9 and 11: each stretch is cut once, at its least confident pair; no frame is dropped
+    assert vc.tracking_breaks(conf) == [(1, 2), (4, 5), (11, 12)]
     assert vc.tracking_breaks(np.full(10, 4.0)) == []
 
 

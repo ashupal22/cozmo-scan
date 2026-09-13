@@ -54,7 +54,6 @@ METRIC_SIGMA = 0.07             # per-frame scatter of DA3METRIC's scale against
 SEAM_SIGMA_MIN = 0.01
 MIN_FLOOR_NORMALS = 300         # below this a run is not levelled on its own floor (c00a: 36 -> 36 deg wrong, 417 -> 1.8 deg)
 BREAK_CONF = 2.0                # a key-frame pair is doubtful when a frame's median DA3 confidence is below this
-LONG_BREAK_PAIRS = 3            # a longer run of doubtful pairs drops the frames inside it
 UNSURE_FRAME_CONF = 1.2         # depth of frames DA3 is very unsure about (blank walls up close) is not fused
 FOCAL_SIGMA_GIVEN = 0.02
 FOCAL_SIGMA_LINES_MIN = 0.015   # room-line focal: bootstrap spread, but never below this (errors 0.0%, 1.6%)
@@ -333,9 +332,9 @@ def tracking_breaks(frame_conf: np.ndarray) -> list[tuple[int, int]]:
     DA3 loses track when the phone turns while facing a blank wall up close. A key-frame pair is doubtful
     when either frame's median DA3 confidence is below BREAK_CONF: on c00a170fe1 and 1a8384c3f6 every
     rotation error above 20 degrees had confidence 1.0-1.6, at the price of false alarms (25 of 111 and
-    40 of 343 pairs), which only loosen one step of the walk. Consecutive doubtful pairs form one break:
-    a short one is cut at its least confident pair and keeps every frame; a long one drops the frames
-    inside it."""
+    40 of 343 pairs), which only loosen one step of the walk. Consecutive doubtful pairs form one break, cut
+    at its least confident pair. No frame is ever dropped: dropping the frames inside long breaks lost 11-21%
+    of the frames and collapsed the plans (footprints -59% to -65%, bench/results/fix_loop/)."""
     doubtful = np.minimum(frame_conf[:-1], frame_conf[1:]) < BREAK_CONF
     breaks, k = [], 0
     while k < len(doubtful):
@@ -345,12 +344,9 @@ def tracking_breaks(frame_conf: np.ndarray) -> list[tuple[int, int]]:
         k0 = k
         while k < len(doubtful) and doubtful[k]:
             k += 1
-        if k - k0 <= LONG_BREAK_PAIRS:
-            pair_conf = np.minimum(frame_conf[k0:k], frame_conf[k0 + 1:k + 1])
-            worst = k0 + int(np.argmin(pair_conf))
-            breaks.append((worst, worst + 1))
-        else:
-            breaks.append((k0, k))
+        pair_conf = np.minimum(frame_conf[k0:k], frame_conf[k0 + 1:k + 1])
+        worst = k0 + int(np.argmin(pair_conf))
+        breaks.append((worst, worst + 1))
     return breaks
 
 
