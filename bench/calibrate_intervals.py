@@ -1,9 +1,11 @@
 """Calibrate the video tier's 90% intervals on the errors it actually makes (brief: calibration is scored at
 every tier; confident garbage on thin input caps the score).
 
-Input: bench/results/video_vs_lidar.json (run bench/video_vs_lidar.py first). For every paired gate wall
-(LiDAR wall of at least 1 m whose two neighbouring faces were fitted to wall points) the error
-|video - LiDAR| is divided by the video wall's own sigma, the half-width of its 90% interval / 1.645.
+Input: bench/results/video_vs_lidar.json (run bench/video_vs_lidar.py first). For every paired wall the error
+|video - LiDAR| is divided by the video wall's own sigma, the half-width of its 90% interval / 1.645. All paired
+walls count, not only the gate walls (LiDAR walls of at least 1 m whose two neighbouring faces were fitted to
+wall points): on our walks only 5 gate walls paired, too few to calibrate on. Walls with a weaker LiDAR reference
+make the factor more conservative, not less. A video wall matched to two parallel LiDAR walls counts once.
 Split-conformal calibration: with n such ratios, the ceil((n+1) x 0.9)-th smallest, divided by 1.645, is the
 factor by which every video interval must widen so that 90% of intervals hold the truth. LiDAR's own error
 (1-2 cm) is counted as video error, which makes the factor slightly conservative.
@@ -32,12 +34,16 @@ LEVEL = 0.9
 GATE_WALL_M = 1.0
 
 
-def ratios(walk_result: dict) -> np.ndarray:
-    """|video - LiDAR| / video sigma for the paired gate walls of one walk."""
-    out = []
+def ratios(walk_result: dict, gate_only: bool = False) -> np.ndarray:
+    """|video - LiDAR| / video sigma for the paired walls of one walk (only gate walls with gate_only)."""
+    out, seen = [], set()
     for w in walk_result.get("wall_pairs", []):
-        if w.get("video_m") is None or not w["reference_ok"] or w["lidar_m"] < GATE_WALL_M:
+        if w.get("video_m") is None or (gate_only and (not w["reference_ok"] or w["lidar_m"] < GATE_WALL_M)):
             continue
+        key = (w["room"], w["video_m"], tuple(w["video_ci"]))
+        if key in seen:
+            continue
+        seen.add(key)
         sigma = (w["video_ci"][1] - w["video_ci"][0]) / (2 * Z90)
         out.append(abs(w["video_m"] - w["lidar_m"]) / sigma if sigma > 0 else np.inf)
     return np.array(out)
@@ -63,6 +69,8 @@ def main():
     report = {"benchmark": "video_intervals", "source": str(RESULTS.relative_to(ROOT)),
               "source_commit": results.get("code_commit"), "variant": args.variant,
               "walls_per_walk": {cid: int(len(v)) for cid, v in z.items()},
+              "gate_walls_per_walk": {cid: int(len(ratios(r, gate_only=True))) for cid, r in walks.items()},
+              "error_over_sigma": {cid: [round(float(x), 2) for x in np.sort(v)] for cid, v in z.items()},
               "covered_as_is": {cid: f"{int(np.sum(v <= Z90))}/{len(v)}" for cid, v in z.items()}}
     loo = {}
     for cid in walks:

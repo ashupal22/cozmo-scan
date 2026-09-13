@@ -119,3 +119,92 @@ Both walks of the flat go through the LiDAR pipeline with drift correction. The 
 - **First run (`ea62760`): the correction barely engaged.** No wall directions were used on two walks, no loops were accepted on two walks, and a table top used as floor moved one walk 44 cm.
 - **Fixes (`2720656`, `1807cd0`, `b6b144c`):** looser wall-direction threshold, floor gating, a submap merge bug, loops matched around the map centre, heading drift modelled as a steady creep, ARKit snaps tied to the walk start, and loops matched on first-pass-straightened maps.
 - **Metric fix (`5fdba7f`):** the two-walk comparison became symmetric. The one-way version rewarded blurred maps.
+
+## Video tier: focal length and real-world scale (`bench/video_scale.py`)
+
+```bash
+COZMO_DATA=/path/to/captures python bench/video_scale.py     # ~6 min with cached model outputs
+```
+
+The video tier has no depth sensor and no camera calibration, so its real-world size rests on two estimates: the focal length, and a monocular metric-depth model (DA3METRIC-LARGE) whose metres are proportional to that focal length. The reference is each capture's own data. The Stray video, turned upright the way the Camera app stores it, goes through the video tier, and ARKit's calibration and the LiDAR depth of the same frames are the truth.
+
+Matching video frames to poses needed one correction. Stray's video frames lag its poses by about 75 ms (4–5 frames at 60 fps). Rotations measured from feature matches with LiDAR depth disagree with ARKit by a median 1.94° at no lag and 0.72° at 4 frames.
+
+### Focal length (focal / image width)
+
+| Walk | ARKit calibration | Room lines (`cozmo/video/focal.py`) | DA3's own estimate |
+|---|---|---|---|
+| c00a170fe1 | 1.110 | +1.1% | +10.9% |
+| 1a8384c3f6 | 1.108 | +1.6% | +11.4% |
+| c7d28f72c6 | 1.098 | +2.4% | +11.2% |
+
+### Scale: LiDAR depth ÷ video depth, median over key frames (gain and range correction off)
+
+| Walk | Ratio | Gain from the other two walks | Held-out walk off by |
+|---|---|---|---|
+| c00a170fe1 | 1.062 | 1.074 | −1.09% |
+| 1a8384c3f6 | 1.075 | 1.067 | +0.75% |
+| c7d28f72c6 | 1.072 | 1.068 | +0.35% |
+
+### Range bias left after the gain, binned by video depth
+
+"+" means the video reads short. Each cell is before → after the correction fitted on the other two walks.
+
+| Video depth | c00a170fe1 | 1a8384c3f6 | c7d28f72c6 |
+|---|---|---|---|
+| 0.6 m | −5.2 → −3.4% | −2.4 → −0.1% | −2.5 → +0.8% |
+| 1.1 m | −3.6 → −3.0% | −0.2 → +0.9% | −0.6 → +0.6% |
+| 1.5 m | −1.0 → −1.0% | +0.4 → +0.6% | −0.2 → 0.0% |
+| 1.9 m | +1.0 → +0.7% | +0.5 → +0.2% | −0.3 → −0.8% |
+| 2.3 m | +1.1 → +0.2% | +1.2 → +0.3% | +0.4 → −0.8% |
+| 2.9 m | — | +0.4 → −0.9% | +3.6 → +1.3% |
+| 3.6 m | — | −1.2 → −3.2% | +5.6 → +3.7% |
+
+### What the numbers say
+
+- **DA3's own focal length is 11% too long on every walk.** Metric depth grows with the focal length, so every depth would read 11% long, while sideways positions (depth ÷ focal) stay put: the map would be stretched along each viewing direction, not scaled evenly. The room-line estimate measures the focal length from straight edges instead: only the right value lets three perpendicular directions explain most of them. It lands within 2.4%.
+- **With the right focal length, the metric model still reads about 7% short, and consistently so** (1.062–1.075). A fixed gain of 1.07 leaves at most 1.1% on the walk it was not fitted on.
+- **A small bias by range remains.** Video depth reads a few percent long up close and short far away. The correction log(LiDAR/video) = a + b·log(depth), with a = −0.0119 and b = 0.0253, helps most at 2–3 m, where room walls are seen. It makes the nearest bin worse on two walks, and c00a170fe1 keeps a 3% offset below 1.2 m. Whether it helps the plans is judged on the plans themselves (next section).
+- **Caveats.** The three walks cover two flats and one phone, so the scale interval keeps a 2% allowance for the calibration itself. The Stray video is ARKit's unstabilised 4:3 stream, not a Camera-app clip.
+
+## Video tier: plans against LiDAR (`bench/video_vs_lidar.py`, `bench/calibrate_intervals.py`)
+
+```bash
+COZMO_DATA=/path/to/captures python bench/video_vs_lidar.py --variants oracle     # ~20 min with cached model outputs
+python bench/calibrate_intervals.py
+```
+
+Each walk's video goes through the video tier, and its plan is compared with the LiDAR plan of the same walk. Rooms are paired after a local alignment. Walls are paired corner to corner. The 3% gate (G-WALL-VIDEO) is scored on LiDAR walls of at least 1 m whose two neighbouring faces were fitted to wall points. The `oracle` variant keeps the video tier's depth but uses ARKit's camera path, to separate the two sources of error.
+
+### Results (code `1d00698`)
+
+| Walk | Variant | Rooms (video / LiDAR) | Rooms paired | Footprint | Gate walls within 3% | Paired walls, typical error | Interval held the LiDAR length | Wall-map agreement |
+|---|---|---|---|---|---|---|---|---|
+| c00a170fe1 | video | 3 / 3 | 1 | −18.6% | 0 of 6 (2 paired) | 8.5% | 1 of 2 | 0.47 |
+| c00a170fe1 | ARKit path | 2 / 3 | 0 | −10.0% | — | — | — | 0.88 |
+| 1a8384c3f6 | video | 7 / 7 | 5 | −9.4% | 0 of 17 (3 paired) | 15.5% | 0 of 8 | 0.55 |
+| 1a8384c3f6 | ARKit path | 6 / 7 | 2 | +6.2% | 3 of 8 (6 paired) | 2.9% | 6 of 6 | 0.82 |
+| c7d28f72c6 | video | 12 / 9 | 0 | −4.9% | — | — | — | 0.39 |
+| c7d28f72c6 | ARKit path | 11 / 9 | 7 | −22.2% | 1 of 23 (11 paired) | 14.6% | 4 of 11 | 0.77 |
+
+### What the numbers say
+
+- **The video tier does not meet G-WALL-VIDEO.** Paired walls are typically 8–16% off, mostly short. c7d28f72c6's −4.9% footprint is a coincidence: its plan is scrambled, and no room pairs with LiDAR.
+- **The camera path is one cause.** With ARKit's path, wall maps agree far better with LiDAR (0.77–0.88 against 0.39–0.55). On 1a8384c3f6, wall lengths become unbiased: typical error 2.9%, every interval holds. Tracking is lost where the phone turns while facing a blank wall up close.
+- **Building rooms from noisy depth is the other cause.** Even with ARKit's path, c7d28f72c6's walls read about 15% short, and rooms split or merge differently from LiDAR. Plans from video depth also flip with small input changes: c00a170fe1's ARKit-path footprint moved from −21.6% to −35.4% after a correction of about 1% in depth.
+
+### Interval calibration
+
+Across the 9 paired video walls (each video wall counted once), the error divided by the wall's own sigma runs from 1.5 to 7.4. With 9 walls, the 90% split-conformal factor is the largest ratio: 4.49. Every video interval is therefore widened by `VIDEO_INTERVAL_SCALE = 4.5` (`cozmo/export/document.py`), so a 3 m wall reads about ±0.7 m. The evidence is thin: two flats, and no leave-one-walk-out check was possible because c7d28f72c6 has no paired walls. The factor must be re-measured after any change to the video tier.
+
+### Options tried and not used
+
+| Option | What it did | Decision |
+|---|---|---|
+| Layout tolerances scaled to wall scatter (video walls scatter 4.8 cm, LiDAR 2.0 cm) | c00a170fe1 ARKit-path footprint −35.4% → −10.0% | **Used** |
+| Counting a wall seen anywhere within a scatter-wide band | Found a 3.7 m wall that was missed, but also turned furniture into walls: c00a170fe1 ARKit-path footprint −10.0% → −34.4% | Not used |
+| Cutting the walk at tracking breaks and dropping the frames inside long ones | Lost 21% of c00a170fe1's frames: footprint −18.6% → −65.2% | Not used |
+| Cutting at tracking breaks, keeping frames, ignoring the depth of very unsure frames | Wall-map agreement 1a8384c3f6 0.55 → 0.63, c7d28f72c6 0.39 → 0.49, but footprints no better (c7d28f72c6 −12.4% → −24.6%) | Not used; breaks are reported as a warning |
+| Ignoring the depth of very unsure frames alone | c00a170fe1 −18.6% → −15.6%, 1a8384c3f6 −9.4% → −13.6% | Not used |
+
+Tracking breaks are detected from DA3's confidence (median below 2.0 in either frame of a pair). This flags every pair of frames whose rotation error exceeds 20 degrees, with 25 false alarms in 111 pairs on c00a170fe1 and 40 in 343 on 1a8384c3f6. The drift step can hold such breaks loosely and search wider for loop closures across them. On a synthetic walk turned 25 degrees and shifted 25 cm at a break, median distortion was 41.7 cm undeclared, 24.2 cm declared, and 0.3 cm declared with the wider search (`tests/test_drift.py`). It is not used for video because the plans did not improve.

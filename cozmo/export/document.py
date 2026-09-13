@@ -35,7 +35,11 @@ NOMINAL_DOOR_WIDTH_SIGMA_M = 0.15  # jambs not seen: a typical door width with a
 CEILING_PRIOR_M = (2.5, 2.2, 3.2)  # value, low, high when no ceiling was seen anywhere
 VIDEO_FACE_M = 0.03
 VIDEO_OPENING_M = 0.08
-VIDEO_INTERVAL_SCALE = 1.0         # multiplier on every video interval; bench/calibrate_intervals.py sets it
+# Multiplier on every video interval, from bench/calibrate_intervals.py on bench/results/video_vs_lidar.json
+# (commit 1d00698): 9 paired walls on two flats, error / own sigma 1.5-7.4, factor 4.49. Only 1 of 9 intervals
+# held the LiDAR length before. Thin evidence (no leave-one-walk-out check was possible): re-measure after
+# any change to the video tier.
+VIDEO_INTERVAL_SCALE = 4.5
 
 
 @dataclass(frozen=True)

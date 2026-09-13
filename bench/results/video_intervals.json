@@ -1,0 +1,54 @@
+{
+  "benchmark": "video_intervals",
+  "source": "bench/results/video_vs_lidar.json",
+  "source_commit": "1d00698-dirty",
+  "variant": "video",
+  "walls_per_walk": {
+    "c00a170fe1": 2,
+    "1a8384c3f6": 7,
+    "c7d28f72c6": 0
+  },
+  "gate_walls_per_walk": {
+    "c00a170fe1": 2,
+    "1a8384c3f6": 3,
+    "c7d28f72c6": 0
+  },
+  "error_over_sigma": {
+    "c00a170fe1": [
+      1.49,
+      3.53
+    ],
+    "1a8384c3f6": [
+      1.92,
+      2.94,
+      5.2,
+      5.47,
+      5.7,
+      7.26,
+      7.39
+    ],
+    "c7d28f72c6": []
+  },
+  "covered_as_is": {
+    "c00a170fe1": "1/2",
+    "1a8384c3f6": "0/7",
+    "c7d28f72c6": "0/0"
+  },
+  "leave_one_out": {
+    "c00a170fe1": {
+      "factor_from_others": null,
+      "held_out_covered": null
+    },
+    "1a8384c3f6": {
+      "factor_from_others": null,
+      "held_out_covered": null
+    },
+    "c7d28f72c6": {
+      "factor_from_others": 4.49,
+      "held_out_covered": "0/0"
+    }
+  },
+  "factor_all_walks": 4.49,
+  "scale_in_effect": 1.0,
+  "recommended_VIDEO_INTERVAL_SCALE": 4.49
+}
