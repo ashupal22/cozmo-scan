@@ -44,10 +44,11 @@ def select_keyframes(capture, min_translation_m: float = 0.05, min_rotation_deg:
 
 def frame_points(capture, i: int, min_confidence: int = 2, min_depth: float = 0.3, max_depth: float = 4.5,
                  stride: int = 2, max_depth_step: float = 0.04,
-                 ground_truth: bool = False) -> tuple[np.ndarray, np.ndarray]:
+                 ground_truth: bool = False, depth_offset_m: float = 0.0) -> tuple[np.ndarray, np.ndarray]:
     """(xyz, normal) in the world frame for one depth frame. Pixels on depth edges are dropped,
     because their normals are meaningless. With ground_truth=True the capture's laser-rendered
-    depth is used instead of the device depth (ARKitScenes walks only)."""
+    depth is used instead of the device depth (ARKitScenes walks only). `depth_offset_m` is added
+    to every device depth value: a calibrated sensor bias, never applied to laser depth."""
     if ground_truth:
         raw = capture.gt_depth(i)
         if raw is None:
@@ -57,6 +58,8 @@ def frame_points(capture, i: int, min_confidence: int = 2, min_depth: float = 0.
         k = capture.intrinsics(i, "gt")
     else:
         z = cv2.medianBlur(capture.depth(i), 5)
+        if depth_offset_m:
+            z = np.where(z > 0, z + np.float32(depth_offset_m), z).astype(np.float32)
         c = capture.confidence(i)
         k = capture.intrinsics(i, "depth")
     h, w = z.shape

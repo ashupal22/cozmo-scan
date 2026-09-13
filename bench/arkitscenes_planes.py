@@ -12,7 +12,10 @@ Gates (docs/gates.md): G-CEIL error <= 15 mm; G-CEIL-SPREAD spread <= 10 mm.
 
     python bench/arkitscenes_planes.py                 # all walks in data/external/arkitscenes
     python bench/arkitscenes_planes.py --walks 41069048
-Writes bench/results/arkitscenes_planes.json.
+    python bench/arkitscenes_planes.py --bias-correction leave-one-venue-out
+Writes bench/results/arkitscenes_planes.json, or arkitscenes_planes_bias_corrected.json with the correction:
+every walk's device depth gets the offset measured on the other venue's walks (median device - laser depth
+between 0.3 and 2 m), so no walk is corrected with its own ground truth.
 """
 from __future__ import annotations
 
@@ -53,16 +56,29 @@ def depth_bias_mm(walk: ARKitScenesWalk, every: int = 5) -> dict:
     return {f"{lo}-{hi} m": (round(1000 * float(np.median(v)), 1) if v else None) for (lo, hi), v in diffs.items()}
 
 
+def device_bias_m(walk: ARKitScenesWalk, every: int = 5, near: float = 0.3, far: float = 2.0) -> float | None:
+    """Median over frames of the median device - laser depth, for laser depth between near and far."""
+    per_frame = []
+    for i in walk.gt_indices[::every]:
+        i = int(i)
+        d, c = walk.depth(i), walk.confidence(i)
+        g = cv2.resize(walk.gt_depth(i), walk.depth_size, interpolation=cv2.INTER_NEAREST)
+        m = (c == 2) & (d > 0) & (g >= near) & (g < far)
+        if m.sum() > 100:
+            per_frame.append(float(np.median(d[m] - g[m])))
+    return float(np.median(per_frame)) if per_frame else None
+
+
 def refit(points: PointSet, facing: int, height: float):
     """Device plane fitted only around a known height; facing +1 = up (floor), -1 = down (ceiling)."""
     mask = points.normal[:, 1] * facing > HORIZONTAL_DOT
     return robust_height(points.xyz[mask, 1], height, window=0.05)
 
 
-def evaluate(walk: ARKitScenesWalk) -> dict:
-    device = fuse(walk)
+def evaluate(walk: ARKitScenesWalk, depth_offset_m: float = 0.0) -> dict:
+    device = fuse(walk, depth_offset_m=depth_offset_m)
     laser = fuse(walk, walk.gt_indices, ground_truth=True, stride=8, max_depth=6.0)
-    result = {"frames": len(walk), "gt_frames": int(len(walk.gt_indices))}
+    result = {"frames": len(walk), "gt_frames": int(len(walk.gt_indices)), "depth_offset_mm": round(1000 * depth_offset_m, 1)}
 
     true_floors = find_floors(laser)
     if not true_floors:
@@ -126,26 +142,40 @@ def code_commit() -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--walks", nargs="+", help="video ids (default: all in manifest.json)")
+    parser.add_argument("--bias-correction", choices=["none", "leave-one-venue-out"], default="none",
+                        help="add the depth offset measured on the other venue's walks (default: depth as recorded)")
     args = parser.parse_args()
 
     commit = code_commit()
     manifest = json.loads((DATA / "manifest.json").read_text())
     chosen = [m for m in manifest if not args.walks or m["video_id"] in args.walks]
-    walks, visits = {}, {}
+    walks, visits, offsets, bias = {}, {}, {}, {}
+    if args.bias_correction == "leave-one-venue-out":
+        for m in chosen:
+            bias[m["video_id"]] = (m["visit_id"], device_bias_m(ARKitScenesWalk(DATA / "Validation" / m["video_id"])))
+        for m in chosen:
+            others = [b for visit, b in bias.values() if visit != m["visit_id"] and b is not None]
+            offsets[m["video_id"]] = -float(np.mean(others)) if others else 0.0
     for m in chosen:
         t0 = time.time()
         walk = ARKitScenesWalk(DATA / "Validation" / m["video_id"])
-        walks[m["video_id"]] = {"visit_id": m["visit_id"], **evaluate(walk), "seconds": round(time.time() - t0)}
+        walks[m["video_id"]] = {"visit_id": m["visit_id"], **evaluate(walk, offsets.get(m["video_id"], 0.0)),
+                                "seconds": round(time.time() - t0)}
         visits.setdefault(m["visit_id"], []).append(m["video_id"])
         print(m["video_id"], json.dumps(walks[m["video_id"]]))
 
-    report = {"benchmark": "arkitscenes_planes", "code_commit": commit,
+    report = {"benchmark": "arkitscenes_planes", "code_commit": commit, "bias_correction": args.bias_correction,
               "gates_mm": {"ceiling_error": CEIL_GATE_MM, "ceiling_spread": SPREAD_GATE_MM},
               "summary": summarize(walks, visits), "walks": walks}
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(report, indent=2) + "\n")
+    if bias:
+        report["device_bias_mm"] = {vid: round(1000 * b, 1) if b is not None else None for vid, (_, b) in bias.items()}
+        measured = [b for _, b in bias.values() if b is not None]
+        report["device_bias_all_walks_mm"] = round(1000 * float(np.mean(measured)), 1) if measured else None
+    out = OUT if args.bias_correction == "none" else OUT.with_name("arkitscenes_planes_bias_corrected.json")
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, indent=2) + "\n")
     print(json.dumps(report["summary"], indent=2))
-    print("wrote", OUT.relative_to(ROOT))
+    print("wrote", out.relative_to(ROOT))
 
 
 if __name__ == "__main__":
