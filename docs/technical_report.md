@@ -130,14 +130,15 @@ The root cause was partly right: the camera path is the main loss. But the mecha
 
 - **Blank-wall turns (video):** turning within 1 m of a plain wall breaks DA3 tracking and can turn the rest of the walk by up to a quarter turn. The protocol forbids it; the output warns when it happens.
 - **Phone pointed down:** walls never seen above 1.5 m cannot be walls-first rooms, so rooms merge (a corridor joined a living room). The protocol requires a ceiling sweep in every room.
-- **Mirrors and glass:** depth, from the sensor or the model, sees a room behind them. There is no detector yet; the protocol asks not to film them straight on.
-- **Low light:** DA3 confidence drops and tracking breaks multiply; LiDAR depth is unaffected. The protocol asks for every light on.
+- **Mirrors and glass:** depth, from the sensor or the model, sees a room behind them. The protocol asks not to film them straight on. Every run also checks each image with CLIP and warns when it sees a mirror, glass or a wet-look floor, naming the first frame. On our walks the flags are real: a glass partition reflecting the person filming, and a glossy TV screen. The geometry is not corrected; the warning tells the reader where not to trust it.
+- **Low light:** DA3 confidence drops and tracking breaks multiply; LiDAR depth is unaffected. The protocol asks for every light on, and a run warns when 30% or more of its images are dark.
 - **Wet-look and shiny floors:** LiDAR dropouts leave holes, handled by area-based plane choice; the damage detector may read reflections as stains.
 - **Multi-level ceilings:** one plane per room; venue 384651's spread of 43.9 mm comes from a two-level ceiling.
 - **Photo tier:** boxes cannot represent L-shaped rooms or corridors. Photos not taken from the doorway leave the camera-side wall too close. Missed doors leave rooms in separate groups.
 - **Damage:** zero-shot and untested on real damage. Painted stains were found in only 16 of 93 images. Recall is the weakest part of the contract.
 - **Long videos, cold:** DA3 takes about 10 s per second of video on an M4 (378 s for a 37 s clip), so a 3-minute walk needs about 30 minutes, over our 10-minute target. Runs of cached model outputs take seconds.
 - **Fresh model runs are not bit-identical:** DA3 on Apple's GPU gives slightly different outputs on a fresh run, and room building on video depth is sensitive to them. c00a170fe1's video plan was 3 rooms and 19.82 m² from the cache, and 2 rooms and 20.32 m² on a fresh run. Cached runs replay exactly.
+- **Standing still and sweeping:** rooms are grown from where the phone walked. On two public ARKitScenes scans, where the phone stayed within about 1 m, the layout found a single 3 m² room in rooms of about 20 m². The protocol's walk along the walls avoids this. It is also why ARKitScenes could not serve as a wall-length benchmark for us: its laser-depth layout failed too, because the walls there did not meet at right angles.
 - **Non-right-angled rooms:** the walls-first layout needs right angles; otherwise it falls back to floor-traced outlines, which stop at furniture.
 
 ## 9. What comes next

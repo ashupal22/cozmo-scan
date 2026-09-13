@@ -16,7 +16,7 @@ Follow these steps exactly. Every "why" comes from a measured failure, listed in
 1. Install **Stray Scanner** (free, App Store). Open it and tap record.
 2. Start at the front door, facing into the home.
 3. In **every room**:
-   1. Walk along the walls about 1 m away from them.
+   1. Walk along the walls about 1 m away from them. *Why: rooms are grown from where you walked. Standing in one spot and sweeping (as public scans do) gave a 3 m² room inside a room of about 20 m².*
    2. Tilt the phone up until you see where the walls meet the ceiling, all the way round. *Why: rooms are split using walls seen above 1.5 m. A walk that pointed the phone down merged a corridor into a living room.*
    3. Walk through each doorway facing forward, so both sides of the door frame are seen. *Why: opening widths.*
 4. Return to the front door and stop. Allow about **1 minute per room**.

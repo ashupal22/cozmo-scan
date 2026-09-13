@@ -52,3 +52,11 @@ def test_tile_points_are_placed_on_the_nearest_wall():
     xyz = np.column_stack([np.linspace(1.0, 1.5, 50), np.linspace(0.8, 1.2, 50), np.full(50, 0.02)])
     s, u, v = place(xyz, 0.0, surfaces, rooms)
     assert s.id == "R1.W1" and 0.9 < u.min() < 1.1 and 0.7 < v.min() < 0.9
+
+
+def test_low_light_is_reported_only_when_many_images_are_dark():
+    import cozmo.damage.detect as dd
+    view = lambda level, k: dd.View(np.full((40, 40, 3), level, np.uint8), np.zeros((4, 4)), (1, 1, 1, 1),  # noqa: E731
+                                    np.eye(3), np.zeros(3), k)
+    assert dd.low_light([view(20, k) for k in range(5)]).startswith("low light: 5 of 5")
+    assert dd.low_light([view(20, 0)] + [view(150, k) for k in range(1, 10)]) is None

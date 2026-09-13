@@ -267,3 +267,66 @@ def model_views(capture, every: int = 1, loader=None) -> list[View]:
             image = cv2.cvtColor(cv2.imread(str(capture.frame_files[i])), cv2.COLOR_BGR2RGB)
         views.append(View(image, capture.depth(i), (k.fx, k.fy, k.cx, k.cy), capture.rotation(i), capture.positions[i], i))
     return views
+
+
+# ---- scene conditions the brief names: mirrors, glass, wet-look surfaces, low light ------------------------------
+
+CONDITIONS = {
+    "mirror": ["a large mirror on a wall", "a mirrored wardrobe door"],
+    "glass": ["a glass door", "a large glass window", "a glass shower screen"],
+    "wet-look floor": ["a shiny wet floor", "a glossy reflective floor"],
+}
+CONDITION_NEGATIVES = ["a plain painted wall", "a room with furniture", "a wooden floor", "a carpet", "a door",
+                       "a kitchen", "a ceiling", "a corridor", "a bed", "a sofa"]
+CONDITION_P_MIN = 0.5
+DARK_MEAN = 0.18            # mean brightness (0-1) below which an image counts as dark
+DARK_SHARE = 0.3
+
+
+def low_light(views: list[View]) -> str | None:
+    """A warning when at least DARK_SHARE of the images are dark, else None."""
+    brightness = np.array([float(v.image.mean()) / 255.0 for v in views])
+    dark = brightness < DARK_MEAN
+    if not len(views) or dark.mean() < DARK_SHARE:
+        return None
+    return (f"low light: {int(dark.sum())} of {len(views)} images are dark (mean brightness {brightness.mean():.2f}); "
+            f"depth from images and damage detection are less reliable there. Switch on every light and capture again "
+            f"if possible")
+
+
+def scene_conditions(views: list[View]) -> list[str]:
+    """Warnings for conditions that make depth or damage detection unreliable, with how many images show them."""
+    import torch
+    from PIL import Image
+    from cozmo.video.da3 import device
+    if not views:
+        return []
+    low = low_light(views)
+    warnings = [low] if low else []
+    model, processor, _, _ = _clip()
+    prompts = [f"a photo of {p}." for ps in CONDITIONS.values() for p in ps] + [f"a photo of {p}." for p in CONDITION_NEGATIVES]
+    owner = [c for c, ps in CONDITIONS.items() for _ in ps] + [None] * len(CONDITION_NEGATIVES)
+    seen = {c: [] for c in CONDITIONS}
+    with torch.no_grad():
+        tokens = processor(text=prompts, return_tensors="pt", padding=True).to(device())
+        text = model.get_text_features(**tokens)
+        text = text / text.norm(dim=-1, keepdim=True)
+        for s in range(0, len(views), 32):
+            batch = views[s:s + 32]
+            images = [Image.fromarray(np.ascontiguousarray(cv2.rotate(v.image, v.upright) if v.upright is not None else v.image))
+                      for v in batch]
+            img = model.get_image_features(**processor(images=images, return_tensors="pt").to(device()))
+            img = img / img.norm(dim=-1, keepdim=True)
+            prob = (100.0 * img @ text.T).softmax(dim=-1).cpu().numpy()
+            for v, p in zip(batch, prob):
+                for c in CONDITIONS:
+                    share = float(sum(p[j] for j, o in enumerate(owner) if o == c))
+                    if share >= CONDITION_P_MIN:
+                        seen[c].append(v.frame)
+    advice = {"mirror": "depth may show a room behind it that is not there; check walls near it",
+              "glass": "depth may pass through or reflect; walls and openings near it are less reliable",
+              "wet-look floor": "reflections can look like stains, and depth may drop out on it"}
+    for c, frames in seen.items():
+        if frames:
+            warnings.append(f"{c} seen in {len(frames)} of {len(views)} images (first at frame {frames[0]}): {advice[c]}")
+    return warnings
