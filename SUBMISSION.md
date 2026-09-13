@@ -50,7 +50,7 @@ Suggested message:
   - walls first, then rooms and doors
   - measurements with 90% intervals
   - damage, hidden-damage rules, repair scope
-  - `result.json`, `plan.svg`, `summary.md`
+  - `result.json`, `plan.svg`, `summary.md`, and the one-page visual report `report.pdf` (`report.png`)
 - **Video:**
   - key frames at 3 per second, up to 360
   - depth and camera path from Depth Anything 3, in overlapping runs of 12 frames
@@ -200,7 +200,7 @@ brew install ffmpeg
 git clone https://github.com/ashupal22/cozmo-scan.git && cd cozmo-scan
 python3 -m venv .venv && source .venv/bin/activate
 bash scripts/install.sh        # packages, Depth Anything 3 (pinned), model weights
-pytest -q                      # 118 tests, about 30 s
+pytest -q                      # 121 tests, about 30 s
 ```
 
 **Capture:** follow `docs/capture_protocol.pdf` (one page).
@@ -220,10 +220,12 @@ cozmo run path/to/home                    # photos: home/kitchen/*.heic, home/be
 - `result.json`: everything, with a 90% interval on every number, validated against `schema/output.schema.json`.
 - `plan.svg`: the floor plan, dimensioned.
 - `summary.md`: each room's width × length, ceiling height and door widths, with ranges.
+- `report.png` and `report.pdf`: everything above on one page, with the plan drawing. The easiest way to see a result.
 
 **Other commands:**
 - `cozmo inspect <capture>`: what a capture holds.
 - `cozmo validate <result.json>`: checks a file against the schema.
+- `cozmo report <result.json>`: redraws the one-page visual report for any result.
 - `--no-drift`: the drift ablation.
 - `--no-damage`: skips damage detection (saves 20–60 s).
 

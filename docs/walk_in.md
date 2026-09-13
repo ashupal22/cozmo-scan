@@ -8,7 +8,7 @@ never seen, choose the tier on the day, and measure it with a laser while the pi
 ```bash
 cd cozmo-scan && bash scripts/install.sh      # creates .venv and installs pinned dependencies
 source .venv/bin/activate
-pytest -q                                     # 118 tests, about 30 s
+pytest -q                                     # 121 tests, about 30 s
 python scripts/fetch_models.py                # DA3 weights into the local cache; instant when already there
 df -h .                                       # need 5 GB free: a video run writes about 1.2 GB
 ```
@@ -48,8 +48,8 @@ Video keeps every key frame up to 2 minutes of clip (360 frames). A 120-frame ca
 
 4. Narrate while it runs: fuse depth into points → drift correction → floor → walls-first layout → rooms split
    at doorways → openings → damage → JSON and SVG.
-5. Open `plan.svg` in a browser, and `summary.md` (each room's width × length, ceiling height and door widths, with
-   ranges). Read each value **with its interval** before they measure.
+5. Open `report.pdf`: the plan, every room's width × length, ceiling height and door widths with ranges, damage and
+   the warnings, on one page. Read each value **with its interval** before they measure.
 6. Show `result.json`: one wall, one opening, one damage region, one concealed flag with the rule that fired,
    one scope line. That is the output contract, item by item.
 7. Show `bench/results/drift_*_on.svg` against `_off.svg`. Pre-computed — never run the ablation live.

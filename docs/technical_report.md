@@ -32,7 +32,7 @@ capture ─► ingest ─► per-frame depth + camera poses ─► fusion ─►
 - **Drift correction** (`cozmo/slam`) is described in section 4.
 - **Planes**: the floor and ceiling are the horizontal planes with the largest covered area, not the most points, which rejects table tops (a table top once moved a floor by 221 mm).
 - **Walls-first layout** (`cozmo/geometry/layout.py`): wall faces are fitted from points seen above an adaptive height, the plan is split into inside and outside by a min cut over line cells, faces are paired into walls, corners snapped, rooms split where the floor narrows at a doorway, and openings kept only with proof (the walk passed through, or floor was seen at the line). If the walls are not at right angles it falls back to rooms traced from the seen floor.
-- **Document** (`cozmo/export`): every measurement is a value with `ci_low`, `ci_high`, `confidence` and, when the sensor never saw it, `observed: false`. Each run writes `result.json` (validated against our schema), `plan.svg` and `summary.md` (room width × length, ceiling height and door widths, with ranges). The formats are in `docs/data_formats.md`.
+- **Document** (`cozmo/export`): every measurement is a value with `ci_low`, `ci_high`, `confidence` and, when the sensor never saw it, `observed: false`. Each run writes `result.json` (validated against our schema), `plan.svg`, `summary.md` (room width × length, ceiling height and door widths, with ranges), and a one-page visual report (`report.png`, `report.pdf`). The formats are in `docs/data_formats.md`.
 
 ## 3. Tier design and device matrix
 

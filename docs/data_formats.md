@@ -52,7 +52,7 @@ home/
 | Real defect photos | BD3 test split: a parquet table of photo bytes and a defect label | Downloaded by `bench/damage_bd3.py` |
 | Real iPhone photos | Two iPhone 12 Pro HEIC samples from heic.digital | Downloaded by `bench/iphone_photo_check.py` |
 | Tape and app measurements | CSV `room, item, tape_m, app_m, notes`, in metres. Items: length, width, ceiling height, door width, and damage width, height and height above floor | Template `bench/templates/measurements.csv`, read by `bench/tape_truth.py` |
-| Unit tests | Synthetic rooms, walks and clips generated inside the tests | `tests/` (118 tests) |
+| Unit tests | Synthetic rooms, walks and clips generated inside the tests | `tests/` (121 tests) |
 
 To add new test captures, keep one room name across all three tiers and the CSV, so the comparison can match rooms:
 `data/captures/<id>/` (Stray export), `<id>.mov` (video), `<id>_photos/<room>/` (photos).
@@ -66,6 +66,7 @@ To add new test captures, keep one room name across all three tiers and the CSV,
   - IDs: rooms `R1`, walls `R1.W1`, openings `R1.O1`, surfaces `R1.FLOOR` / `R1.CEIL`, damage `D1`, flags `F1`, scope items `S1`, rules `R-...`.
 - `plan.svg`: the dimensioned floor plan.
 - `summary.md`: each room's width × length, ceiling height and opening widths, with ranges.
+- `report.png` and `report.pdf`: one A4 landscape page with the plan drawing (rooms, wall lengths, openings, damage markers), the room table with ranges, the plan summary, damage and repairs, and the first warnings. `cozmo report <result.json>` redraws it for any result.
 
 ## Why these formats
 

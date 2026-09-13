@@ -22,7 +22,7 @@ Needs Python 3.10–3.12, git and ffmpeg (macOS: `brew install ffmpeg`), plus ab
 git clone https://github.com/ashupal22/cozmo-scan.git && cd cozmo-scan
 python3 -m venv .venv && source .venv/bin/activate
 bash scripts/install.sh     # packages, Depth Anything 3 (pinned commit), model weights
-pytest -q                   # 118 unit tests on synthetic data, about 30 s
+pytest -q                   # 121 unit tests on synthetic data, about 30 s
 ```
 
 `scripts/install.sh` installs the package and Depth Anything 3 at a pinned commit, without the training extras that do not build on macOS. It then fetches the weights: DA3-BASE 0.5 GB, DA3METRIC-LARGE 1.2 GB, CLIP ViT-B/32 0.6 GB. Tested in a fresh virtual environment: install in 87 s with warm download caches, then all tests passed and a LiDAR capture ran. A cold machine also downloads about 1 GB of packages and 2.3 GB of weights, which takes about 10 minutes on a 50 Mbit/s line.
@@ -37,9 +37,10 @@ cozmo run path/to/walkthrough.mov           # video tier
 cozmo run path/to/photos                    # photo tier: photos/kitchen/*.heic, photos/bedroom 1/*.heic, ...
 ```
 
-The tier is detected from the input. Each run writes `out/<name>/result.json` (schema: [`schema/output.schema.json`](schema/output.schema.json)), `out/<name>/plan.svg` and `out/<name>/summary.md` (each room's width × length, ceiling height and door widths, with ranges). It also prints that table and the warnings. Input and output formats, and why they were chosen, are in [`docs/data_formats.md`](docs/data_formats.md). Other commands:
+The tier is detected from the input. Each run writes `out/<name>/result.json` (schema: [`schema/output.schema.json`](schema/output.schema.json)), `out/<name>/plan.svg` and `out/<name>/summary.md` (each room's width × length, ceiling height and door widths, with ranges), plus `report.png` and `report.pdf`: one page with the plan drawing, the room table, damage and repairs, and the warnings, so nobody has to read the JSON. It also prints the table and the warnings. Input and output formats, and why they were chosen, are in [`docs/data_formats.md`](docs/data_formats.md). Other commands:
 - `cozmo inspect <capture>` summarises a capture.
 - `cozmo validate <result.json>` checks a file against the schema.
+- `cozmo report <result.json>` draws the one-page visual report for any existing result.
 - `--no-drift` runs the drift ablation, and `--no-damage` skips damage detection.
 
 Typical run times on an Apple M4, with damage detection:
