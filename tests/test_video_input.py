@@ -31,3 +31,17 @@ def test_rotation_flag_is_applied(tmp_path):
     h, w = img.shape
     assert h > w                                               # portrait, as the phone was held
     assert img[: h // 4, : w // 4].mean() > 200 and img[-h // 4:, -w // 4:].mean() < 50
+
+
+def test_keyframe_cap_lowers_the_rate_and_benchmarks_can_switch_it_off(tmp_path):
+    from cozmo.video.capture import KEYFRAME_FPS, keyframe_fps
+    src = tmp_path / "f"
+    src.mkdir()
+    for k in range(80):                                        # 10 s at 8 fps
+        cv2.imwrite(str(src / f"{k:03d}.png"), np.full((64, 48, 3), k, np.uint8))
+    clip = tmp_path / "clip.mov"
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-framerate", "8", "-i", str(src / "%03d.png"), "-c:v", "libx264",
+                    "-pix_fmt", "yuv420p", str(clip)], check=True)
+    assert abs(keyframe_fps(clip, max_frames=12) - 1.2) < 0.05     # 12 frames over 10 s
+    assert keyframe_fps(clip, max_frames=None) == KEYFRAME_FPS
+    assert keyframe_fps(clip, max_frames=1000) == KEYFRAME_FPS

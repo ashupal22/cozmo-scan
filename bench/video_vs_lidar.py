@@ -290,7 +290,8 @@ def run_walk(cid: str, variants: list[str]) -> dict:
     out = {}
     for name in ["video"] + variants:
         t0 = time.time()
-        vcap = load_video(video_path, work, fx_over_width=true_fx if name in ("truefocal", "oracle") else None)
+        vcap = load_video(video_path, work, fx_over_width=true_fx if name in ("truefocal", "oracle") else None,
+                                  max_keyframes=None)   # every key frame, as the committed results were produced
         if name == "oracle":
             vcap = oracle_capture(vcap, cap, key_rows(video_path, vcap.frame_files, cap), code)
         video = plan_video_capture(vcap, video_path, t0)

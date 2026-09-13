@@ -142,10 +142,10 @@ def video_duration_s(video: Path) -> float | None:
         return None
 
 
-def keyframe_fps(video: Path, fps: float = KEYFRAME_FPS, max_frames: int = MAX_KEYFRAMES) -> float:
+def keyframe_fps(video: Path, fps: float = KEYFRAME_FPS, max_frames: int | None = MAX_KEYFRAMES) -> float:
     """The key-frame rate to use: KEYFRAME_FPS, lowered so a long clip still gives at most `max_frames`
-    frames and so finishes inside the runtime gate."""
-    duration = video_duration_s(video)
+    frames and so finishes inside the runtime gate. `max_frames=None` keeps every key frame."""
+    duration = video_duration_s(video) if max_frames is not None else None
     if duration is None or duration <= 0:
         return fps
     return min(fps, max_frames / duration)
@@ -487,13 +487,14 @@ def correct_range(depth: np.ndarray) -> np.ndarray:
 
 
 def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain: float | None = None,
-               range_correction: bool = True) -> VideoCapture:
+               range_correction: bool = True, max_keyframes: int | None = MAX_KEYFRAMES) -> VideoCapture:
     """`fx_over_width`: focal length in units of the upright frame width, when known (e.g. from
     metadata); otherwise estimated from the video. `metric_gain` overrides METRIC_DEPTH_GAIN (the
-    calibration benchmark measures with 1.0)."""
+    calibration benchmark measures with 1.0). `max_keyframes`: cap on key frames for a bounded runtime (`cozmo run`);
+    the benchmarks pass None, the setting every committed video result was produced with."""
     metric_gain = METRIC_DEPTH_GAIN if metric_gain is None else metric_gain
     video, work_dir = Path(video), Path(work_dir)
-    fps = keyframe_fps(video)
+    fps = keyframe_fps(video, max_frames=max_keyframes)
     frames = extract_keyframes(video, work_dir / "frames", fps=fps)
     n = len(frames)
     runs = runs_for(n)

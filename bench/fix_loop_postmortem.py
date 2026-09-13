@@ -18,7 +18,7 @@ heading = lambda R: np.degrees(np.arctan2(R[0, 2], R[2, 2]))
 for cid in ("c00a170fe1", "1a8384c3f6", "c7d28f72c6"):
     cap = StrayCapture(DATA / cid)
     work = DERIVED / f"{cid}_video_work"
-    vcap = load_video(upright_video(cid), work)
+    vcap = load_video(upright_video(cid), work, max_keyframes=None)
     rows = np.load(work / "rows.npy")
     n = len(vcap)
     pts = fuse(vcap)

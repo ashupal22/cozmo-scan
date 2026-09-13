@@ -178,7 +178,7 @@ Each walk's video goes through the video tier, and its plan is compared with the
 
 ### Results (code `1d00698`)
 
-These are also the shipped video tier's numbers. The fix loop's change made them worse and is switched off, and the re-run with it off reproduces these video plans exactly ([`docs/fix_loop.md`](../docs/fix_loop.md)).
+These are also the shipped video tier's numbers, with every key frame at 3 fps. `cozmo run` now caps long clips at 120 key frames to bound runtime (clips over 40 s: c7d28f72c6 and 1a8384c3f6 would be capped), and the benchmarks pass `max_keyframes=None` so these results still regenerate. The cap's accuracy cost is not measured. The fix loop's change made them worse and is switched off, and the re-run with it off reproduces these video plans exactly ([`docs/fix_loop.md`](../docs/fix_loop.md)).
 
 
 | Walk | Variant | Rooms (video / LiDAR) | Rooms paired | Footprint | Gate walls within 3% | Paired walls, typical error | Interval held the LiDAR length | Wall-map agreement |

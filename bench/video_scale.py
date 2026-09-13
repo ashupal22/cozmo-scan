@@ -101,7 +101,7 @@ def main():
         sideways = code in (cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_90_COUNTERCLOCKWISE)
         true_fx = k.fy / cap.rgb_size[1] if sideways else k.fx / cap.rgb_size[0]
         video = upright_video(cid)
-        raw = vc.load_video(video, DERIVED / f"{cid}_video_work", metric_gain=1.0, range_correction=False)
+        raw = vc.load_video(video, DERIVED / f"{cid}_video_work", metric_gain=1.0, range_correction=False, max_keyframes=None)
         rows = key_rows(video, raw.frame_files, cap)
         ratio = depth_scale(raw, cap, rows, code)
         L, V = depth_pairs(raw, cap, rows, code)
