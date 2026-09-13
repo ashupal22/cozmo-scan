@@ -22,7 +22,7 @@ Needs Python 3.10–3.12, git and ffmpeg (macOS: `brew install ffmpeg`), plus ab
 git clone https://github.com/ashupal22/cozmo-scan.git && cd cozmo-scan
 python3 -m venv .venv && source .venv/bin/activate
 bash scripts/install.sh     # packages, Depth Anything 3 (pinned commit), model weights
-pytest -q                   # 111 unit tests on synthetic data, about 45 s
+pytest -q                   # 114 unit tests on synthetic data, about 30 s
 ```
 
 `scripts/install.sh` installs the package and Depth Anything 3 at a pinned commit, without the training extras that do not build on macOS. It then fetches the weights: DA3-BASE 0.5 GB, DA3METRIC-LARGE 1.2 GB, CLIP ViT-B/32 0.6 GB. Tested in a fresh virtual environment: install in 87 s with warm download caches, then all tests passed and a LiDAR capture ran. A cold machine also downloads about 1 GB of packages and 2.3 GB of weights, which takes about 10 minutes on a 50 Mbit/s line.

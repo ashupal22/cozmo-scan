@@ -4,7 +4,7 @@ What we do at the defense, on the demo laptop (Apple silicon Mac, set up with `b
 
 ## Before the examiners arrive
 
-1. `cd cozmo-scan && source .venv/bin/activate && pytest -q`: 112 tests, about 30 s.
+1. `cd cozmo-scan && source .venv/bin/activate && pytest -q`: 114 tests, about 30 s.
 2. Warm the models so the first run does not pay for loading: `python scripts/fetch_models.py`. The weights are already cached, so this is instant.
 3. Check free disk space (a video run writes key frames and model outputs, about 1 GB for 3 minutes of video) and plug in power.
 
