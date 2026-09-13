@@ -40,10 +40,10 @@ being the team whose ranges mean what they say is the thing we can win today.
 | Tier | What arrives | Command | Cold time on an M4 |
 |---|---|---|---|
 | LiDAR | Stray Scanner export folder (AirDrop) | `cozmo run <folder>` | 19 s for a 3-room flat |
-| Video | one `.mov` (AirDrop) | `cozmo run <file>.mov` | under 7 min, any clip length |
+| Video | one `.mov` (AirDrop) | `cozmo run <file>.mov` | about 6 s per second of clip; about 13 min for a 2 minute clip |
 | Photo | photos sorted into one folder per room | `cozmo run <folder>` | about 15 s per room |
 
-Video is capped at 120 key frames, so a longer walk costs accuracy, not time (`cozmo/video/capture.py`).
+Video keeps every key frame up to 2 minutes of clip (360 frames). A 120-frame cap was measured and dropped: our 115 s walk collapsed to 1 room (-86% footprint).
 `--no-damage` saves 20–60 s if the clock is against us.
 
 4. Narrate while it runs: fuse depth into points → drift correction → floor → walls-first layout → rooms split

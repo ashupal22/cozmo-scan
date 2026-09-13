@@ -43,12 +43,12 @@ from cozmo.video import da3
 from cozmo.video.focal import estimate_focal
 
 KEYFRAME_FPS = 3.0
-# A cold video run costs about 3.4 s of Apple-silicon GPU time per key frame (bench/results/timing_cold_video.json:
-# 111 frames, 378 s). The runtime gate is 10 minutes per capture (docs/gates.md, A-RUNTIME), and the capture protocol
-# allows a 3 minute clip, which at 3 fps is 540 frames and over half an hour. So the frame count is capped and the
-# key-frame rate drops instead: runtime is bounded by the cap, not by how long the examiner chose to walk. Frames are
-# spaced further apart on a long clip, which costs pose accuracy; the output says so.
-MAX_KEYFRAMES = 120
+# Key frames are capped so runtime stays bounded on a clip longer than the capture protocol allows. The cap covers the
+# protocol's longest clip (2 minutes) at the full 3 fps. A cap of 120 was tried and failed: our 115 s walk sampled at
+# 1.05 fps gave 1 room, footprint -86%, an interval that missed the LiDAR value, against -13% with all
+# 345 frames (bench/results/video_cap120_1a8384c3f6.json). DA3 needs neighbouring key frames to overlap. Runtime is about
+# 2.1 s per key frame cold on an M4, so a 2 minute clip takes about 13 minutes.
+MAX_KEYFRAMES = 360
 FRAME_LONG_SIDE = 960
 RUN, OVERLAP = 12, 4            # longer runs fold opposite white walls together on our walks (bench/README.md)
 PROCESS_RES = 504

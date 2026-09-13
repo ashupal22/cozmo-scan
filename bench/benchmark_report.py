@@ -181,8 +181,8 @@ def main():
         t = json.loads(cold.read_text())
         lines.append(f"| {t['capture']} | video | {t['rooms']} | {t['pipeline_runtime_s']} s | {t['seconds']} s | live (cold cache) |")
         lines += ["", f"**Runtime.** LiDAR and photo runs are live and take seconds to a few minutes. A cold video run takes about "
-                  f"10 s per second of video ({t['seconds']} s for a 37 s clip), so `cozmo run` caps a clip at 120 key frames, about 7 minutes of model time "
-                  f"for any length (A-RUNTIME: 10 min); longer clips get frames spaced further apart, which is not benchmarked. **Determinism:** cached runs replay exactly; a fresh DA3 run on Apple's "
+                  f"10 s per second of video ({t['seconds']} s for a 37 s clip), so a 2-minute clip (the protocol's limit, 360 key frames) takes about 13 minutes cold. "
+                  f"A 120-frame cap was measured and dropped: frames 1 s apart collapsed our 115 s walk to 1 room. **Determinism:** cached runs replay exactly; a fresh DA3 run on Apple's "
                   f"GPU is not bit-identical, and the cold run above gave {t['rooms']} rooms and {t['footprint_m2']} m² against "
                   f"{t['cached_run']['rooms']} rooms and {t['cached_run']['footprint_m2']} m² from the cache.", ""]
     (ROOT / "docs" / "benchmark_report.md").write_text("\n".join(lines))

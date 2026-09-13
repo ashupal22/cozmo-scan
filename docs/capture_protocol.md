@@ -22,7 +22,7 @@ phone: [`device_matrix.md`](device_matrix.md).
 ## Tier 2: Video (any iPhone 15 or newer)
 
 1. **Settings → Camera → Record Video: 1080p HD at 30 fps, HDR Video off.** In the Camera app choose Video and the 1× lens. No zoom, no Cinematic or Action mode. *Why: tested on standard 8-bit video.*
-2. Walk the LiDAR route: the ceiling sweep in every room, through every doorway, back to the start. About **30 seconds per room, under 2 minutes** in all. *Why: a longer clip gets key frames spaced further apart to keep the runtime bounded, so its camera path is less certain.*
+2. Walk the LiDAR route: the ceiling sweep in every room, through every doorway, back to the start. About **30 seconds per room, under 2 minutes** in all. *Why: up to 2 minutes every key frame is used; with frames 1 s apart our 115 s test walk lost all but one room.*
 3. **Turn slowly**: about 3 seconds for a quarter turn. *Why: fast turns in front of plain walls broke the camera path.*
 4. AirDrop the `.mov` file to the Mac, then run `cozmo run <file>.mov`.
 

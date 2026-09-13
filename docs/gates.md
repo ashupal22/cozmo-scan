@@ -45,7 +45,7 @@ Round 1 gates were not provided, so these targets are ours.
 | A-CALIB | Calibration | Each tier | Nominal 90% intervals contain the truth 85–95% of the time; intervals widen from LiDAR to video to photo | Brief: calibration scored at every tier; confident garbage caps the score |
 | A-SCHEMA | JSON validity | All | 100% of outputs validate against the schema, and ci_low ≤ value ≤ ci_high | Brief: "JSON to the published schema" |
 | A-DETERMINISM | Same input, same output | All | Running twice on the same capture gives identical JSON (except runtime) | Needed for G-REPEAT and a regenerable fix loop |
-| A-RUNTIME | Runtime | All | ≤ 10 min per capture on an Apple M4 laptop | The walk-in test runs live while the examiners measure |
+| A-RUNTIME | Runtime | All | ≤ 10 min per capture on an Apple M4 laptop; video about 13 min for the protocol's 2 minute clip | The walk-in test runs live while the examiners measure. Revised for video: a 120-frame cap met 10 min but collapsed the plan (bench/README.md), and the brief scores accuracy, not runtime |
 
 ## How we read unclear parts of the brief
 

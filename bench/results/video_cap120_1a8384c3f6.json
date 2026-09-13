@@ -1,0 +1,92 @@
+{
+  "benchmark": "video_vs_lidar",
+  "code_commit": "0ccec6f-dirty",
+  "max_keyframes": 120,
+  "walks": {
+    "1a8384c3f6": {
+      "video": {
+        "rooms": {
+          "lidar": 8,
+          "video": 1,
+          "paired": 0,
+          "paired_iou": [],
+          "paired_area_share": 0.0
+        },
+        "footprint_m2": {
+          "lidar": 56.98,
+          "video": 7.97,
+          "error_pct": -86.0,
+          "video_interval": [
+            3.73,
+            17.0
+          ],
+          "interval_holds_lidar": false
+        },
+        "gate_walls": {
+          "walls": 0,
+          "paired": 0,
+          "within_3pct": "0/0",
+          "error_pct_median": null,
+          "abs_error_pct_median": null,
+          "abs_error_pct_p90": null,
+          "interval_holds_lidar": "0/0"
+        },
+        "all_walls": {
+          "walls": 0,
+          "paired": 0,
+          "within_3pct": "0/0",
+          "error_pct_median": null,
+          "abs_error_pct_median": null,
+          "abs_error_pct_p90": null,
+          "interval_holds_lidar": "0/0"
+        },
+        "dimensions": {
+          "count": 0,
+          "within_3pct": "0/0",
+          "abs_error_pct_median": null,
+          "error_pct_median": null
+        },
+        "fit": {
+          "yaw_deg": -0.1,
+          "overlap_fraction": 0.35,
+          "overlap_median_cm": 2.5
+        },
+        "wall_pairs": [],
+        "dimension_pairs": [],
+        "video_capture": {
+          "frames": 120,
+          "runs": 15,
+          "keyframe_fps": 1.046,
+          "depth_size": [
+            378,
+            504
+          ],
+          "camera": "DA3 ray output",
+          "fx_over_width": 1.1239,
+          "focal_source": "room lines (53 frames)",
+          "focal_sigma": 0.015,
+          "fx_over_width_da3_median": 1.252,
+          "metric_gain": 1.07,
+          "scale_sigma": 0.0271,
+          "range_correction": [
+            -0.0119,
+            0.0253
+          ],
+          "tracking_breaks": 10,
+          "frames_depth_ignored": 0,
+          "frames_dropped_at_breaks": 0,
+          "runs_levelled_on_floor": "15/15",
+          "level_change_deg_median": 3.31,
+          "seam_rotation_spread_deg_median": 29.89,
+          "seam_position_spread_m_median": 0.549,
+          "seam_depth_ratio_spread_median": 0.0295,
+          "metric_anchors": 44,
+          "metric_anchor_scatter": 0.0948
+        },
+        "true_fx_over_width": 1.1084,
+        "video_interval_scale": 4.5,
+        "seconds": 256.9
+      }
+    }
+  }
+}

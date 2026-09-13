@@ -129,7 +129,7 @@ def plan_video_capture(capture, path: Path, t0: float, drift: bool = True) -> Pl
     if info["keyframe_fps"] < KEYFRAME_FPS - 1e-6:
         document["quality"]["warnings"].append(
             f"long clip: key frames taken at {info['keyframe_fps']:.2f}/s instead of {KEYFRAME_FPS:.1f}/s, to keep the "
-            f"run inside the 10 minute budget. Frames are further apart, so the camera path is less certain than on a "
+            f"runtime bounded. Frames are further apart, so the camera path is much less certain than on a "
             f"shorter clip of the same space")
     document["quality"]["low_confidence"] = True
     return plan
