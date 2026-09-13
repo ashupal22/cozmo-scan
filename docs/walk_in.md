@@ -8,7 +8,7 @@ never seen, choose the tier on the day, and measure it with a laser while the pi
 ```bash
 cd cozmo-scan && bash scripts/install.sh      # creates .venv and installs pinned dependencies
 source .venv/bin/activate
-pytest -q                                     # 114 tests, about 24 s
+pytest -q                                     # 117 tests, about 30 s
 python scripts/fetch_models.py                # DA3 weights into the local cache; instant when already there
 df -h .                                       # need 5 GB free: a video run writes about 1.2 GB
 ```
@@ -21,7 +21,7 @@ invocation of the day must never be the examiners'.
 Say the failures first. They are in `docs/benchmark_report.md` and they will be found anyway:
 
 > LiDAR is our measuring tier and it holds: ceiling within 15 mm on 6 of 6 public walks with laser truth,
-> and two walks of the same flat agree to 1.9% on footprint. Video and photo miss their wall gates, and our
+> and two walks of the same flat agree to 1.6% on footprint. Video and photo miss their wall gates, and our
 > fix-loop prediction was wrong — the fix is shipped but switched off, and the post-mortem says why.
 > Every number carries an interval widened from measured error, not guessed. Please check the intervals,
 > not only the values.
@@ -32,8 +32,9 @@ being the team whose ranges mean what they say is the thing we can win today.
 ## When the capture arrives
 
 1. `cozmo inspect <path>` — one second. Shows the tier it detected and the capture summary.
-2. **Say the prediction out loud before the laser touches a wall.** LiDAR: walls within 2 cm, ceiling within
-   1.5 cm. Video: expect several percent out, and the interval will be wide enough to say so. Photo: wider still.
+2. **Say the prediction out loud before the laser touches a wall.** LiDAR: walls seen well within about 2 cm (laser-truth
+   scans: 4 of 4 wall-to-wall distances within 1.4 cm), ceiling within 1.5 cm if the ceiling was seen; the main risk is
+   a room split differently from how they measure it. Video: expect several percent out, and the interval will be wide enough to say so. Photo: wider still.
 3. Run it:
 
 | Tier | What arrives | Command | Cold time on an M4 |
@@ -47,7 +48,8 @@ Video is capped at 120 key frames, so a longer walk costs accuracy, not time (`c
 
 4. Narrate while it runs: fuse depth into points → drift correction → floor → walls-first layout → rooms split
    at doorways → openings → damage → JSON and SVG.
-5. Open `plan.svg` in a browser. Read each value **with its interval** before they measure.
+5. Open `plan.svg` in a browser, and `summary.md` (each room's width × length, ceiling height and door widths, with
+   ranges). Read each value **with its interval** before they measure.
 6. Show `result.json`: one wall, one opening, one damage region, one concealed flag with the rule that fired,
    one scope line. That is the output contract, item by item.
 7. Show `bench/results/drift_*_on.svg` against `_off.svg`. Pre-computed — never run the ablation live.
@@ -55,7 +57,9 @@ Video is capped at 120 key frames, so a longer walk costs accuracy, not time (`c
 ## If it fails
 
 Say "the fallback is in the pipeline", and run the same capture one tier down. A Stray export contains the
-video, so a LiDAR failure re-runs as `cozmo run <folder>/rgb.mp4`. Rehearse the sentence and the command.
+video, so a LiDAR failure re-runs as `cozmo run <folder>/rgb.mp4`. Rehearse the sentence and the command. That
+`rgb.mp4` is stored sideways, and this fallback is not benchmarked (our video results use an upright copy), so
+rehearse it the evening before.
 
 ## Reading the output with them
 
