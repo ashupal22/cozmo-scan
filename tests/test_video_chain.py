@@ -162,3 +162,13 @@ def test_range_correction_stays_inside_its_calibrated_range():
     assert factor[3] == pytest.approx(factor[2])          # beyond the calibrated range: the edge factor
     assert np.all(np.abs(factor - 1) < 0.05)
 
+
+
+def test_unused_da3_imports_are_stubbed_once_and_again():
+    import importlib
+    import sys
+    from cozmo.video.da3 import _stub_unused_imports
+    _stub_unused_imports()
+    _stub_unused_imports()               # the second model load must not fail on the stub it left
+    importlib.import_module("pycolmap")
+    assert hasattr(sys.modules["evo.core.trajectory"], "PosePath3D") or importlib.util.find_spec("evo") is not None

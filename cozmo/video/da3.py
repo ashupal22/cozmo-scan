@@ -90,9 +90,9 @@ def _stub_unused_imports():
     import importlib.util
     import sys
     import types
-    if importlib.util.find_spec("pycolmap") is None:
-        sys.modules.setdefault("pycolmap", types.ModuleType("pycolmap"))
-    if importlib.util.find_spec("evo") is None:
+    if "pycolmap" not in sys.modules and importlib.util.find_spec("pycolmap") is None:
+        sys.modules["pycolmap"] = types.ModuleType("pycolmap")
+    if "evo" not in sys.modules and importlib.util.find_spec("evo") is None:
         for name in ("evo", "evo.core", "evo.core.trajectory"):
             sys.modules.setdefault(name, types.ModuleType(name))
         sys.modules["evo.core.trajectory"].PosePath3D = None
@@ -106,12 +106,33 @@ def load(name: str):
     return model.to(device()).eval()
 
 
+GPU_FAILURES = ("pipeline state", "XPC", "MPS", "Metal")
+
+
+def _inference(model, images: list, **kwargs):
+    """model.inference on the GPU, or on the CPU when Apple's GPU shader compiler fails. That was seen once under
+    heavy load, in the ray-pose solver's SVD; the CPU gives the same answer, only slower."""
+    try:
+        with _apple_friendly():
+            return model.inference(images, **kwargs)
+    except RuntimeError as e:
+        if not any(s in str(e) for s in GPU_FAILURES):
+            raise
+    model.to("cpu")
+    model.device = None                # DA3 caches the device it found
+    try:
+        with _apple_friendly():
+            return model.inference(images, **kwargs)
+    finally:
+        model.to(device())
+        model.device = None
+
+
 def run_views(images: list, model_name: str = POSE_MODEL, process_res: int = 504, ray_pose: bool = False) -> ViewSet:
     """Poses, intrinsics and depth for a list of images (paths or HxWx3 uint8 arrays). `ray_pose` solves
     the cameras from the per-pixel ray output instead of the small camera head."""
     model = load(model_name)
-    with _apple_friendly():
-        pred = model.inference(images, process_res=process_res, use_ray_pose=ray_pose)
+    pred = _inference(model, images, process_res=process_res, use_ray_pose=ray_pose)
     h, w = pred.depth.shape[1:]
     return ViewSet(pred.depth.astype(np.float32), pred.conf.astype(np.float32),
                    pred.extrinsics.astype(np.float64), pred.intrinsics.astype(np.float64), (w, h))
@@ -126,9 +147,8 @@ def metric_depth(images: list, fx_over_width: float, process_res: int = 504) -> 
     focal length in units of the image width, so it holds at any resolution."""
     model = load(METRIC_MODEL)
     out = []
-    with _apple_friendly():
-        for img in images:
-            pred = model.inference([img], process_res=process_res)
-            d = pred.depth[0].astype(np.float32)
-            out.append(d * (fx_over_width * d.shape[1] / 300.0))
+    for img in images:
+        pred = _inference(model, [img], process_res=process_res)
+        d = pred.depth[0].astype(np.float32)
+        out.append(d * (fx_over_width * d.shape[1] / 300.0))
     return np.stack(out)

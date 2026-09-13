@@ -17,8 +17,8 @@ dependencies = [
   "shapely>=2.0",
   "pillow>=10",
   "pillow-heif>=0.16",       # iPhone HEIC photos
-  "torch>=2.4",
-  "torchvision>=0.19",
+  "torch>=2.4,<2.10",        # tested with 2.9.0; 2.14 failed once in the GPU shader compiler
+  "torchvision>=0.19,<0.25",
   "transformers>=4.40,<5",   # CLIP for damage detection
   "huggingface-hub>=0.23,<1",
   # what Depth Anything 3 imports at run time; DA3 itself is installed without its extras (scripts/install.sh)
