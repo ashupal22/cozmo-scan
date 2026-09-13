@@ -60,7 +60,7 @@ Paths are relative to the repo root. Results are in `bench/results/`. Our gate I
 | G-PHOTO-STITCH | One stitched plan, correct adjacency, no overlaps, footprint ±8% | `bench/photo_vs_lidar.py`, `bench/stitch_benchmark.py` | Photo footprints −31% and −41%. On HouseLayout3D the solver gets all doors right in 40 of 46 noise-free runs and 14 of 46 with photo-like noise | **Not met** |
 | G-WALL-PHOTO | Wall lengths ±8%, calibrated intervals | `bench/photo_vs_lidar.py` | 1 of 18 box dimensions within 8%; intervals hold on 17 of 18 | **Not met** (calibrated) |
 | G-WALL-VIDEO | Wall lengths ±3%, calibrated intervals | `bench/video_vs_lidar.py` | 0 of 22 gate walls within 3%; paired walls 8–16% off; intervals hold on 6 of 7 | **Not met** (calibrated); this is the fix-loop gate |
-| Calibration | Scored at every tier; no confident garbage | `bench/calibrate_intervals.py`, `bench/photo_vs_lidar.py` | Video and photo intervals widened until they hold. LiDAR intervals from the error model | **Partial**: LiDAR wall intervals are not yet checked against tape |
+| Calibration | Scored at every tier; no confident garbage | `bench/calibrate_intervals.py`, `bench/photo_vs_lidar.py`, `bench/results/arkitscenes_planes_bias_corrected.json`, `bench/results/arkitscenes_wall_distances.json` | Video ×4.5 holds 6 of 7 walls; photo ×5.1 holds 17 of 18 dimensions. LiDAR: every wall-length and ceiling interval is at least ±3.0 cm (two faces × the 13 mm bias allowance). On laser truth it holds 6 of 6 ceilings (largest error 1.1 cm) and 4 of 4 wall-to-wall distances (largest 1.4 cm), so it is conservative on purpose until an iPhone room is taped | **Partial**: LiDAR checked on 10 public laser-truth values, not our own rooms |
 
 ## Part 3: head-to-head
 

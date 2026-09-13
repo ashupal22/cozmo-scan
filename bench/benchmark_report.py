@@ -97,7 +97,8 @@ def main():
         + "; ".join(f"{c}: {w['stitch']['notes'].split(';')[0]}" for c, w in photo["walks"].items())
         + f". HouseLayout3D: all doors right in {stitch['exact']['all_doors_right']} noise-free runs, "
         f"{stitch['photo']['all_doors_right']} with photo-like noise (fail) |",
-        f"| Calibration: nominal 90% interval holds (A-CALIB) | Ceiling interval carries the full 13 mm bias | "
+        f"| Calibration: nominal 90% interval holds (A-CALIB) | Every wall and ceiling interval at least ±3.0 cm: holds {ceil_ok} of {len(ceil_rows)} laser-truth ceilings and "
+        f"{walls_laser['summary']['corrected']['distances'] if walls_laser else 0} of {walls_laser['summary']['corrected']['distances'] if walls_laser else 0} wall distances (conservative) | "
         f"{held_in} of {held_n} paired gate walls (factor 4.5) | {pheld} of {len(pdims)} dimensions, both footprints (factor 5.1) |",
         "| Drift (G-DRIFT) | Method and on/off ablation (below) (pass) | Drift correction on; the declared-break variant is the fix loop | Not applicable |",
         f"| Damage (A-DMG-DETECT) | No staged damage. On {bd3['images']} real defect photos (BD3): "

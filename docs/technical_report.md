@@ -95,12 +95,12 @@ The first three rows are modelled in `cozmo/export/document.py`. The last three 
 
 ## 6. Calibration analysis
 
-Each tier's model sigma is multiplied by a factor fitted on benchmark errors, so the nominal 90% interval holds on at least 90% of benchmark measurements. With 9 video walls this is also the split-conformal rule (the largest ratio): 4.5, and the video intervals then hold on 6 of 7 gate walls in the shipped run. For photos, 18 box dimensions give 5.1 (holds on 17 of 18). The finite-sample split-conformal rule would take the single worst dimension (a 1 m corridor boxed as 3 m) and 16.8×; we report both numbers. Where sigma exceeds 25% of a value, the interval is taken on a log scale (value ÷ f to value × f), so lengths and areas never go below zero. The asymmetry also suits our errors, which are mostly underestimates. Photo rooms have independent scales, so their areas add in quadrature in the footprint.
+Each tier's model sigma is multiplied by a factor fitted on benchmark errors, so the nominal 90% interval holds on at least 90% of benchmark measurements. With 9 video walls this is also the split-conformal rule (the largest ratio): 4.5, and the video intervals then hold on 6 of 7 gate walls in the shipped run. For photos, 18 box dimensions give 5.1 (holds on 17 of 18). LiDAR intervals come from the error model alone. Every wall length or ceiling height carries at least ±3.0 cm, two faces of the 13 mm bias allowance, and on laser truth they hold 6 of 6 ceilings (largest error 1.1 cm) and 4 of 4 wall-to-wall distances (largest 1.4 cm). They are conservative on purpose, until an iPhone room is taped. The finite-sample split-conformal rule would take the single worst dimension (a 1 m corridor boxed as 3 m) and 16.8×; we report both numbers. Where sigma exceeds 25% of a value, the interval is taken on a log scale (value ÷ f to value × f), so lengths and areas never go below zero. The asymmetry also suits our errors, which are mostly underestimates. Photo rooms have independent scales, so their areas add in quadrature in the footprint.
 
 Caveats we state plainly:
 - The evidence is thin: two flats, one phone, and LiDAR plans as the reference instead of tape.
 - The factors must be re-measured after any change to a tier.
-- LiDAR wall intervals are not yet checked against tape.
+- LiDAR intervals are checked on public laser data only (6 ceilings, 4 wall distances), not on tape-measured iPhone rooms.
 
 "Confident garbage" is avoided by construction: every unseen ceiling, wall or door width is marked `observed: false` with a wide prior.
 

@@ -416,3 +416,14 @@ No damaged room was available, so damage is staged synthetically on walk `c7d28f
   3. This third run makes it clearly visible.
   Neither the detector nor its threshold was changed for this test.
 
+## LiDAR intervals against laser truth
+
+LiDAR intervals come from the error model (`cozmo/export/document.py`), not from a fitted factor. A wall length or
+ceiling height depends on two surfaces, each carrying the 13 mm depth-bias allowance, so every such 90% interval is at
+least 1.645 × √2 × 13 mm = ±3.0 cm wide. On laser truth, with the shipped depth correction:
+- ceiling height: errors of at most 1.1 cm on 6 of 6 ARKitScenes walks, so every interval holds;
+- wall-to-wall distances: errors of at most 1.4 cm on 4 of 4, so every interval holds.
+
+The intervals are conservative, roughly twice the largest error. The bias allowance stays until the correction is
+confirmed on a tape-measured iPhone room, since it was calibrated on a 2020 iPad Pro.
+

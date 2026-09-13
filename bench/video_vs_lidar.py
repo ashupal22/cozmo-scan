@@ -275,12 +275,12 @@ def compare(lidar, video, fit) -> dict:
     }
 
 
-def run_walk(cid: str, variants: list[str]) -> dict:
+def run_walk(cid: str, variants: list[str], max_keyframes: int | None = None) -> dict:
     from cozmo.video.capture import load_video
     lidar = run_lidar(DATA / cid)
     target, target_n = wall_map(lidar)
     video_path = upright_video(cid)
-    work = DERIVED / f"{cid}_video_work"
+    work = DERIVED / (f"{cid}_video_work" if max_keyframes is None else f"{cid}_video_work_cap{max_keyframes}")
     cap = StrayCapture(DATA / cid)
     codes = [upright_rotate_code(cap.rotation(i)) for i in range(0, len(cap), 30)]
     code = max(set(codes), key=codes.count)
@@ -291,7 +291,7 @@ def run_walk(cid: str, variants: list[str]) -> dict:
     for name in ["video"] + variants:
         t0 = time.time()
         vcap = load_video(video_path, work, fx_over_width=true_fx if name in ("truefocal", "oracle") else None,
-                                  max_keyframes=None)   # every key frame, as the committed results were produced
+                                  max_keyframes=max_keyframes)   # default None: every key frame, as the committed results were produced
         if name == "oracle":
             vcap = oracle_capture(vcap, cap, key_rows(video_path, vcap.frame_files, cap), code)
         video = plan_video_capture(vcap, video_path, t0)
@@ -314,15 +314,16 @@ def main():
     ap.add_argument("walks", nargs="*", default=list(WALKS))
     ap.add_argument("--variants", default="", help="comma-separated: truefocal, oracle")
     ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--max-keyframes", type=int, default=None, help="cap on key frames as cozmo run applies (default: all)")
     args = ap.parse_args()
     out = Path(args.out)
     variants = [v for v in args.variants.split(",") if v]
-    report = {"benchmark": "video_vs_lidar", "code_commit": code_commit(), "walks": {}}
+    report = {"benchmark": "video_vs_lidar", "code_commit": code_commit(), "max_keyframes": args.max_keyframes, "walks": {}}
     if out.is_file():
         old = json.loads(out.read_text())
         report["walks"] = old.get("walks", {})
     for cid in args.walks:
-        report["walks"][cid] = run_walk(cid, variants)
+        report["walks"][cid] = run_walk(cid, variants, args.max_keyframes)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, indent=2) + "\n")
     print("wrote", out)
