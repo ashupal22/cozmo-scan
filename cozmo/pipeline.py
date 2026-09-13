@@ -4,9 +4,10 @@ from __future__ import annotations
 import json
 import subprocess
 import time
+from dataclasses import dataclass
 from pathlib import Path
 
-from cozmo.export.document import build_document
+from cozmo.export.document import LIDAR_ERRORS, ErrorModel, build_document, video_errors
 from cozmo.export.render import render_svg
 from cozmo.export.validate import validate_output
 from cozmo.geometry.fusion import fuse
@@ -14,7 +15,7 @@ from cozmo.geometry.layout import NotManhattan, build_layout
 from cozmo.geometry.planes import find_floors
 from cozmo.geometry.rooms import build_room_map, room_ceilings
 from cozmo.geometry.walls import attach_doorways, outline_rooms
-from cozmo.ingest.detect import detect_tier
+from cozmo.ingest.detect import VIDEO_EXT, detect_tier
 from cozmo.ingest.stray import CaptureError, StrayCapture
 from cozmo.slam.drift import estimate_drift
 
@@ -45,14 +46,24 @@ def plan_rooms(points, floor, positions):
     return room_map, outlines, attach_doorways(outlines, room_map), note
 
 
-def run_lidar(path: Path, drift: bool = True) -> tuple[dict, float]:
-    t0 = time.time()
-    capture = StrayCapture(path)
+@dataclass
+class Plan:
+    document: dict
+    yaw_deg: float
+    points: object      # drift-corrected PointSet
+    floor: object       # HorizontalPlane
+    outlines: dict      # room id -> RoomOutline
+
+
+def plan_capture(capture, path: Path, tier: str, t0: float, drift: bool = True, jumps=None,
+                 errors: ErrorModel = LIDAR_ERRORS) -> Plan:
+    """Shared by every tier that gives per-frame depth and poses: fuse, correct drift, find the floor,
+    lay out rooms, measure ceilings, write the document."""
     points = fuse(capture)
     positions = capture.positions
     drift_summary = None
     if drift:
-        correction, report = estimate_drift(capture, points)
+        correction, report = estimate_drift(capture, points, jumps=jumps)
         points = correction.apply(points)
         positions = correction.positions[correction.valid]
         drift_summary = report.to_schema()
@@ -64,24 +75,53 @@ def run_lidar(path: Path, drift: bool = True) -> tuple[dict, float]:
     if not outlines:
         raise CaptureError(f"{path}: no room outline could be built")
     ceilings = room_ceilings(points, floor, room_map)
-    info = {"id": Path(path).name, "tier": "lidar", "device": None, "input_path": str(path),
-            "pipeline_version": _code_version()}
+    info = {"id": Path(path).stem if tier == "video" else Path(path).name, "tier": tier, "device": None,
+            "input_path": str(path), "pipeline_version": _code_version()}
     document, _ = build_document(info, floor, room_map, outlines, ceilings, openings, time.time() - t0,
-                                 drift=drift_summary)
+                                 drift=drift_summary, errors=errors)
     for warning in capture.warnings:
         document["quality"]["warnings"].append(f"capture: {warning}")
     if method_note:
         document["quality"]["warnings"].append(method_note)
     yaw = next(iter(outlines.values())).yaw_deg
-    return document, yaw
+    return Plan(document, yaw, points, floor, outlines)
+
+
+def run_lidar(path: Path, drift: bool = True) -> Plan:
+    t0 = time.time()
+    return plan_capture(StrayCapture(path), path, "lidar", t0, drift=drift)
+
+
+def plan_video_capture(capture, path: Path, t0: float, drift: bool = True) -> Plan:
+    plan = plan_capture(capture, path, "video", t0, drift=drift, jumps=[], errors=video_errors(capture.scale_sigma))
+    document, info = plan.document, capture.info
+    document["quality"]["warnings"] += [
+        f"no depth sensor: wall positions come from a learned depth model (Depth Anything 3) on {info['frames']} "
+        f"key frames",
+        f"real size set by a monocular metric-depth model, focal length from {info['focal_source']}: scale "
+        f"uncertainty {100 * capture.scale_sigma:.1f}% (1 sigma), applied to every length",
+    ]
+    document["quality"]["low_confidence"] = True
+    return plan
+
+
+def run_video(path: Path, work_dir: Path, drift: bool = True, fx_over_width: float | None = None) -> Plan:
+    from cozmo.video.capture import load_video  # torch and the DA3 models load only for videos
+    t0 = time.time()
+    return plan_video_capture(load_video(path, work_dir, fx_over_width=fx_over_width), path, t0, drift=drift)
 
 
 def run(path, out_dir, drift: bool = True) -> Path:
     path, out_dir = Path(path), Path(out_dir)
     tier = detect_tier(path)
-    if tier != "lidar":
-        raise NotBuiltYet(f"the {tier} tier is not built yet; only LiDAR captures run for now")
-    document, yaw = run_lidar(path, drift=drift)
+    if tier == "lidar":
+        plan = run_lidar(path, drift=drift)
+    elif tier == "video":
+        video = path if path.is_file() else next(c for c in sorted(path.iterdir()) if c.suffix.lower() in VIDEO_EXT)
+        plan = run_video(video, out_dir / "video_work", drift=drift)
+    else:
+        raise NotBuiltYet(f"the {tier} tier is not built yet")
+    document, yaw = plan.document, plan.yaw_deg
     out_dir.mkdir(parents=True, exist_ok=True)
     svg_path = out_dir / "plan.svg"
     document["render"] = {"plan_svg": str(svg_path)}

@@ -419,16 +419,20 @@ def _map_area(xz: np.ndarray) -> float:
     return float(len(np.unique(np.floor(xz / MAP_CELL_M).astype(np.int64), axis=0)) * MAP_CELL_M ** 2)
 
 
-def estimate_drift(capture, points: PointSet) -> tuple[FrameCorrection, DriftReport]:
+def estimate_drift(capture, points: PointSet, jumps: list[tuple[int, int]] | None = None
+                   ) -> tuple[FrameCorrection, DriftReport]:
     """Per-frame corrections for a walk. `capture` needs timestamps, positions, rotation(i) and len();
-    `points` must come from that capture (frame indices are sorted here if needed)."""
+    `points` must come from that capture (frame indices are sorted here if needed). `jumps` are pose
+    relocalisations as (frame before, frame after); None finds them in the positions, which suits ARKit
+    at 60 fps. Video poses chained from key frames have large normal steps and no relocalisations, so
+    the video tier passes []."""
     t0 = time.time()
     if np.any(np.diff(points.frame) < 0):
         order = np.argsort(points.frame, kind="stable")
         points = PointSet(points.xyz[order], points.normal[order], points.frame[order], points.camera_y[order])
     report = DriftReport()
     positions = np.asarray(capture.positions, float)
-    jumps = find_jumps(positions)
+    jumps = find_jumps(positions) if jumps is None else list(jumps)
     segments = _segments(len(capture), jumps)
     submaps = _build_submaps(capture, points, segments)
     report.submaps = len(submaps)

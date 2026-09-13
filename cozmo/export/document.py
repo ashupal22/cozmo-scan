@@ -9,9 +9,15 @@ Provisional error model, to be replaced by conformal calibration on benchmark re
   only, get UNSNAPPED_FACE_M.
 - A wall's length depends on the two neighbouring faces; room area shifts with every face at once.
 - Ceiling height combines the floor and ceiling plane standard errors with the bias on both.
+- Video tier (VIDEO_ERRORS): wall positions come from a learned depth model, so the per-face term is
+  larger, and the overall scale comes from a monocular metric-depth model. A scale error stretches
+  every length in the capture by the same factor, so it is added per measurement in proportion to
+  its size (twice that for areas).
 All intervals are nominal 90% (value +/- 1.645 sigma).
 """
 from __future__ import annotations
+
+from dataclasses import dataclass
 
 import numpy as np
 
@@ -26,6 +32,24 @@ POINTS_PER_SAMPLE = 100
 DOORWAY_WIDTH_SIGMA_M = 0.05
 NOMINAL_DOOR_WIDTH_SIGMA_M = 0.15  # jambs not seen: a typical door width with a wide range
 CEILING_PRIOR_M = (2.5, 2.2, 3.2)  # value, low, high when no ceiling was seen anywhere
+VIDEO_FACE_M = 0.03                # provisional; calibrated against the LiDAR plans of the same walks
+VIDEO_OPENING_M = 0.08
+
+
+@dataclass(frozen=True)
+class ErrorModel:
+    """Error terms of one tier. face_m: systematic error of one wall face or plane. scale_sigma: relative
+    error of the overall scale, shared by every length in the capture (0 when depth is measured)."""
+    face_m: float = DEPTH_BIAS_M
+    opening_m: float = DOORWAY_WIDTH_SIGMA_M
+    scale_sigma: float = 0.0
+
+
+LIDAR_ERRORS = ErrorModel()
+
+
+def video_errors(scale_sigma: float) -> ErrorModel:
+    return ErrorModel(VIDEO_FACE_M, VIDEO_OPENING_M, scale_sigma)
 
 
 def measurement(value: float, sigma: float, digits: int = 3, observed: bool = True, method: str | None = None) -> dict:
@@ -38,19 +62,20 @@ def measurement(value: float, sigma: float, digits: int = 3, observed: bool = Tr
     return m
 
 
-def face_sigma(outline: RoomOutline, k: int) -> float:
+def face_sigma(outline: RoomOutline, k: int, errors: ErrorModel = LIDAR_ERRORS) -> float:
     wall = outline.walls[k]
     if wall.support == 0:
-        return UNSNAPPED_FACE_M
+        return max(UNSNAPPED_FACE_M, errors.face_m)
     samples = max(wall.support / POINTS_PER_SAMPLE, 1.0)
-    return float(np.hypot(wall.face_spread_m / np.sqrt(samples), DEPTH_BIAS_M))
+    return float(np.hypot(wall.face_spread_m / np.sqrt(samples), errors.face_m))
 
 
 def build_document(capture_info: dict, floor: HorizontalPlane, room_map: RoomMap,
                    outlines: dict[int, RoomOutline], ceilings: dict[int, HorizontalPlane | None],
                    openings: list[OpeningOnWall], runtime_s: float,
-                   drift: dict | None = None) -> tuple[dict, list[str]]:
+                   drift: dict | None = None, errors: ErrorModel = LIDAR_ERRORS) -> tuple[dict, list[str]]:
     """`drift` is DriftReport.to_schema(), or None when drift correction was switched off."""
+    scale = errors.scale_sigma
     warnings = ["opening widths are coarse (5 cm plan grid); image-edge refinement not built yet",
                 "damage detection, concealed-damage rules and scope are not built yet"]
     if drift is None:
@@ -62,23 +87,25 @@ def build_document(capture_info: dict, floor: HorizontalPlane, room_map: RoomMap
     for rid, outline in sorted(outlines.items()):
         name = f"R{rid}"
         n = len(outline.walls)
-        sig = [face_sigma(outline, k) for k in range(n)]
+        sig = [face_sigma(outline, k, errors) for k in range(n)]
         walls = []
         for k, wall in enumerate(outline.walls):
-            length_sigma = float(np.hypot(sig[(k - 1) % n], sig[(k + 1) % n]))
+            length_sigma = float(np.linalg.norm([sig[(k - 1) % n], sig[(k + 1) % n], scale * wall.length_m]))
             walls.append({"id": f"{name}.W{k + 1}",
                           "start": [round(float(v), 3) for v in wall.start],
                           "end": [round(float(v), 3) for v in wall.end],
                           "length_m": measurement(wall.length_m, length_sigma,
                                                   method="corner to corner, inside faces")})
-        area_sigma = outline.perimeter_m * float(np.mean(sig))
+        area_sigma = float(np.hypot(outline.perimeter_m * np.mean(sig), 2 * scale * outline.area_m2))
         footprint += outline.area_m2
         footprint_sigma += area_sigma
 
         ceiling = ceilings.get(rid)
         if ceiling is not None:
-            height_sigma = float(np.sqrt(floor.standard_error ** 2 + ceiling.standard_error ** 2 + 2 * DEPTH_BIAS_M ** 2))
-            ceiling_m = measurement(ceiling.height - floor.height, height_sigma, method="floor and ceiling plane fit")
+            height = ceiling.height - floor.height
+            height_sigma = float(np.sqrt(floor.standard_error ** 2 + ceiling.standard_error ** 2
+                                         + 2 * errors.face_m ** 2 + (scale * height) ** 2))
+            ceiling_m = measurement(height, height_sigma, method="floor and ceiling plane fit")
         else:
             if seen:
                 prior = float(np.median(seen))
@@ -98,17 +125,19 @@ def build_document(capture_info: dict, floor: HorizontalPlane, room_map: RoomMap
             oid = f"{name}.O{len(room_openings) + 1}"
             opening_ids[index] = oid
             room_openings.append({"id": oid, "type": "opening", "wall_id": f"{name}.W{op.wall_index + 1}",
-                                  "width_m": measurement(op.width_m, DOORWAY_WIDTH_SIGMA_M, method="gap between the jambs")
+                                  "width_m": measurement(op.width_m, float(np.hypot(errors.opening_m, scale * op.width_m)),
+                                                         method="gap between the jambs")
                                   if op.measured else
                                   measurement(op.width_m, NOMINAL_DOOR_WIDTH_SIGMA_M, observed=False,
                                               method="walked through, jambs not seen: typical door width"),
-                                  "offset_along_wall_m": measurement(op.offset_m, DOORWAY_WIDTH_SIGMA_M),
+                                  "offset_along_wall_m": measurement(op.offset_m, float(np.hypot(errors.opening_m, scale * op.offset_m))),
                                   "connects_to": f"R{op.other_room}" if op.other_room is not None else None})
 
         rooms.append({"id": name, "label": f"room {rid}",
                       "polygon": [[round(float(x), 3), round(float(z), 3)] for x, z in outline.vertices],
                       "floor_area_m2": measurement(outline.area_m2, area_sigma, digits=2),
-                      "perimeter_m": measurement(outline.perimeter_m, n * float(np.mean(sig)), digits=2),
+                      "perimeter_m": measurement(outline.perimeter_m, float(np.hypot(n * np.mean(sig), scale * outline.perimeter_m)),
+                                                 digits=2),
                       "ceiling_height_m": ceiling_m, "walls": walls, "openings": room_openings})
 
     adjacency = {}

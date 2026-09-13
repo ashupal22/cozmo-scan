@@ -43,7 +43,8 @@ def cmd_inspect(args) -> int:
 def cmd_run(args) -> int:
     from cozmo.pipeline import NotBuiltYet, run
 
-    out = Path(args.out) if args.out else Path("out") / Path(args.path).name
+    src = Path(args.path)
+    out = Path(args.out) if args.out else Path("out") / (src.stem if src.is_file() else src.name)
     try:
         result = run(args.path, out, drift=not args.no_drift)
     except NotBuiltYet as e:
