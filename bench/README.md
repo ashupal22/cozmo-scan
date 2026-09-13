@@ -208,3 +208,29 @@ Across the 9 paired video walls (each video wall counted once), the error divide
 | Ignoring the depth of very unsure frames alone | c00a170fe1 −18.6% → −15.6%, 1a8384c3f6 −9.4% → −13.6% | Not used |
 
 Tracking breaks are detected from DA3's confidence (median below 2.0 in either frame of a pair). This flags every pair of frames whose rotation error exceeds 20 degrees, with 25 false alarms in 111 pairs on c00a170fe1 and 40 in 343 on 1a8384c3f6. The drift step can hold such breaks loosely and search wider for loop closures across them. On a synthetic walk turned 25 degrees and shifted 25 cm at a break, median distortion was 41.7 cm undeclared, 24.2 cm declared, and 0.3 cm declared with the wider search (`tests/test_drift.py`). It is not used for video because the plans did not improve.
+
+## Depth bias correction for LiDAR ceilings (a separate improvement, not the scored fix loop)
+
+```bash
+python bench/arkitscenes_planes.py                                          # before: depth as recorded
+python bench/arkitscenes_planes.py --bias-correction leave-one-venue-out    # after
+```
+
+Device depth reads 9–16 mm shorter than laser depth on every walk (first section). Each walk's device depth now gets the offset measured on the **other** venue's walks, so no walk is corrected with its own ground truth. The prediction was recorded in the commit message before the run (`c159802`): 6 of 6 walks within 15 mm, mean about −6 mm.
+
+| Walk | Venue | Offset added | Ceiling height error, before | After | Floor error, before | After |
+|---|---|---|---|---|---|---|
+| 41069048 | 381644 | +11.3 mm | -28.1 mm | -11.3 mm | +16.1 mm | +5.7 mm |
+| 41069050 | 381644 | +11.3 mm | -26.9 mm | -9.1 mm | +14.3 mm | +3.4 mm |
+| 41069051 | 381644 | +11.3 mm | -23.6 mm | -5.4 mm | +10.7 mm | -0.0 mm |
+| 41142278 | 384651 | +12.5 mm | -20.9 mm | -2.7 mm | +7.4 mm | -3.1 mm |
+| 41142280 | 384651 | +12.5 mm | -11.2 mm | +9.5 mm | +12.1 mm | -0.2 mm |
+| 41142281 | 384651 | +12.5 mm | -19.8 mm | -0.4 mm | +11.0 mm | -1.1 mm |
+| **Within 15 mm (G-CEIL)** | | | **1/6** | **6/6** | | |
+| **Mean** | | | -21.8 mm | -3.2 mm | | |
+
+Before: code `33e470f`. After: code `c159802`. Device bias on all six walks: -11.9 mm.
+
+- **G-CEIL now passes on all six walks**, as predicted. The mean error is −3.2 mm against the predicted −6 mm: the correction did slightly more than the viewing-angle argument suggested.
+- **The spread gate did not improve.** Spread across walks: before 381644: 9.2 mm, 384651: 42.6 mm; after 381644: 10.1 mm, 384651: 43.9 mm. Venue 381644 moved from just inside the 10 mm gate to 0.1 mm outside it. One offset per venue cannot change the spread by much; the small movement comes from plane fits over slightly moved points. Venue 384651 stays confounded by a ceiling with more than one level (first section).
+- **The calibration comes from a 2020 iPad Pro.** It is not yet verified on an iPhone 15 Pro. Until a tape-measured room confirms it, the pipeline keeps the full 13 mm bias in its ceiling interval.
