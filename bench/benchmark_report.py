@@ -23,6 +23,24 @@ def main():
     damage = load("damage_sanity.json")
     openings = load("same_flat_openings.json")
     bd3 = load("damage_bd3.json")
+    optional = lambda name: json.loads((R / name).read_text()) if (R / name).is_file() else None  # noqa: E731
+    walls_laser = optional("arkitscenes_wall_distances.json")
+    staged = optional("staged_damage.json")
+    if walls_laser and walls_laser["summary"]["corrected"]["distances"]:
+        w = walls_laser["summary"]["corrected"]
+        lidar_walls = (f"Laser truth, ARKitScenes (sensor and fusion only; the layout cannot run on these scans): "
+                       f"{w['within_max_2cm_1pct']} wall-to-wall distances within max(2 cm, 1%), median error "
+                       f"{w['error_cm_median']:+.1f} cm. No tape of our own rooms")
+    else:
+        lidar_walls = "Not measured (no tape)"
+    if staged:
+        st = staged["summary"]
+        staged_text = (f" Synthetic staged damage on our walk ({', '.join(x['staged']['class'] for x in staged['staged'])}): "
+                       f"found on the right wall with the right class {st['found_right_class_right_wall']}, IoU ≥ 0.5 "
+                       f"{st['iou_at_least_0.5']}, area within 25% {st['area_within_25pct']}, rules fired {st['rules_fired']}, "
+                       f"{st['false_regions']} false regions.")
+    else:
+        staged_text = ""
     walks = ("c00a170fe1", "1a8384c3f6", "c7d28f72c6")
 
     v = {c: video["walks"][c]["video"] for c in walks}
@@ -63,7 +81,7 @@ def main():
         "",
         "| Gate | LiDAR | Video (vs LiDAR, same walk) | Photo (vs LiDAR, same rooms) |",
         "|---|---|---|---|",
-        f"| Wall lengths (A-WALL-LIDAR ≤ max(2 cm, 1%); G-WALL-VIDEO ±3%; G-WALL-PHOTO ±8%) | Not measured (no tape) | "
+        f"| Wall lengths (A-WALL-LIDAR ≤ max(2 cm, 1%); G-WALL-VIDEO ±3%; G-WALL-PHOTO ±8%) | {lidar_walls} | "
         f"**{gw_in} of {gw_n}** gate walls within 3% (fail) | **{p8} of {len(pdims)}** box dimensions within 8% (fail) |",
         f"| Footprint vs reference | Same flat, two walks: {drift['same_flat']['on']['difference_pct']}% apart | "
         + " / ".join(f"{v[c]['footprint_m2']['error_pct']:+.1f}%" for c in walks) + " | "
@@ -84,7 +102,7 @@ def main():
         f"| Damage (A-DMG-DETECT) | No staged damage. On {bd3['images']} real defect photos (BD3): "
         f"{100 * bd3['by_threshold']['0.6']['recall_any_damage']:.0f}% flagged, {100 * bd3['by_threshold']['0.6']['right_class_share_of_damaged']:.0f}% "
         f"right class, {100 * bd3['by_threshold']['0.6']['false_alarm_share_of_plain']:.1f}% false alarms on plain walls; 0 false regions on "
-        f"our 3 walks | same detector | same detector |",
+        f"our 3 walks.{staged_text} | same detector | same detector |",
         "",
         "## Drift correction on and off (G-DRIFT, shipped LiDAR pipeline)",
         "",

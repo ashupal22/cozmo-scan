@@ -8,7 +8,7 @@ Built for the Cozmo AI Applied AI case study. Start with the [compliance matrix]
 
 | Tier | Input (one command each) | Honest accuracy, measured | Gates |
 |---|---|---|---|
-| **LiDAR** | Stray Scanner export folder, iPhone 12 Pro or newer | Ceiling height within 15 mm on 6 of 6 public walks with laser truth, after depth-bias correction. Same flat walked twice: footprints agree within 1.6% | G-CEIL met on public data. Walls and openings not yet checked against a tape measure |
+| **LiDAR** | Stray Scanner export folder, iPhone 12 Pro or newer | Ceiling height within 15 mm on 6 of 6 public walks with laser truth, after depth-bias correction. Wall-to-wall distances within 1.36 cm of laser on 4/4 measurable pairs. Same flat walked twice: footprints agree within 1.6% | G-CEIL met on public data. Walls and openings not yet checked against a tape measure |
 | **Video** | `.mov` from any iPhone 15 or newer | Walls typically 8–16% off against LiDAR of the same walk. Intervals widened 4.5× so they hold | G-WALL-VIDEO (±3%) **not met** |
 | **Photo** | One folder of 2–8 photos per room | Room boxes about 26% off (median). Intervals widened 5.1× so they hold (17 of 18). Rooms are joined through their doors, often into several groups | G-WALL-PHOTO and G-PHOTO-STITCH **not met** |
 
@@ -86,6 +86,9 @@ bash bench/reproduce.sh                      # every benchmark below, writes ben
 | Stitch solver on real buildings | `bench/stitch_benchmark.py` | `stitch_benchmark.json`, `stitch_ablation/` | `bench/README.md` |
 | Damage detector checks: our walks, and real defect photos (BD3) | `bench/damage_sanity.py`, `bench/damage_bd3.py` | `damage_sanity.json`, `damage_bd3.json` | `bench/README.md` |
 | Opening widths, walk against walk | `bench/same_flat_openings.py` | `same_flat_openings.json` | `bench/README.md` |
+| LiDAR wall-to-wall distances vs laser (ARKitScenes) | `bench/arkitscenes_wall_distances.py` | `arkitscenes_wall_distances.json` | `bench/README.md` |
+| Synthetic staged damage on our walk | `bench/staged_damage.py` | `staged_damage.json` | `bench/README.md` |
+| Tape truth and head-to-head (when measured) | `bench/tape_truth.py` | `tape_truth.json` | `docs/benchmark_report.md` |
 | Fix loop before, after, ablation | `bench/video_vs_lidar.py` at the listed commits | `fix_loop/` | [`docs/fix_loop.md`](docs/fix_loop.md) |
 
 Model outputs are cached under `data/derived/` and keyed by input content, so a rerun replays them exactly. A fresh capture runs the models live.

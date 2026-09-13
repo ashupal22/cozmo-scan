@@ -45,6 +45,15 @@ The brief says *"you build the benchmark set yourself"*. These rows need a devic
 | Head-to-head against a consumer app on 2 rooms | The app on a phone |
 | One room captured twice at the same tier | We have this for the apartment (LiDAR), without ground truth |
 
+## Alternatives searched for the rows above (2026-09-13)
+
+| Row | What we looked for | Found | What we did |
+|---|---|---|---|
+| Head-to-head against a consumer app | A public set of rooms with a consumer app's export and tape or laser truth | None. Published studies compare iPhone LiDAR apps with terrestrial laser scanners on their own rooms, reporting errors from about 1 cm to about 10 cm (ISPRS Archives XLVIII-2-W8-2024, p. 431; Journal of Spatial Science 2024, doi 10.1080/16874048.2024.2408839). magicplan publishes no accuracy figure | Not done: the brief asks for the same rooms. `bench/tape_truth.py` is ready for a tape-and-app session |
+| Staged damage | Real defect photos; a way to stage damage without a damaged room | BD3 (real phone photos of defects, CC-BY-4.0 re-release) | Detector classes on 793 photos (`bench/damage_bd3.py`); synthetic staging on our real capture (`bench/staged_damage.py`) |
+| Laser truth for LiDAR | Laser-registered iPhone or iPad depth | ARKitScenes (used), ScanNet++ (needs an application) | Ceilings (`bench/arkitscenes_planes.py`); wall-to-wall distances (`bench/arkitscenes_wall_distances.py`) |
+| Better photo and video geometry | Newer feed-forward metric 3D models | MapAnything (Meta, 2025): an Apache 2.0 variant, plus a stronger CC BY-NC one; VGGT; Pi3 | Not swapped in: re-validating both tiers takes longer than the time left, and would put the tested pipeline at risk before the walk-in test |
+
 ## Machine limits
 
 The development machine has about 10 GB of free disk and downloads at about 1.9 MB/s. That rules out large raw datasets, and model weights chosen in later steps have to fit too.

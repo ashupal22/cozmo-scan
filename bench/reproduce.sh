@@ -21,3 +21,5 @@ python bench/damage_sanity.py                                               # da
 python bench/damage_bd3.py                                                  # damage detector on real defect photos (BD3)
 python bench/same_flat_openings.py                                          # opening widths, walk against walk
 python bench/drift_footprint.py                                             # G-DRIFT footprint, shipped pipeline
+python bench/arkitscenes_wall_distances.py                                 # LiDAR wall-to-wall distances vs laser
+python bench/staged_damage.py                                               # synthetic staged damage on our walk

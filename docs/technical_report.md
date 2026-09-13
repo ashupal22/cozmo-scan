@@ -9,7 +9,7 @@ One command (`cozmo run <capture>`) turns a Stray Scanner LiDAR export, an iPhon
 | | LiDAR | Video | Photo |
 |---|---|---|---|
 | Runs cold from a fresh install | yes | yes | yes |
-| Accuracy we can show | Ceiling within 15 mm on 6/6 laser-truth walks; same flat walked twice agrees within 1.6% footprint | Walls 8–16% off LiDAR; 0 of 22 gate walls within 3% | Room boxes 26% off (median); 1 of 18 within 8% |
+| Accuracy we can show | Ceiling within 15 mm on 6/6 laser-truth walks; wall-to-wall distances within 1.36 cm of laser on 4 of 4 pairs; same flat walked twice agrees within 1.6% footprint | Walls 8–16% off LiDAR; 0 of 22 gate walls within 3% | Room boxes 26% off (median); 1 of 18 within 8% |
 | Intervals hold on our benchmark | ceiling interval carries the 13 mm bias | 6 of 7 walls (×4.5) | 17 of 18 dimensions (×5.1) |
 | Gates met | G-CEIL (public data), G-DRIFT | — | — |
 
@@ -36,7 +36,7 @@ capture ─► ingest ─► per-frame depth + camera poses ─► fusion ─►
 
 ## 3. Tier design and device matrix
 
-**LiDAR.** The phone's depth is trusted and ARKit's poses are corrected (section 4). On ARKitScenes, whose laser scans are registered to every frame, device depth reads 9–16 mm short on every walk (median −11.9 mm), so 11.9 mm is added to every depth pixel along its ray (`LIDAR_DEPTH_OFFSET_M`). Measured leave-one-venue-out, this took ceiling height from 1/6 to 6/6 walks within 15 mm. The calibration comes from a 2020 iPad Pro; until a tape-measured iPhone room confirms it, ceiling intervals keep the full 13 mm bias term.
+**LiDAR.** The phone's depth is trusted and ARKit's poses are corrected (section 4). On ARKitScenes, whose laser scans are registered to every frame, device depth reads 9–16 mm short on every walk (median −11.9 mm), so 11.9 mm is added to every depth pixel along its ray (`LIDAR_DEPTH_OFFSET_M`). Measured leave-one-venue-out, this took ceiling height from 1/6 to 6/6 walks within 15 mm. On the same scans the distance between opposite walls went from -2.0 cm to -0.0 cm (median), all 4 measurable pairs within max(2 cm, 1%) (`bench/arkitscenes_wall_distances.py`; sensor and fusion only, the layout cannot run on these scans). The calibration comes from a 2020 iPad Pro; until a tape-measured iPhone room confirms it, ceiling intervals keep the full 13 mm bias term.
 
 **Video.** No sensor depth and no poses, so both come from Depth Anything 3 (DA3), Apache-licensed models only.
 - **Runs of 12 key frames**, sharing 4 frames with the next run, go through DA3-BASE, with cameras solved from its ray output. Inside a run DA3 is accurate: 1–2 cm and about 1° per frame pair. Longer runs fold opposite white walls together.
@@ -60,7 +60,7 @@ capture ─► ingest ─► per-frame depth + camera poses ─► fusion ─►
 
 | Tier | Hardware | Capture tool | Accuracy it honestly delivers today |
 |---|---|---|---|
-| LiDAR | iPhone 12 Pro and newer Pro models, iPad Pro 2020+ | Stray Scanner (free) | Ceiling ±15 mm (public laser data); footprint repeat 1.6%; walls not yet taped |
+| LiDAR | iPhone 12 Pro and newer Pro models, iPad Pro 2020+ | Stray Scanner (free) | Ceiling ±15 mm and wall-to-wall distances ±1.36 cm (public laser data, 6 walks and 4 distances); footprint repeat 1.6%; our layout's walls not yet taped |
 | Video | Any iPhone 15 or newer (1× lens, 30 fps) | Camera app | Walls typically 8–16% off; intervals about ±20% on a 3 m wall |
 | Photo | Any iPhone 15 or newer | Camera app | Rooms about 26% small (median); intervals about ×/÷ 1.5 to 2 |
 
@@ -138,7 +138,7 @@ The root cause was partly right: the camera path is the main loss. But the mecha
 - **Damage:** zero-shot. On 793 real defect photos (BD3) it flags 62% of damaged photos, with the right class for 42%, and flags 6.5% of plain walls. Cracks are found well (about 88%); peeling paint is flagged but almost never named right, and stains and spalling are found less than half the time. Metric extent in a real room is untested (no staged-damage capture).
 - **Long videos, cold:** DA3 takes about 10 s per second of video on an M4 (378 s for a 37 s clip), so a 3-minute walk needs about 30 minutes, over our 10-minute target. Runs of cached model outputs take seconds.
 - **Fresh model runs are not bit-identical:** DA3 on Apple's GPU gives slightly different outputs on a fresh run, and room building on video depth is sensitive to them. c00a170fe1's video plan was 3 rooms and 19.82 m² from the cache, and 2 rooms and 20.32 m² on a fresh run. Cached runs replay exactly.
-- **Standing still and sweeping:** rooms are grown from where the phone walked. On two public ARKitScenes scans, where the phone stayed within about 1 m, the layout found a single 3 m² room in rooms of about 20 m². The protocol's walk along the walls avoids this. It is also why ARKitScenes could not serve as a wall-length benchmark for us: its laser-depth layout failed too, because the walls there did not meet at right angles.
+- **Standing still and sweeping:** rooms are grown from where the phone walked. On two public ARKitScenes scans, where the phone stayed within about 1 m, the layout found a single 3 m² room in rooms of about 20 m². The protocol's walk along the walls avoids this. It is also why ARKitScenes can test where the sensor puts walls (section 3) but not our layout's wall lengths.
 - **Openings:** detection and widths do not repeat between two walks of the same flat: 23 vs 12 openings. Of 7 doors found in both, only one was measured jamb to jamb both times, and those widths differ by 13.0 cm. Doors walked through without both jambs in view get a typical width with a ±0.25 m interval. G-OPEN would fail; the fix is to see both jambs (the protocol's walk-through step) and to refine edges on the images.
 - **Non-right-angled rooms:** the walls-first layout needs right angles; otherwise it falls back to floor-traced outlines, which stop at furniture.
 

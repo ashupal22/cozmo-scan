@@ -374,3 +374,24 @@ BD3 (Kottari and Arjunan, 2024) has phone photos of building walls taken about 1
 - **Threshold trade-off:** 0.3: 93% found, 26.8% false alarms / 0.4: 87% found, 18.7% false alarms / 0.5: 76% found, 11.4% false alarms / 0.6: 62% found, 6.5% false alarms / 0.7: 48% found, 3.3% false alarms. We keep 0.6: our undamaged walks gave 0 false regions with it.
 - **Caveat:** this checks classes on close-up photos. It does not check metric extent in a room; that still needs a staged-damage capture (A-DMG-DETECT).
 
+## LiDAR wall-to-wall distances against laser truth (`bench/arkitscenes_wall_distances.py`)
+
+```bash
+python bench/arkitscenes_wall_distances.py        # about 10 min
+```
+
+Our layout cannot run on ARKitScenes scans: the phone stays within about 1 m, and rooms are grown from the walk. So this measures what the layout is built on, where the sensor puts the walls. On each of the six walks, wall planes are found in the laser-rendered depth and in the device depth of the same frames and poses, so pose errors cancel. Two planes facing each other across the room give a wall-to-wall distance, the reading a laser measurer takes (code `5016e5c`).
+
+| Walk | Laser distance | Device error, as recorded | Device error, corrected (+11.9 mm) |
+|---|---|---|---|
+| 41069048 | 1.029 m | -0.28 cm | +1.42 cm |
+| 41069051 | 3.337 m | -1.26 cm | +0.95 cm |
+| 41142278 | 1.809 m | -2.78 cm | -0.97 cm |
+| 41142280 | 1.828 m | -3.33 cm | -1.22 cm |
+
+- **As recorded:** 2/4 within max(2 cm, 1%), median -2.0 cm. The sensor reads walls 10.6 mm too close (median over walks).
+- **With the shipped correction:** **4/4** within the gate, median -0.0 cm, |error| p90 1.36 cm; walls sit 3.8 mm close. This matches the ceiling result: the sensor reads short, and the correction removes it.
+- **Caveats:**
+  - Only 4 distances: these small scans rarely see two opposite walls well.
+  - This tests the sensor and fusion, not our wall snapping and corners. Those still need tape on our own rooms.
+

@@ -1,0 +1,195 @@
+{
+  "benchmark": "arkitscenes_wall_distances",
+  "code_commit": "5016e5c",
+  "depth_offset_m": 0.0119,
+  "walks": {
+    "41069048": {
+      "visit_id": 381644,
+      "frames": 150,
+      "wall_yaw_deg": 48.8,
+      "manhattan_share": 0.2,
+      "laser_planes": 8,
+      "laser_distances": 1,
+      "recorded": {
+        "planes_matched": "8/8",
+        "wall_face_offset_mm_median": 22.3,
+        "distances": [
+          {
+            "laser_m": 1.029,
+            "device_m": 1.026,
+            "error_cm": -0.28,
+            "within_gate": true
+          }
+        ]
+      },
+      "corrected": {
+        "planes_matched": "8/8",
+        "wall_face_offset_mm_median": 13.3,
+        "distances": [
+          {
+            "laser_m": 1.029,
+            "device_m": 1.043,
+            "error_cm": 1.42,
+            "within_gate": true
+          }
+        ]
+      },
+      "seconds": 44.6
+    },
+    "41069050": {
+      "visit_id": 381644,
+      "frames": 131,
+      "wall_yaw_deg": 84.29,
+      "manhattan_share": 0.13,
+      "laser_planes": 6,
+      "laser_distances": 0,
+      "recorded": {
+        "planes_matched": "5/6",
+        "wall_face_offset_mm_median": -8.3,
+        "distances": []
+      },
+      "corrected": {
+        "planes_matched": "5/6",
+        "wall_face_offset_mm_median": 9.3,
+        "distances": []
+      },
+      "seconds": 41.3
+    },
+    "41069051": {
+      "visit_id": 381644,
+      "frames": 289,
+      "wall_yaw_deg": 17.83,
+      "manhattan_share": 0.19,
+      "laser_planes": 8,
+      "laser_distances": 1,
+      "recorded": {
+        "planes_matched": "5/8",
+        "wall_face_offset_mm_median": -7.2,
+        "distances": [
+          {
+            "laser_m": 3.337,
+            "device_m": 3.324,
+            "error_cm": -1.26,
+            "within_gate": true
+          }
+        ]
+      },
+      "corrected": {
+        "planes_matched": "6/8",
+        "wall_face_offset_mm_median": -2.3,
+        "distances": [
+          {
+            "laser_m": 3.337,
+            "device_m": 3.346,
+            "error_cm": 0.95,
+            "within_gate": true
+          }
+        ]
+      },
+      "seconds": 103.2
+    },
+    "41142278": {
+      "visit_id": 384651,
+      "frames": 312,
+      "wall_yaw_deg": 60.51,
+      "manhattan_share": 0.18,
+      "laser_planes": 6,
+      "laser_distances": 1,
+      "recorded": {
+        "planes_matched": "6/6",
+        "wall_face_offset_mm_median": 13.3,
+        "distances": [
+          {
+            "laser_m": 1.809,
+            "device_m": 1.781,
+            "error_cm": -2.78,
+            "within_gate": false
+          }
+        ]
+      },
+      "corrected": {
+        "planes_matched": "4/6",
+        "wall_face_offset_mm_median": 2.7,
+        "distances": [
+          {
+            "laser_m": 1.809,
+            "device_m": 1.799,
+            "error_cm": -0.97,
+            "within_gate": true
+          }
+        ]
+      },
+      "seconds": 108.9
+    },
+    "41142280": {
+      "visit_id": 384651,
+      "frames": 166,
+      "wall_yaw_deg": 2.52,
+      "manhattan_share": 0.27,
+      "laser_planes": 9,
+      "laser_distances": 1,
+      "recorded": {
+        "planes_matched": "8/9",
+        "wall_face_offset_mm_median": 9.2,
+        "distances": [
+          {
+            "laser_m": 1.828,
+            "device_m": 1.794,
+            "error_cm": -3.33,
+            "within_gate": false
+          }
+        ]
+      },
+      "corrected": {
+        "planes_matched": "7/9",
+        "wall_face_offset_mm_median": -2.4,
+        "distances": [
+          {
+            "laser_m": 1.828,
+            "device_m": 1.815,
+            "error_cm": -1.22,
+            "within_gate": true
+          }
+        ]
+      },
+      "seconds": 50.5
+    },
+    "41142281": {
+      "visit_id": 384651,
+      "frames": 388,
+      "wall_yaw_deg": 16.61,
+      "manhattan_share": 0.16,
+      "laser_planes": 10,
+      "laser_distances": 3,
+      "recorded": {
+        "planes_matched": "8/10",
+        "wall_face_offset_mm_median": 12.0,
+        "distances": []
+      },
+      "corrected": {
+        "planes_matched": "7/10",
+        "wall_face_offset_mm_median": 4.9,
+        "distances": []
+      },
+      "seconds": 123.0
+    }
+  },
+  "summary": {
+    "recorded": {
+      "distances": 4,
+      "within_max_2cm_1pct": "2/4",
+      "error_cm_median": -2.02,
+      "abs_error_cm_median": 2.02,
+      "abs_error_cm_p90": 3.17,
+      "wall_face_offset_mm_median_of_walks": 10.6
+    },
+    "corrected": {
+      "distances": 4,
+      "within_max_2cm_1pct": "4/4",
+      "error_cm_median": -0.01,
+      "abs_error_cm_median": 1.09,
+      "abs_error_cm_p90": 1.36,
+      "wall_face_offset_mm_median_of_walks": 3.8
+    }
+  }
+}
