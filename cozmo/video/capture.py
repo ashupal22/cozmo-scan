@@ -5,9 +5,10 @@
 2. Depth Anything 3 (cozmo.video.da3) on overlapping runs of RUN frames that share OVERLAP frames: camera
    poses and depth per run, each run in its own frame and scale. Inside a run DA3 is good (camera
    positions within ~2 cm of ARKit over 1.5 m on our walks); the work is in joining runs.
-3. One camera for every frame: focal length given (e.g. from metadata) or the median of DA3's estimates.
-   DA3's focal differs from run to run by up to 15%, and with each run's own focal the same frame's
-   point clouds differ by a stretch, not a scale.
+3. One camera for every frame. Focal length: given (e.g. from metadata), else measured from the room's
+   straight lines (cozmo/video/focal.py, within 2% on our walks), else DA3's median estimate (10% too
+   long on our walks). DA3's focal also differs from run to run by up to 15%, and with each run's own
+   focal the same frame's point clouds differ by a stretch, not a scale.
 4. Scale of every run, solved at once: neighbouring runs must agree on the depth of the frames they
    share (a per-pixel depth ratio, independent of the focal length), and every run must agree with
    DA3METRIC's depth in metres on the frames it samples. The metric anchors stop scale from creeping
@@ -27,6 +28,7 @@ gives the same result.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 import subprocess
@@ -38,6 +40,7 @@ import numpy as np
 
 from cozmo.ingest.stray import CaptureError, Intrinsics
 from cozmo.video import da3
+from cozmo.video.focal import estimate_focal
 
 KEYFRAME_FPS = 3.0
 FRAME_LONG_SIDE = 960
@@ -50,8 +53,10 @@ METRIC_SAMPLE_EVERY = 4         # key frames between metric-depth samples
 METRIC_SIGMA = 0.07             # per-frame scatter of DA3METRIC's scale against LiDAR on c00a (6.3%)
 SEAM_SIGMA_MIN = 0.01
 MIN_FLOOR_NORMALS = 300         # below this a run is not levelled on its own floor (c00a: 36 -> 36 deg wrong, 417 -> 1.8 deg)
-FOCAL_SIGMA_ESTIMATED = 0.05    # provisional: DA3 focal, median over the video
 FOCAL_SIGMA_GIVEN = 0.02
+FOCAL_SIGMA_LINES_MIN = 0.015   # room-line focal: bootstrap spread, but never below this (errors 0.0%, 1.6%)
+FOCAL_SIGMA_DA3 = 0.10          # DA3's own focal: 10% too long on both our walks
+METRIC_DEPTH_GAIN = 1.0         # DA3METRIC reads short; set from bench/video_scale.py (LiDAR as reference)
 METRIC_BIAS_SIGMA = 0.05        # provisional until calibrated against the LiDAR walks
 
 
@@ -93,11 +98,24 @@ class VideoCapture:
 
 # ---- frames and model outputs ----------------------------------------------------------------
 
+def video_key(video: Path, fps: float = KEYFRAME_FPS, long_side: int = FRAME_LONG_SIDE) -> str:
+    """Identity of a video and the key-frame settings: size and the first and last megabyte. Caches
+    are filed under it, so a different video never reuses another's model outputs, and moving or
+    renaming a video keeps its cache."""
+    size = video.stat().st_size
+    h = hashlib.sha1(f"{size}:{fps}:{long_side}".encode())
+    with open(video, "rb") as f:
+        h.update(f.read(1 << 20))
+        f.seek(max(size - (1 << 20), 0))
+        h.update(f.read(1 << 20))
+    return h.hexdigest()[:12]
+
+
 def extract_keyframes(video: Path, out_dir: Path, fps: float = KEYFRAME_FPS, long_side: int = FRAME_LONG_SIDE) -> list[Path]:
     if not shutil.which("ffmpeg"):
         raise CaptureError("ffmpeg is needed to read videos: brew install ffmpeg")
     stamp = out_dir / "source.json"
-    source = {"video": str(video.resolve()), "bytes": video.stat().st_size, "fps": fps, "long_side": long_side}
+    source = {"key": video_key(video, fps, long_side), "fps": fps, "long_side": long_side}
     files = sorted(out_dir.glob("*.jpg"))
     if files and stamp.is_file() and json.loads(stamp.read_text()) == source:
         return files
@@ -124,9 +142,30 @@ def runs_for(n: int) -> list[tuple[int, int]]:
     return runs
 
 
-def pose_cache(work_dir: Path) -> Path:
+def _room_line_focal(frames: list[Path], cache: Path) -> dict | None:
+    """Focal length from the room's straight lines, cached."""
+    f = cache / "focal_lines.json"
+    if f.is_file():
+        return json.loads(f.read_text()) or None
+    est = estimate_focal(frames)
+    result = {"fx_over_width": est.fx_over_width, "sigma": est.sigma, "frames_used": est.frames_used,
+              "frames_tried": est.frames_tried} if est else {}
+    cache.mkdir(parents=True, exist_ok=True)
+    f.write_text(json.dumps(result))
+    return result or None
+
+
+def cache_dir(work_dir: Path, video: Path) -> Path:
+    return work_dir / "cache" / video_key(video)
+
+
+def pose_cache(cache: Path) -> Path:
     camera = "ray" if RAY_POSE else "head"
-    return work_dir / "da3" / f"{da3.POSE_MODEL.split('/')[-1]}-{camera}-{PROCESS_RES}-{RUN}x{OVERLAP}"
+    return cache / f"{da3.POSE_MODEL.split('/')[-1]}-{camera}-{PROCESS_RES}-{RUN}x{OVERLAP}"
+
+
+def metric_cache(cache: Path) -> Path:
+    return cache / f"{da3.METRIC_MODEL.split('/')[-1]}-{PROCESS_RES}"
 
 
 def _views(frames: list[Path], a: int, b: int, cache: Path) -> da3.ViewSet:
@@ -284,6 +323,8 @@ class Chain:
     conf: np.ndarray             # (N, h, w) DA3 confidence
     K: np.ndarray                # (3, 3) one camera for every frame, for the depth maps
     runs: list[tuple[int, int]]
+    run_scales: np.ndarray       # metres per DA3 unit, per run
+    run_rotations: list[np.ndarray]  # DA3-local to world rotation, per run
     info: dict
 
 
@@ -333,8 +374,7 @@ def chain_runs(views: list[da3.ViewSet], runs: list[tuple[int, int]], K: np.ndar
     # join runs by the poses of the shared frames
     c2w = np.zeros((n, 4, 4))
     depth, conf = np.zeros((n, h, w), np.float32), np.zeros((n, h, w), np.float32)
-    levelled, seam_turn, seam_shift, level_change = [], [], [], []
-    A_prev = b_prev = None
+    levelled, seam_turn, seam_shift, level_change, run_rotations = [], [], [], [], []
     for r, ((a, b), vs, T) in enumerate(zip(runs, views, local)):
         s = scales[r]
         own_level = rotation_to_y(ups[r]) if floor_counts[r] >= MIN_FLOOR_NORMALS else None
@@ -355,6 +395,7 @@ def chain_runs(views: list[da3.ViewSet], runs: list[tuple[int, int]], K: np.ndar
             t = np.median(offsets, axis=0)
             seam_shift.append(float(np.max(np.linalg.norm(offsets - t, axis=1))))
         levelled.append(own_level is not None)
+        run_rotations.append(A)
         for k in range(a, b):
             if r > 0 and k < runs[r - 1][1]:
                 continue  # shared frames keep the earlier run's version
@@ -373,30 +414,38 @@ def chain_runs(views: list[da3.ViewSet], runs: list[tuple[int, int]], K: np.ndar
             "seam_depth_ratio_spread_median": round(float(np.median(seam_spread)), 4) if seam_spread else None,
             "metric_anchors": len(anchors),
             "metric_anchor_scatter": round(float(1.4826 * np.median(anchor_resid)), 4)}
-    return Chain(c2w, depth, conf, K, runs, info)
+    return Chain(c2w, depth, conf, K, runs, scales, run_rotations, info)
 
 
-def load_video(video, work_dir, fx_over_width: float | None = None) -> VideoCapture:
+def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain: float | None = None) -> VideoCapture:
     """`fx_over_width`: focal length in units of the upright frame width, when known (e.g. from
-    metadata); otherwise estimated from the video."""
+    metadata); otherwise estimated from the video. `metric_gain` overrides METRIC_DEPTH_GAIN (the
+    calibration benchmark measures with 1.0)."""
+    metric_gain = METRIC_DEPTH_GAIN if metric_gain is None else metric_gain
     video, work_dir = Path(video), Path(work_dir)
     frames = extract_keyframes(video, work_dir / "frames")
     n = len(frames)
     runs = runs_for(n)
-    cache = pose_cache(work_dir)
-    views = [_views(frames, a, b, cache) for a, b in runs]
+    cache = cache_dir(work_dir, video)
+    views = [_views(frames, a, b, pose_cache(cache)) for a, b in runs]
     h, w = views[0].depth.shape[1:]
     run_fx = [float(np.median(v.K[:, 0, 0] / w)) for v in views]
-    focal_given = fx_over_width is not None
-    if not focal_given:
-        fx_over_width = float(np.median(np.concatenate([v.K[:, 0, 0] / w for v in views])))
+    if fx_over_width is not None:
+        focal_source, focal_sigma = "given", FOCAL_SIGMA_GIVEN
+    else:
+        lines = _room_line_focal(frames, cache)
+        if lines is not None:
+            fx_over_width, focal_sigma = lines["fx_over_width"], max(lines["sigma"], FOCAL_SIGMA_LINES_MIN)
+            focal_source = f"room lines ({lines['frames_used']} frames)"
+        else:
+            fx_over_width = float(np.median(np.concatenate([v.K[:, 0, 0] / w for v in views])))
+            focal_source, focal_sigma = "DA3 estimate (too few straight lines in view)", FOCAL_SIGMA_DA3
     K = camera_matrix(fx_over_width, w, h)
 
     sample = list(range(0, n, METRIC_SAMPLE_EVERY))
-    metric = _metric(frames, sample, fx_over_width, work_dir / "da3" / f"{da3.METRIC_MODEL.split('/')[-1]}-{PROCESS_RES}")
+    metric = {k: m * metric_gain for k, m in _metric(frames, sample, fx_over_width, metric_cache(cache)).items()}
     chain = chain_runs(views, runs, K, metric)
 
-    focal_sigma = FOCAL_SIGMA_GIVEN if focal_given else FOCAL_SIGMA_ESTIMATED
     scale_sigma = float(np.linalg.norm([METRIC_SIGMA / np.sqrt(chain.info["metric_anchors"]), focal_sigma, METRIC_BIAS_SIGMA]))
     confidences = np.zeros(chain.depth.shape, np.uint8)
     for i in range(n):
@@ -404,7 +453,8 @@ def load_video(video, work_dir, fx_over_width: float | None = None) -> VideoCapt
 
     info = {"frames": n, "runs": len(runs), "keyframe_fps": KEYFRAME_FPS, "depth_size": [w, h],
             "camera": "DA3 ray output" if RAY_POSE else "DA3 camera head",
-            "fx_over_width": round(fx_over_width, 4), "focal_source": "given" if focal_given else "DA3 median",
+            "fx_over_width": round(fx_over_width, 4), "focal_source": focal_source, "focal_sigma": round(focal_sigma, 4),
+            "fx_over_width_da3_median": round(float(np.median(run_fx)), 4), "metric_gain": metric_gain,
             "fx_over_width_per_run": [round(v, 4) for v in run_fx],
             "scale_sigma": round(scale_sigma, 4), **chain.info}
     (work_dir / "video_capture.json").write_text(json.dumps(info, indent=2))
