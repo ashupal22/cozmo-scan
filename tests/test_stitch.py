@@ -94,3 +94,15 @@ def test_rooms_whose_doors_cannot_match_stay_apart():
     names, observed, result = solve(rooms, seed=6)
     assert result.islands == 2 and not result.pairs
     assert result.overlap_m2 < 1e-6
+
+
+def test_a_room_outline_touching_itself_does_not_break_the_solver():
+    # outline noise can make a room's outline touch itself; the solver keeps the largest part
+    touching = np.array([[4 + T, 0], [6 + T, 0], [6 + T, 2], [8 + T, 2], [8 + T, 4], [6 + T, 4], [6 + T, 2], [4 + T, 2]], float)
+    rooms = {
+        "A": (box(0, 0, 4, 3), [((4.0, 1.0), (1, 0), 0.8)]),
+        "B": (touching, [((4 + T, 1.0), (-1, 0), 0.8)]),
+    }
+    names, observed, result = solve(rooms, seed=7)
+    assert result.islands == 1 and len(result.pairs) == 1
+

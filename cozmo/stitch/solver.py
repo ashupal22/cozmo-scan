@@ -10,7 +10,9 @@ explained and tries every compatible door of every room not yet placed, and also
 (outside, or a room without photos). Each candidate plan is scored:
   + a bonus per door pair, less a penalty for width disagreement
   + further door pairs that line up by themselves (confirmations)
-  + wall length shared with rooms already placed (homes are compact)
+  + wall length shared with rooms already placed
+  + filling a concave spot of the plan rather than sticking out of it (homes are compact): the growth of the
+    plan's convex hull, less the room's own area
   - overlap with rooms already placed, beyond what outline noise explains (large overlaps are rejected)
   - doors that open into a placed room where that room has no door
   - leaving a door unexplained (small), and starting a separate island when no door fits (large)
@@ -34,6 +36,7 @@ MATCH_BONUS = 5.0
 CONFIRM_BONUS = 3.0
 CONFIRM_REACH_M = 0.35
 SHARED_WALL_PER_M = 0.5
+HULL_PER_M2 = 0.0               # compactness weight: off until bench/stitch_benchmark.py settles it
 WALL_REACH_M = 0.35
 OVERLAP_SHRINK_M = 0.05
 OVERLAP_PER_M2 = 4.0
@@ -118,8 +121,16 @@ class _State:
 
 
 def _plan_polygon(room: Room, placement: Placement) -> Polygon:
-    poly = Polygon(placement.apply(room.polygon))
-    return poly if poly.is_valid else poly.buffer(0)
+    """The room's outline in the plan. An outline that touches itself is repaired, and only its largest part
+    kept (or its convex hull if nothing usable is left)."""
+    raw = Polygon(placement.apply(room.polygon))
+    if raw.is_valid:
+        return raw
+    repaired = raw.buffer(0)
+    parts = [repaired] if repaired.geom_type == "Polygon" else \
+        [g for g in getattr(repaired, "geoms", []) if g.geom_type == "Polygon"]
+    parts = [g for g in parts if not g.is_empty]
+    return max(parts, key=lambda g: g.area) if parts else raw.convex_hull
 
 
 def _door_in_plan(rooms: list[Room], placements: dict, r: int, i: int):
@@ -145,8 +156,10 @@ def _add_room(rooms: list[Room], state: _State, b: int, placement: Placement, pa
     overlap = inner.intersection(state.union).area if not inner.is_empty else 0.0
     if overlap > MAX_OVERLAP_SHARE * poly.area:
         return None
+    union = state.union.union(poly)
+    protrusion = (union.convex_hull.area - state.union.convex_hull.area) - poly.area
     score = (state.score + MATCH_BONUS - 0.5 * (width_gap / WIDTH_SIGMA_M) ** 2 - OVERLAP_PER_M2 * overlap
-             + SHARED_WALL_PER_M * poly.exterior.intersection(state.near_walls).length)
+             + SHARED_WALL_PER_M * poly.exterior.intersection(state.near_walls).length - HULL_PER_M2 * protrusion)
     placements = {**state.placements, b: placement}
     pairs = state.pairs + [pair]
     explained = set(state.explained) | {(pair.room_a, pair.door_a), (pair.room_b, pair.door_b)}
@@ -173,7 +186,6 @@ def _add_room(rooms: list[Room], state: _State, b: int, placement: Placement, pa
                 cd, nd, _ = _door_in_plan(rooms, placements, r, i)
                 if poly.contains(Point(*(cd + nd * BEYOND_DOOR_M))):
                     score -= BLOCKED_DOOR_PENALTY
-    union = state.union.union(poly)
     return _State(placements, {**state.polygons, b: poly}, union, union.buffer(WALL_REACH_M), pairs,
                   frozenset(explained), state.islands, score)
 
@@ -228,7 +240,7 @@ def stitch(rooms: list[Room], beam_width: int = BEAM_WIDTH) -> StitchResult:
     """One plan from separately framed rooms. The largest room fixes the plan's frame."""
     if not rooms:
         return StitchResult({}, [], 0, 0.0, 0.0)
-    order = sorted(range(len(rooms)), key=lambda k: -Polygon(rooms[k].polygon).area)
+    order = sorted(range(len(rooms)), key=lambda k: -_plan_polygon(rooms[k], Placement(0.0, (0.0, 0.0))).area)
     beam = [_start(rooms, order, order[0], None)]
     while True:
         grown, changed = [], False
