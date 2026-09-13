@@ -395,3 +395,24 @@ Our layout cannot run on ARKitScenes scans: the phone stays within about 1 m, an
   - Only 4 distances: these small scans rarely see two opposite walls well.
   - This tests the sensor and fusion, not our wall snapping and corners. Those still need tape on our own rooms.
 
+## Staged damage, synthesised on a real walk (`bench/staged_damage.py`)
+
+```bash
+COZMO_DATA=/path/to/captures python bench/staged_damage.py        # about 5 min
+```
+
+No damaged room was available, so damage is staged synthetically on walk `c7d28f72c6` at a known size (code `260ff25-dirty`). Everything is real except the damage: images, LiDAR depth, poses and the plan from `cozmo run`. A BD3 photo of a water stain, and one of a crack, are each mapped onto the wall seen by the most frames, at a set size and height. They are blended into every frame that sees them, only where the LiDAR sees that wall, so furniture hides them. The shipped damage path then runs unchanged.
+
+| Staged | Wall | Size | Frames painted | Found as a region | Damage score of the tiles covering it, unpainted → painted |
+|---|---|---|---|---|---|
+| water_stain | R1.W5 | 0.6 × 0.45 m, 0.1 m above the floor | 14 | no | 0.23 → 0.68 (mold) |
+| crack | R2.W5 | 0.35 × 1.2 m, 0.45 m above the floor | 10 | no | 0.36 → 0.63 (crack) |
+
+- **Not found: 0/2.** Both raised their tiles' damage score above the 0.6 threshold, but in one frame each, and a region needs two. The stain was read as mold. There were 0 false regions, and 0 on the unpainted control.
+- **What it shows:** damage seen from a walkthrough (a 0.6 m stain several metres away) fills too little of a tile. On close-up photos the detector finds 62% (`bench/damage_bd3.py`). The capture protocol now asks for a close look at any damage.
+- **Honest history of this test:**
+  1. The first run painted the stain across an open doorway, because nothing checked that a wall was there. The detector "found" it, but with IoU 0.09. That result was discarded.
+  2. The second run placed it correctly but too faint to see (0 of 2 found).
+  3. This third run makes it clearly visible.
+  Neither the detector nor its threshold was changed for this test.
+

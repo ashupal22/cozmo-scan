@@ -1,0 +1,68 @@
+{
+  "benchmark": "staged_damage",
+  "code_commit": "260ff25-dirty",
+  "walk": "c7d28f72c6",
+  "p_min": 0.6,
+  "views": 215,
+  "staged": [
+    {
+      "staged": {
+        "class": "water_stain",
+        "surface_id": "R1.W5",
+        "bd3_row": 162,
+        "width_m": 0.6,
+        "height_m": 0.45,
+        "bottom_m": 0.1,
+        "area_m2": 0.27,
+        "frames_painted": 14,
+        "frames_seeing_fully": 7
+      },
+      "found": false,
+      "tiles_covering_it": {
+        "painted": {
+          "max_damage_score": 0.677,
+          "class": "mold"
+        },
+        "unpainted": {
+          "max_damage_score": 0.227,
+          "class": "hole"
+        }
+      },
+      "regions_on_that_wall": []
+    },
+    {
+      "staged": {
+        "class": "crack",
+        "surface_id": "R2.W5",
+        "bd3_row": 229,
+        "width_m": 0.35,
+        "height_m": 1.2,
+        "bottom_m": 0.45,
+        "area_m2": 0.42,
+        "frames_painted": 10,
+        "frames_seeing_fully": 3
+      },
+      "found": false,
+      "tiles_covering_it": {
+        "painted": {
+          "max_damage_score": 0.629,
+          "class": "crack"
+        },
+        "unpainted": {
+          "max_damage_score": 0.363,
+          "class": "water_stain"
+        }
+      },
+      "regions_on_that_wall": []
+    }
+  ],
+  "summary": {
+    "found_right_class_right_wall": "0/2",
+    "iou_at_least_0.5": "0/2",
+    "area_within_25pct": "0/2",
+    "rules_fired": "0/2",
+    "false_regions": 0,
+    "false_regions_detail": [],
+    "control_regions_unpainted": 0
+  }
+}

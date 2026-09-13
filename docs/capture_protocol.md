@@ -10,6 +10,7 @@ Follow these steps exactly. Every "why" comes from a measured failure, listed in
 - **Never turn while pointing at a plain wall closer than 1 m.** Step back first, then turn. *Why: this is where tracking is lost.*
 - **End the walk where you started.** *Why: returning lets drift be corrected.*
 - **Mirrors and glass:** do not film large mirrors or glass doors straight on. At night, close the curtains. *Why: depth sees a room behind the glass that is not there.*
+- **Damage:** stop for 2 seconds about 1 m from any stain, crack or mould, so it fills the screen (photo tier: make it one of that room's photos). *Why: the detector finds 62% of close-up defects but missed staged damage seen from across the room.*
 
 ## Tier 1: LiDAR (iPhone 12 Pro or newer Pro / Pro Max)
 
