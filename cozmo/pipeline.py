@@ -20,6 +20,10 @@ from cozmo.ingest.stray import CaptureError, StrayCapture
 from cozmo.slam.drift import estimate_drift
 
 REPO = Path(__file__).resolve().parents[1]
+# Apple LiDAR depth reads short. On ARKitScenes (2020 iPad Pro, laser truth) the median device - laser depth is -11.9 mm
+# over six walks, and adding it back brings ceiling height within 15 mm on 6/6 walks (bench/README.md). The transfer to
+# iPhone LiDAR is not yet verified, so the ceiling interval keeps its full 13 mm bias term (cozmo/export/document.py).
+LIDAR_DEPTH_OFFSET_M = 0.0119
 
 
 class NotBuiltYet(RuntimeError):
@@ -57,10 +61,11 @@ class Plan:
 
 
 def plan_capture(capture, path: Path, tier: str, t0: float, drift: bool = True, jumps=None, relocalized: bool = True,
-                 errors: ErrorModel = LIDAR_ERRORS, face_scatter_m: float = LIDAR_FACE_SCATTER_M) -> Plan:
+                 errors: ErrorModel = LIDAR_ERRORS, face_scatter_m: float = LIDAR_FACE_SCATTER_M,
+                 depth_offset_m: float = 0.0) -> Plan:
     """Shared by every tier that gives per-frame depth and poses: fuse, correct drift, find the floor,
     lay out rooms, measure ceilings, write the document."""
-    points = fuse(capture)
+    points = fuse(capture, depth_offset_m=depth_offset_m)
     positions = capture.positions
     drift_summary = correction = None
     if drift:
@@ -90,7 +95,11 @@ def plan_capture(capture, path: Path, tier: str, t0: float, drift: bool = True, 
 
 def run_lidar(path: Path, drift: bool = True) -> Plan:
     t0 = time.time()
-    return plan_capture(StrayCapture(path), path, "lidar", t0, drift=drift)
+    plan = plan_capture(StrayCapture(path), path, "lidar", t0, drift=drift, depth_offset_m=LIDAR_DEPTH_OFFSET_M)
+    plan.document["quality"]["warnings"].append(
+        f"LiDAR depth corrected by +{1000 * LIDAR_DEPTH_OFFSET_M:.1f} mm (calibrated on a 2020 iPad Pro against laser scans; "
+        f"not yet verified on iPhone, so ceiling intervals keep the full bias allowance)")
+    return plan
 
 
 VIDEO_FACE_SCATTER_M = 0.048  # video wall points across their wall, true poses, c00a170fe1 (LiDAR: 0.020)
