@@ -9,9 +9,12 @@ stream without stabilisation, not a Camera-app clip.
 Per walk:
   - rooms and footprint of both plans; the video plan is placed on the LiDAR plan by one rigid fit of
     their wall maps (rotation and shift only: a scale error must show, not be fitted away)
-  - rooms paired by IoU >= 0.5, then walls paired by direction and position
-  - wall length error, share within 3% (G-WALL-VIDEO), and whether each video wall's 90% interval holds
-    the LiDAR length (calibration)
+  - rooms paired by IoU >= 0.5 after a local alignment per room (wall lengths are local measurements;
+    placement in the stitched plan is judged by the footprint)
+  - walls paired corner to corner; the gate (G-WALL-VIDEO, 3%) is scored on LiDAR walls of at least 1 m
+    whose two neighbouring faces were fitted to wall points, and a LiDAR wall with no video partner is
+    a miss; plus whether each video wall's 90% interval holds the LiDAR length (calibration)
+  - main dimensions of paired rooms
 Diagnostic variants (--variants):
   truefocal   the video tier given the true focal length instead of estimating it
   oracle      ARKit's camera poses with the video tier's depth (true focal): what depth alone limits
@@ -36,7 +39,8 @@ from shapely.geometry import Polygon
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from cozmo.geometry.walls import wall_mask  # noqa: E402
+from cozmo.export.document import VIDEO_INTERVAL_SCALE  # noqa: E402
+from cozmo.geometry.walls import _to_aligned, wall_mask  # noqa: E402
 from cozmo.ingest.stray import StrayCapture, upright_rotate_code  # noqa: E402
 from cozmo.pipeline import plan_video_capture, run_lidar  # noqa: E402
 from cozmo.slam.matching import match_walls  # noqa: E402
@@ -48,6 +52,11 @@ WALKS = ("c00a170fe1", "1a8384c3f6", "c7d28f72c6")
 MIN_IOU = 0.5
 MIN_WALL_M = 0.5
 GATE = 0.03
+GATE_WALL_M = 1.0          # shorter walls: LiDAR's own 1-2 cm is already 1-2% of the length
+PAIR_REACH_M = 1.5         # room centroids this close after the global fit are candidates
+CORNER_MATCH_M = 0.6       # corners this close drive the local shift
+CORNER_REACH_M = 0.20      # a video wall pairs when both its corners lie this close to the LiDAR wall's...
+CORNER_REACH_SHARE = 0.15  # ...or within this share of the wall's length
 VIDEO_POSE_LAG_S = 0.075   # Stray's video frames lag its poses by 4-5 frames (found by feature-based rotations)
 TRANSPOSE = {cv2.ROTATE_90_CLOCKWISE: "transpose=1", cv2.ROTATE_90_COUNTERCLOCKWISE: "transpose=2",
              cv2.ROTATE_180: "transpose=1,transpose=1"}
@@ -115,80 +124,154 @@ def wall_map(plan):
     return walls.xyz[keep][:, [0, 2]].astype(float), n / (np.linalg.norm(n, axis=1, keepdims=True) + 1e-9)
 
 
-def _direction(a, b):
-    d = np.asarray(b, float) - np.asarray(a, float)
-    return d / (np.linalg.norm(d) + 1e-12)
+def _dominant_angle(vertices: np.ndarray) -> float:
+    """Wall direction of an outline, degrees modulo 90 (length-weighted, 4-fold symmetric mean)."""
+    edges = np.roll(vertices, -1, axis=0) - vertices
+    length = np.linalg.norm(edges, axis=1)
+    angle = np.arctan2(edges[:, 1], edges[:, 0])
+    return float(np.degrees(np.angle(np.sum(length * np.exp(4j * angle))) / 4))
+
+
+def _rotate(points: np.ndarray, degrees: float, about: np.ndarray) -> np.ndarray:
+    t = np.radians(degrees)
+    R = np.array([[np.cos(t), -np.sin(t)], [np.sin(t), np.cos(t)]])
+    return (points - about) @ R.T + about
+
+
+def local_align(ref: np.ndarray, test: np.ndarray, iterations: int = 5) -> np.ndarray:
+    """Test room vertices (already placed by the global fit) moved onto the reference room: the small
+    rotation that makes their wall directions agree, then the median shift between nearest corners.
+    Wall lengths are local measurements, so a room misplaced in the stitched plan still counts."""
+    turn = (_dominant_angle(ref) - _dominant_angle(test) + 45.0) % 90.0 - 45.0
+    moved = _rotate(test, turn, test.mean(axis=0))
+    shift = np.zeros(2)
+    for _ in range(iterations):
+        cur = moved + shift
+        dist = np.linalg.norm(ref[:, None, :] - cur[None, :, :], axis=2)
+        nearest = dist.argmin(axis=1)
+        ok = dist[np.arange(len(ref)), nearest] < CORNER_MATCH_M
+        if ok.sum() < 2:
+            break
+        shift += np.median(ref[ok] - cur[nearest[ok]], axis=0)
+    return moved + shift
+
+
+def main_dimensions(outline) -> np.ndarray:
+    return np.sort(np.ptp(np.asarray(outline.vertices) @ _to_aligned(outline.yaw_deg).T, axis=0))
+
+
+def _iou(a: Polygon, b: Polygon) -> float:
+    a, b = (a if a.is_valid else a.buffer(0)), (b if b.is_valid else b.buffer(0))
+    union = a.union(b).area
+    return a.intersection(b).area / union if union > 0 else 0.0
+
+
+def pair_rooms(lidar_outlines: dict, video_outlines: dict, fit) -> list[tuple[int, int, float, np.ndarray]]:
+    """(LiDAR room, video room, IoU after local alignment, aligned video vertices), largest rooms first.
+    Candidates must lie near each other after the global fit."""
+    pairs, used = [], set()
+    for rl, ol in sorted(lidar_outlines.items(), key=lambda kv: -kv[1].area_m2):
+        ref = np.asarray(ol.vertices, float)
+        ref_poly = Polygon(ref)
+        reach = max(PAIR_REACH_M, 0.5 * np.sqrt(ol.area_m2))
+        best = None
+        for rv, ov in video_outlines.items():
+            if rv in used:
+                continue
+            placed = fit.apply(np.asarray(ov.vertices, float))
+            if np.linalg.norm(np.asarray(Polygon(placed).centroid.coords[0]) - np.asarray(ref_poly.centroid.coords[0])) > reach:
+                continue
+            aligned = local_align(ref, placed)
+            iou = _iou(ref_poly, Polygon(aligned))
+            if best is None or iou > best[2]:
+                best = (rl, rv, iou, aligned)
+        if best is not None and best[2] >= MIN_IOU:
+            used.add(best[1])
+            pairs.append(best)
+    return pairs
+
+
+def pair_walls(ol, aligned: np.ndarray, ov, doc_room: dict, rl: int, lidar_room: dict) -> list[dict]:
+    """Every LiDAR wall of at least MIN_WALL_M against the video wall whose two corners lie near its two
+    corners. A LiDAR wall's length is set by its two neighbouring faces; it is a trustworthy reference
+    only when both were fitted to wall points (support > 0)."""
+    n_ref, n_test = len(ol.walls), len(ov.walls)
+    rows = []
+    for k, w in enumerate(ol.walls):
+        if w.length_m < MIN_WALL_M:
+            continue
+        s, e = np.asarray(ol.vertices[k], float), np.asarray(ol.vertices[(k + 1) % n_ref], float)
+        reach = max(CORNER_REACH_M, CORNER_REACH_SHARE * w.length_m)
+        best = None
+        for j in range(n_test):
+            ts, te = aligned[j], aligned[(j + 1) % n_test]
+            cost = min(max(np.linalg.norm(s - ts), np.linalg.norm(e - te)),
+                       max(np.linalg.norm(s - te), np.linalg.norm(e - ts)))
+            if cost <= reach and (best is None or cost < best[0]):
+                best = (cost, j)
+        ml = lidar_room["walls"][k]["length_m"]
+        row = {"room": f"L{rl}", "lidar_m": round(w.length_m, 3), "lidar_ci": [ml["ci_low"], ml["ci_high"]],
+               "reference_ok": bool(ol.walls[k - 1].support > 0 and ol.walls[(k + 1) % n_ref].support > 0)}
+        if best is None:
+            rows.append(row | {"video_m": None})
+            continue
+        cost, j = best
+        length = float(ov.walls[j].length_m)
+        m = doc_room["walls"][j]["length_m"]
+        err = (length - w.length_m) / w.length_m
+        rows.append(row | {"video_m": round(length, 3), "error_pct": round(100 * err, 1),
+                           "within_gate": bool(abs(err) <= GATE),
+                           "interval_holds_lidar": bool(m["ci_low"] <= w.length_m <= m["ci_high"]),
+                           "video_ci": [m["ci_low"], m["ci_high"]],
+                           "corner_offset_m": round(float(cost), 3)})
+    return rows
+
+
+def _wall_summary(rows: list[dict]) -> dict:
+    paired = [r for r in rows if r["video_m"] is not None]
+    errs = np.array([r["error_pct"] for r in paired])
+    return {"walls": len(rows), "paired": len(paired),
+            "within_3pct": f"{int(np.sum(np.abs(errs) <= 100 * GATE))}/{len(rows)}",
+            "error_pct_median": round(float(np.median(errs)), 1) if len(errs) else None,
+            "abs_error_pct_median": round(float(np.median(np.abs(errs))), 1) if len(errs) else None,
+            "abs_error_pct_p90": round(float(np.percentile(np.abs(errs), 90)), 1) if len(errs) else None,
+            "interval_holds_lidar": f"{sum(r['interval_holds_lidar'] for r in paired)}/{len(paired)}"}
 
 
 def compare(lidar, video, fit) -> dict:
-    """Pair rooms and walls of the video plan (moved by `fit`) with the LiDAR plan."""
+    """Rooms, walls and main dimensions of the video plan against the LiDAR plan of the same walk."""
     doc_v = {r["id"]: r for r in video.document["rooms"]}
-    rooms_l = {rid: Polygon(o.vertices) for rid, o in lidar.outlines.items()}
-    rooms_v = {rid: Polygon(fit.apply(o.vertices)) for rid, o in video.outlines.items()}
-    pairs, used = [], set()
-    for rl, pl in sorted(rooms_l.items(), key=lambda kv: -kv[1].area):
-        best = None
-        for rv, pv in rooms_v.items():
-            if rv in used or not pl.intersects(pv):
-                continue
-            iou = pl.intersection(pv).area / pl.union(pv).area
-            if best is None or iou > best[0]:
-                best = (iou, rv)
-        if best and best[0] >= MIN_IOU:
-            used.add(best[1])
-            pairs.append((rl, best[1], best[0]))
-    walls = []
-    for rl, rv, iou in pairs:
+    doc_l = {r["id"]: r for r in lidar.document["rooms"]}
+    pairs = pair_rooms(lidar.outlines, video.outlines, fit)
+    walls, dims = [], []
+    for rl, rv, iou, aligned in pairs:
         ol, ov = lidar.outlines[rl], video.outlines[rv]
-        vs = [(k, fit.apply(np.array([w.start])), fit.apply(np.array([w.end])), w) for k, w in enumerate(ov.walls)]
-        for w in ol.walls:
-            if w.length_m < MIN_WALL_M:
-                continue
-            d = _direction(w.start, w.end)
-            normal = np.array([-d[1], d[0]])
-            best = None
-            for k, s, e, wv in vs:
-                s, e = s[0], e[0]
-                dv = _direction(s, e)
-                if abs(d @ dv) < np.cos(np.radians(10)):
-                    continue
-                offset = abs((0.5 * (s + e) - 0.5 * (np.asarray(w.start) + np.asarray(w.end))) @ normal)
-                a0, a1 = sorted([(s - w.start) @ d, (e - w.start) @ d])
-                overlap = min(a1, w.length_m) - max(a0, 0.0)
-                if offset > 0.35 or overlap < 0.5 * min(w.length_m, wv.length_m):
-                    continue
-                if best is None or offset < best[0]:
-                    best = (offset, k, wv)
-            if best is None:
-                walls.append({"room": f"R{rl}", "lidar_m": round(w.length_m, 3), "video_m": None})
-                continue
-            _, k, wv = best
-            m = doc_v[f"R{rv}"]["walls"][k]["length_m"]
-            err = (wv.length_m - w.length_m) / w.length_m
-            walls.append({"room": f"R{rl}", "lidar_m": round(w.length_m, 3), "video_m": round(wv.length_m, 3),
-                          "error_pct": round(100 * err, 1), "within_gate": bool(abs(err) <= GATE),
-                          "interval_holds_lidar": bool(m["ci_low"] <= w.length_m <= m["ci_high"]),
-                          "offset_m": round(best[0], 3)})
-    matched = [w for w in walls if w["video_m"] is not None]
-    errs = np.array([w["error_pct"] for w in matched]) if matched else np.array([])
-    area_l = sum(p.area for p in rooms_l.values())
-    area_v = sum(p.area for p in rooms_v.values())
+        walls += pair_walls(ol, aligned, ov, doc_v[f"R{rv}"], rl, doc_l[f"R{rl}"])
+        for a, b in zip(main_dimensions(ol), main_dimensions(ov)):
+            dims.append({"room": f"L{rl}", "lidar_m": round(float(a), 3), "video_m": round(float(b), 3),
+                         "error_pct": round(100 * float(b - a) / float(a), 1)})
+    area_l = sum(o.area_m2 for o in lidar.outlines.values())
+    area_v = sum(o.area_m2 for o in video.outlines.values())
     fp = video.document["plan"]["footprint_area_m2"]
+    dim_err = np.array([d["error_pct"] for d in dims])
+    reference = [w for w in walls if w["reference_ok"] and w["lidar_m"] >= GATE_WALL_M]
     return {
-        "rooms": {"lidar": len(rooms_l), "video": len(rooms_v), "paired": len(pairs),
-                  "paired_iou": [round(p[2], 3) for p in pairs]},
+        "rooms": {"lidar": len(lidar.outlines), "video": len(video.outlines), "paired": len(pairs),
+                  "paired_iou": [round(p[2], 3) for p in pairs],
+                  "paired_area_share": round(sum(lidar.outlines[p[0]].area_m2 for p in pairs) / area_l, 3)},
         "footprint_m2": {"lidar": round(area_l, 2), "video": round(area_v, 2),
                          "error_pct": round(100 * (area_v - area_l) / area_l, 1),
                          "video_interval": [fp["ci_low"], fp["ci_high"]],
                          "interval_holds_lidar": bool(fp["ci_low"] <= area_l <= fp["ci_high"])},
-        "walls": {"lidar_walls_over_0.5m": len(walls), "paired": len(matched),
-                  "within_3pct": f"{int(np.sum(np.abs(errs) <= 100 * GATE))}/{len(walls)}",
-                  "error_pct_median": round(float(np.median(errs)), 1) if len(errs) else None,
-                  "abs_error_pct_median": round(float(np.median(np.abs(errs))), 1) if len(errs) else None,
-                  "interval_holds_lidar": f"{sum(w['interval_holds_lidar'] for w in matched)}/{len(matched)}"},
+        "gate_walls": _wall_summary(reference),
+        "all_walls": _wall_summary(walls),
+        "dimensions": {"count": len(dims), "within_3pct": f"{int(np.sum(np.abs(dim_err) <= 100 * GATE))}/{len(dims)}",
+                       "abs_error_pct_median": round(float(np.median(np.abs(dim_err))), 1) if len(dims) else None,
+                       "error_pct_median": round(float(np.median(dim_err)), 1) if len(dims) else None},
         "fit": {"yaw_deg": round(fit.yaw_deg, 1), "overlap_fraction": round(fit.overlap_fraction, 3),
                 "overlap_median_cm": round(100 * fit.overlap_median_m, 1)},
         "wall_pairs": walls,
+        "dimension_pairs": dims,
     }
 
 
@@ -217,9 +300,10 @@ def run_walk(cid: str, variants: list[str]) -> dict:
         result = compare(lidar, video, fit) if fit else {"fit": None}
         result["video_capture"] = {key: v for key, v in vcap.info.items() if key != "fx_over_width_per_run"}
         result["true_fx_over_width"] = round(true_fx, 4)
+        result["video_interval_scale"] = VIDEO_INTERVAL_SCALE
         result["seconds"] = round(time.time() - t0, 1)
         out[name] = result
-        summary = {k: result.get(k) for k in ("rooms", "footprint_m2")} | {"walls": {k: v for k, v in result.get("walls", {}).items()}}
+        summary = {k: result.get(k) for k in ("rooms", "footprint_m2", "gate_walls", "dimensions")}
         print(cid, name, json.dumps(summary), flush=True)
     return out
 
@@ -228,17 +312,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("walks", nargs="*", default=list(WALKS))
     ap.add_argument("--variants", default="", help="comma-separated: truefocal, oracle")
+    ap.add_argument("--out", default=str(OUT))
     args = ap.parse_args()
+    out = Path(args.out)
     variants = [v for v in args.variants.split(",") if v]
     report = {"benchmark": "video_vs_lidar", "code_commit": code_commit(), "walks": {}}
-    if OUT.is_file():
-        old = json.loads(OUT.read_text())
+    if out.is_file():
+        old = json.loads(out.read_text())
         report["walks"] = old.get("walks", {})
     for cid in args.walks:
         report["walks"][cid] = run_walk(cid, variants)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(report, indent=2) + "\n")
-    print("wrote", OUT.relative_to(ROOT))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, indent=2) + "\n")
+    print("wrote", out)
 
 
 if __name__ == "__main__":
