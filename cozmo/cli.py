@@ -59,7 +59,20 @@ def cmd_run(args) -> int:
         print(f"  warning: {warning}")
     table = (result.parent / "summary.md").read_text().split("\nWarnings:")[0].split("\n\n", 2)[-1]
     print(table.rstrip())
-    print(f"wrote {result}, {result.parent / 'plan.svg'} and {result.parent / 'summary.md'}")
+    written = [n for n in ("result.json", "plan.svg", "summary.md", "report.png", "report.pdf") if (result.parent / n).is_file()]
+    print(f"wrote {result.parent}/: {', '.join(written)}")
+    return 0
+
+
+def cmd_report(args) -> int:
+    from cozmo.export.report import render_report
+    try:
+        doc = json.loads(Path(args.file).read_text())
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"error: cannot read {args.file}: {e}", file=sys.stderr)
+        return 2
+    png, pdf = render_report(doc, Path(args.out) if args.out else Path(args.file).parent)
+    print(f"wrote {png} and {pdf}")
     return 0
 
 
@@ -95,6 +108,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-drift", action="store_true", help="skip drift correction (for the on/off ablation)")
     p.add_argument("--no-damage", action="store_true", help="skip damage detection (faster)")
     p.set_defaults(func=cmd_run)
+
+    p = sub.add_parser("report", help="draw the one-page visual report (report.png, report.pdf) of a result.json")
+    p.add_argument("file")
+    p.add_argument("--out", help="folder for the report (default: next to the file)")
+    p.set_defaults(func=cmd_report)
 
     p = sub.add_parser("validate", help="check an output JSON file against the schema")
     p.add_argument("file")

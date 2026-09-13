@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -218,4 +219,9 @@ def run(path, out_dir, drift: bool = True, damage: bool = True) -> Path:
     svg_path.write_text(render_svg(document, yaw))
     from cozmo.export.summary import summary_markdown
     (out_dir / "summary.md").write_text(summary_markdown(document))
+    try:
+        from cozmo.export.report import render_report
+        render_report(document, out_dir)
+    except Exception as e:  # the visual report is a convenience: it must never cost the result
+        print(f"warning: report.png and report.pdf not written: {e}", file=sys.stderr)
     return out_dir / "result.json"
