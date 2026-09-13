@@ -236,10 +236,12 @@ def total_overlap_m2(polygons) -> float:
     return float(sum(a.intersection(b).area for k, a in enumerate(polys) for b in polys[k + 1:]))
 
 
-def stitch(rooms: list[Room], beam_width: int = BEAM_WIDTH) -> StitchResult:
-    """One plan from separately framed rooms. The largest room fixes the plan's frame."""
+def stitch(rooms: list[Room], beam_width: int | None = None) -> StitchResult:
+    """One plan from separately framed rooms. The largest room fixes the plan's frame. `beam_width` defaults
+    to BEAM_WIDTH, read at call time so benchmarks can override it."""
     if not rooms:
         return StitchResult({}, [], 0, 0.0, 0.0)
+    beam_width = BEAM_WIDTH if beam_width is None else beam_width
     order = sorted(range(len(rooms)), key=lambda k: -_plan_polygon(rooms[k], Placement(0.0, (0.0, 0.0))).area)
     beam = [_start(rooms, order, order[0], None)]
     while True:
