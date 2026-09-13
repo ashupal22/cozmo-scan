@@ -234,3 +234,38 @@ Before: code `33e470f`. After: code `c159802`. Device bias on all six walks: -11
 - **G-CEIL now passes on all six walks**, as predicted. The mean error is −3.2 mm against the predicted −6 mm: the correction did slightly more than the viewing-angle argument suggested.
 - **The spread gate did not improve.** Spread across walks: before 381644: 9.2 mm, 384651: 42.6 mm; after 381644: 10.1 mm, 384651: 43.9 mm. Venue 381644 moved from just inside the 10 mm gate to 0.1 mm outside it. One offset per venue cannot change the spread by much; the small movement comes from plane fits over slightly moved points. Venue 384651 stays confounded by a ceiling with more than one level (first section).
 - **The calibration comes from a 2020 iPad Pro.** It is not yet verified on an iPhone 15 Pro. Until a tape-measured room confirms it, the pipeline keeps the full 13 mm bias in its ceiling interval.
+
+## Stitching rooms into one plan (`bench/stitch_benchmark.py`)
+
+```bash
+python bench/houselayout_properties.py      # once: 23 test cases, 130 rooms, from HouseLayout3D
+python bench/stitch_benchmark.py            # seconds
+```
+
+This tests the photo tier's stitch (G-PHOTO-STITCH, A-ADJ) separately from room reconstruction. Real buildings are cut into rooms that doors join. Each room is handed to the solver in its own frame, the way the photo tier reports it: a random quarter turn plus a small turn, a random shift, scale error, a jittered outline, noisy door widths and positions, missed doors and false doors. Levels are **exact** (no noise), **photo** (3% scale, 5 cm door noise, 10% missed and 5% false doors) and **hard** (twice that). Two random framings per case.
+
+A door pair counts as right only when both sides are the same real door. Rooms can be joined through the wrong doors and still count as adjacent, and that misplaces them.
+
+### The solver as committed (code `b8c21bc`)
+
+| Level | Runs | All doors right | Door precision / recall | Adjacency exact | One connected plan | Room placement error (median) |
+|---|---|---|---|---|---|---|
+| exact | 46 | 22/46 | 0.718 / 0.718 | 32/46 | 46/46 | 0.266 m |
+| photo | 46 | 11/46 | 0.508 / 0.557 | 14/46 | 22/46 | 1.586 m |
+| hard | 46 | 11/46 | 0.437 / 0.527 | 10/46 | 17/46 | 1.173 m |
+
+### Compactness term, tried and not used
+
+Rooms can fill a concave spot of the plan or stick out of it. A term favouring the first fixed one case at zero noise, JmbYfDe2QKZ, from 3.8 m to 0.2 m median placement error. Over all cases it made things worse:
+
+| HULL_PER_M2 | Exact: all doors right | Exact: door precision | Exact: placement | Photo: all doors right | Photo: door precision | Photo: one plan |
+|---|---|---|---|---|---|---|
+| 0 (committed) | 22/46 | 0.718 | 0.266 m | 11/46 | 0.508 | 22/46 |
+| 0.5 | 16/46 | 0.525 | 0.723 m | 9/46 | 0.431 | 21/46 |
+| 1.0 | 10/46 | 0.388 | 1.796 m | 9/46 | 0.369 | 18/46 |
+| 0.5, shared wall 0.2 | 14/46 | 0.528 | 1.647 m | 8/46 | 0.424 | 19/46 |
+
+### What the numbers say
+
+- **The stitch solver does not meet G-PHOTO-STITCH.** Even without noise, all doors are right in only 22 of 46 runs. With photo-like noise it builds one connected plan in fewer than half the runs, with rooms placed about 1.6 m off.
+- **Which door pairs with which is the hard part, not the geometry.** Door widths within a home are nearly identical, and a room can sit plausibly on either side of several walls. The next step is a failure-by-failure diagnosis of the zero-noise cases.
