@@ -83,8 +83,24 @@ def _apple_friendly():
         torch.autocast = original_autocast
 
 
+def _stub_unused_imports():
+    """DA3 imports pycolmap and evo at module level for features we do not use (COLMAP export, aligning to given
+    poses). pycolmap's OpenMP clashes with PyTorch's on macOS, so neither is installed (scripts/install.sh); empty
+    stand-ins let the import succeed."""
+    import importlib.util
+    import sys
+    import types
+    if importlib.util.find_spec("pycolmap") is None:
+        sys.modules.setdefault("pycolmap", types.ModuleType("pycolmap"))
+    if importlib.util.find_spec("evo") is None:
+        for name in ("evo", "evo.core", "evo.core.trajectory"):
+            sys.modules.setdefault(name, types.ModuleType(name))
+        sys.modules["evo.core.trajectory"].PosePath3D = None
+
+
 @lru_cache(maxsize=2)
 def load(name: str):
+    _stub_unused_imports()
     from depth_anything_3.api import DepthAnything3
     model = DepthAnything3.from_pretrained(name)
     return model.to(device()).eval()

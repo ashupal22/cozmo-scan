@@ -9,11 +9,21 @@ description = "iPhone photos, video or LiDAR scans of a home to a measured floor
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-  "numpy>=1.24",
+  "numpy>=1.24,<2",          # plyfile < 1.1 (used by Depth Anything 3) needs numpy 1.x
   "pandas>=2.0",
   "opencv-python>=4.8",
   "scipy>=1.10",
   "jsonschema>=4.18",
+  "shapely>=2.0",
+  "pillow>=10",
+  "pillow-heif>=0.16",       # iPhone HEIC photos
+  "torch>=2.4",
+  "torchvision>=0.19",
+  "transformers>=4.40,<5",   # CLIP for damage detection
+  "huggingface-hub>=0.23,<1",
+  # what Depth Anything 3 imports at run time; DA3 itself is installed without its extras (scripts/install.sh)
+  "einops", "omegaconf", "plyfile<1.1", "trimesh", "imageio", "safetensors", "addict", "moviepy<2",
+  "ipython", "matplotlib", "scikit-image",
 ]
 
 [project.optional-dependencies]
