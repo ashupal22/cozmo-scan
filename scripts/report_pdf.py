@@ -25,9 +25,24 @@ pre { font-size: 7.2pt; background: #f5f5f5; padding: 4pt; line-height: 1.2; pag
 """
 
 
+def _list_breaks(text: str) -> str:
+    """Python-Markdown needs a blank line before a list that follows a paragraph (GitHub does not)."""
+    out, fenced = [], False
+    for line in text.splitlines():
+        if line.startswith("```"):
+            fenced = not fenced
+        is_item = line.lstrip().startswith("- ") or line[:3].rstrip(".").isdigit() and line[1:3] in (". ", ".")
+        prev = out[-1] if out else ""
+        prev_item = prev.lstrip().startswith("- ") or prev[:2].rstrip(".").isdigit()
+        if not fenced and is_item and prev.strip() and not prev_item and not prev.startswith("|"):
+            out.append("")
+        out.append(line)
+    return "\n".join(out) + "\n"
+
+
 def main():
     src = ROOT / "docs" / "technical_report.md"
-    html = markdown.markdown(src.read_text(), extensions=["tables", "fenced_code"])
+    html = markdown.markdown(_list_breaks(src.read_text()), extensions=["tables", "fenced_code"])
     page = ROOT / "docs" / "technical_report.html"
     page.write_text(f"<!doctype html><html><head><meta charset='utf-8'><style>{CSS}</style></head><body>{html}</body></html>")
     out = ROOT / "docs" / "technical_report.pdf"
