@@ -84,6 +84,7 @@ class VideoCapture:
     info: dict = field(default_factory=dict)
     warnings: list[str] = field(default_factory=list)
     breaks: list[tuple[int, int]] = field(default_factory=list)  # (frame before, frame after) per tracking break
+    frame_confidence: np.ndarray | None = None  # median DA3 confidence per key frame
 
     def __len__(self) -> int:
         return len(self.timestamps)
@@ -510,4 +511,4 @@ def load_video(video, work_dir, fx_over_width: float | None = None, metric_gain:
     Ks = np.repeat(K[None], n, axis=0)
     depth = correct_range(chain.depth) if range_correction else chain.depth
     return VideoCapture(video, frames, timestamps, chain.c2w[:, :3, 3].copy(), chain.c2w[:, :3, :3].copy(),
-                        depth, confidences, Ks, scale_sigma, info, breaks=breaks)
+                        depth, confidences, Ks, scale_sigma, info, breaks=breaks, frame_confidence=frame_conf)

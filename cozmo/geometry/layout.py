@@ -78,6 +78,35 @@ REFIT_MIN_POINTS = 30
 FACING_DOT = 0.7
 DOOR_PAIR_M = 0.40             # the two faces of one wall are at most this far apart
 VOXEL_M = (0.02, 0.05)         # plan and height size used to thin wall points
+LIDAR_FACE_SCATTER_M = 0.02    # robust spread of LiDAR wall points across their wall (c00a170fe1)
+
+
+@dataclass(frozen=True)
+class Tolerances:
+    """Distances that depend on how sharply walls were measured. The constants above suit LiDAR, whose
+    wall points scatter about 2 cm across a wall; video walls scatter about 5 cm, and at LiDAR settings
+    one video wall splits into two or three parallel faces. Everything scales with the scatter.
+
+    Tried and rejected: counting the wall seen anywhere within a band as wide as the scatter, instead of
+    averaging narrow bins. It found a 3.7 m wall missed on c00a170fe1, but it also turned furniture faces
+    into walls, and the plans got worse (bench/README.md)."""
+    smooth_bins: int = 3
+    peak_distance_bins: int = 3
+    candidate_m: float = 0.02
+    line_merge_m: float = LINE_MERGE_M
+    line_band_m: float = LINE_BAND_M
+    wall_thickness_m: tuple = WALL_THICKNESS_M
+    jog_m: float = JOG_M
+    refit_band_m: float = REFIT_BAND_M
+
+    @classmethod
+    def for_scatter(cls, face_scatter_m: float) -> "Tolerances":
+        k = max(1.0, face_scatter_m / LIDAR_FACE_SCATTER_M)
+        if k == 1.0:
+            return cls()
+        odd = lambda v: int(round(v)) | 1
+        return cls(odd(3 * k), int(round(3 * k)), 0.02 * k, LINE_MERGE_M * k, LINE_BAND_M * k,
+                   (max(WALL_THICKNESS_M[0], LINE_MERGE_M * k), WALL_THICKNESS_M[1]), JOG_M * k, REFIT_BAND_M * k)
 
 OPEN, WALL, DOOR = 0, 1, 2
 
@@ -165,7 +194,7 @@ def _path_crossings(path_uv: np.ndarray, axis: int, c: float) -> np.ndarray:
 
 
 def _face_lines(uv, h, nuv, axis, along0, n_bins, evidence_m: float, floor_seen: _FreeLookup,
-                path_uv: np.ndarray) -> list[FaceLine]:
+                path_uv: np.ndarray, tol: Tolerances = Tolerances()) -> list[FaceLine]:
     fam = np.abs(nuv[:, axis]) > FACE_COS
     across, along, hh = uv[fam, axis], uv[fam, 1 - axis], h[fam]
     tall = (hh >= evidence_m) & (hh < DOOR_HEAD_M)
@@ -176,8 +205,8 @@ def _face_lines(uv, h, nuv, axis, along0, n_bins, evidence_m: float, floor_seen:
                                       np.floor(along[tall] / ALONG_BIN_M)]).astype(np.int64), axis=0)
     lo_bin = keys[:, 0].min() - 3
     hist = np.bincount(keys[:, 0] - lo_bin).astype(float)
-    smooth = ndimage.uniform_filter1d(hist, 3)
-    peaks, _ = find_peaks(smooth, height=LINE_MIN_M / ALONG_BIN_M, distance=3)
+    smooth = ndimage.uniform_filter1d(hist, tol.smooth_bins)
+    peaks, _ = find_peaks(smooth, height=LINE_MIN_M / ALONG_BIN_M, distance=tol.peak_distance_bins)
     order = np.argsort(across)
     s_across, s_along, s_h = across[order], along[order], hh[order]
     s_normal = nuv[fam, axis][order]
@@ -185,7 +214,7 @@ def _face_lines(uv, h, nuv, axis, along0, n_bins, evidence_m: float, floor_seen:
     candidates = []
     for p in peaks:
         c0 = (p + lo_bin + 0.5) * ACROSS_BIN_M
-        i0, i1 = np.searchsorted(s_across, [c0 - 0.02, c0 + 0.02])
+        i0, i1 = np.searchsorted(s_across, [c0 - tol.candidate_m, c0 + tol.candidate_m])
         sel = (s_h[i0:i1] >= evidence_m) & (s_h[i0:i1] < DOOR_HEAD_M)
         if sel.sum() < 10:
             continue
@@ -193,13 +222,13 @@ def _face_lines(uv, h, nuv, axis, along0, n_bins, evidence_m: float, floor_seen:
     candidates.sort(key=lambda x: -x[1])
     chosen: list[float] = []
     for c, _ in candidates:
-        if all(abs(c - o) >= LINE_MERGE_M for o in chosen):
+        if all(abs(c - o) >= tol.line_merge_m for o in chosen):
             chosen.append(c)
 
     centres = along0 + (np.arange(n_bins) + 0.5) * ALONG_BIN_M
     lines = []
     for c in sorted(chosen):
-        i0, i1 = np.searchsorted(s_across, [c - LINE_BAND_M, c + LINE_BAND_M])
+        i0, i1 = np.searchsorted(s_across, [c - tol.line_band_m, c + tol.line_band_m])
         a, z = s_along[i0:i1], s_h[i0:i1]
         k = np.clip(np.floor((a - along0) / ALONG_BIN_M).astype(int), 0, n_bins - 1)
         tall_count = np.bincount(k[(z >= evidence_m) & (z < DOOR_HEAD_M)], minlength=n_bins)
@@ -300,7 +329,7 @@ def _classify_gap(line: FaceLine, k0: int, k1: int, end_gap: bool = False) -> No
             line.doors.append((mid - NOMINAL_DOOR_M / 2, mid + NOMINAL_DOOR_M / 2, False))
 
 
-def _pair_wall_faces(lines: list[FaceLine]) -> int:
+def _pair_wall_faces(lines: list[FaceLine], tol: Tolerances = Tolerances()) -> int:
     """The two faces of one wall (facing opposite ways, WALL_THICKNESS_M apart) share what either saw:
     one room may have seen the left half of a wall and the other room the right half. Without this,
     rooms leak into each other along the inside of the wall. Returns the number of pairs."""
@@ -309,9 +338,9 @@ def _pair_wall_faces(lines: list[FaceLine]) -> int:
     for i, a in enumerate(ordered):
         for b in ordered[i + 1:]:
             gap = b.c - a.c
-            if gap > WALL_THICKNESS_M[1]:
+            if gap > tol.wall_thickness_m[1]:
                 break
-            if gap < WALL_THICKNESS_M[0] or not (a.facing < 0 < b.facing):
+            if gap < tol.wall_thickness_m[0] or not (a.facing < 0 < b.facing):
                 continue  # a faces towards smaller c and b towards larger c: the wall is between them
             both = np.maximum(a.profile, b.profile)   # DOOR > WALL > OPEN
             overlap = (a.profile == WALL) & (b.profile == WALL)
@@ -362,7 +391,7 @@ def _min_cut(n: int, t_source: np.ndarray, t_sink: np.ndarray, edges: np.ndarray
     return inside
 
 
-def _rectilinear_cleanup(coords: np.ndarray) -> np.ndarray:
+def _rectilinear_cleanup(coords: np.ndarray, jog_m: float = JOG_M) -> np.ndarray:
     """Drop repeated and collinear vertices, then remove short jogs between parallel edges."""
     def simplify(p):
         p = [tuple(v) for v in p]
@@ -389,7 +418,7 @@ def _rectilinear_cleanup(coords: np.ndarray) -> np.ndarray:
         n = len(p)
         lengths = np.linalg.norm(np.roll(p, -1, axis=0) - p, axis=1)
         k = int(np.argmin(lengths))
-        if lengths[k] >= JOG_M:
+        if lengths[k] >= jog_m:
             break
         # edge k runs p[k] -> p[k+1]; its neighbours (k-1) and (k+1) are parallel: move the shorter onto the longer
         a, b = p[k], p[(k + 1) % n]
@@ -406,7 +435,10 @@ def _rectilinear_cleanup(coords: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------------------------
-def build_layout(points: PointSet, floor: HorizontalPlane, camera_positions: np.ndarray) -> Layout:
+def build_layout(points: PointSet, floor: HorizontalPlane, camera_positions: np.ndarray,
+                 face_scatter_m: float = LIDAR_FACE_SCATTER_M) -> Layout:
+    """`face_scatter_m`: how far wall points scatter across their wall (LiDAR 2 cm, video 5 cm)."""
+    tol = Tolerances.for_scatter(face_scatter_m)
     maps = plan_maps(points, floor, camera_positions)
     grid = maps.grid
     free_raw = ndimage.binary_closing(maps.floor | maps.path, structure=_disk(CLOSE_RADIUS_M / grid.cell))
@@ -435,13 +467,13 @@ def build_layout(points: PointSet, floor: HorizontalPlane, camera_positions: np.
     hi = free_uv.max(axis=0) + BOX_MARGIN_M
     n_bins_v = int(np.ceil((hi[1] - lo[1]) / ALONG_BIN_M)) + 1
     n_bins_u = int(np.ceil((hi[0] - lo[0]) / ALONG_BIN_M)) + 1
-    lines_u = [l for l in _face_lines(uv, h, nuv, 0, lo[1], n_bins_v, evidence_m, floor_seen, path_uv)
+    lines_u = [l for l in _face_lines(uv, h, nuv, 0, lo[1], n_bins_v, evidence_m, floor_seen, path_uv, tol)
                if lo[0] < l.c < hi[0]]
-    lines_v = [l for l in _face_lines(uv, h, nuv, 1, lo[0], n_bins_u, evidence_m, floor_seen, path_uv)
+    lines_v = [l for l in _face_lines(uv, h, nuv, 1, lo[0], n_bins_u, evidence_m, floor_seen, path_uv, tol)
                if lo[1] < l.c < hi[1]]
     _close_ends(lines_u, lines_v)
     _close_ends(lines_v, lines_u)
-    paired = _pair_wall_faces(lines_u) + _pair_wall_faces(lines_v)
+    paired = _pair_wall_faces(lines_u, tol) + _pair_wall_faces(lines_v, tol)
     us = np.array([lo[0]] + [l.c for l in lines_u] + [hi[0]])
     vs = np.array([lo[1]] + [l.c for l in lines_v] + [hi[1]])
     nu, nv = len(us) - 1, len(vs) - 1
@@ -524,10 +556,10 @@ def build_layout(points: PointSet, floor: HorizontalPlane, camera_positions: np.
         if shape.geom_type != "Polygon":
             shape = max(shape.geoms, key=lambda g: g.area)
         shape = orient(Polygon(shape.exterior), sign=1.0)
-        p = _rectilinear_cleanup(np.array(shape.exterior.coords)[:-1])
+        p = _rectilinear_cleanup(np.array(shape.exterior.coords)[:-1], tol.jog_m)
         if len(p) < 4:
             continue
-        outline = _refit(rid, p, wall_uv, wall_h, wall_n, R, yaw)
+        outline = _refit(rid, p, wall_uv, wall_h, wall_n, R, yaw, tol.refit_band_m)
         if outline is not None:
             outlines[rid] = outline
             polys_uv[rid] = np.array(outline.vertices) @ R.T
@@ -668,7 +700,7 @@ def _walked_openings(path_xz, room_map, outlines, existing) -> list[OpeningOnWal
     return openings
 
 
-def _refit(rid, p, wall_uv, wall_h, wall_n, R, yaw) -> RoomOutline | None:
+def _refit(rid, p, wall_uv, wall_h, wall_n, R, yaw, band_m: float = REFIT_BAND_M) -> RoomOutline | None:
     """Move every edge of a rectilinear outline onto the wall points facing into the room."""
     n = len(p)
     coords, spreads, supports = [], [], []
@@ -679,7 +711,7 @@ def _refit(rid, p, wall_uv, wall_h, wall_n, R, yaw) -> RoomOutline | None:
         d = b - a
         inward = np.array([-d[1], d[0]]) / (np.linalg.norm(d) + 1e-12)  # left of a CCW edge
         lo_a, hi_a = sorted((a[1 - axis], b[1 - axis]))
-        sel = ((np.abs(wall_uv[:, axis] - c) < REFIT_BAND_M)
+        sel = ((np.abs(wall_uv[:, axis] - c) < band_m)
                & (wall_uv[:, 1 - axis] > lo_a + 0.05) & (wall_uv[:, 1 - axis] < hi_a - 0.05)
                & (wall_n @ inward > FACING_DOT) & (wall_h > 0.2))
         if sel.sum() >= REFIT_MIN_POINTS:

@@ -11,7 +11,7 @@ from cozmo.export.document import LIDAR_ERRORS, ErrorModel, build_document, vide
 from cozmo.export.render import render_svg
 from cozmo.export.validate import validate_output
 from cozmo.geometry.fusion import fuse
-from cozmo.geometry.layout import NotManhattan, build_layout
+from cozmo.geometry.layout import LIDAR_FACE_SCATTER_M, NotManhattan, build_layout
 from cozmo.geometry.planes import find_floors
 from cozmo.geometry.rooms import build_room_map, room_ceilings
 from cozmo.geometry.walls import attach_doorways, outline_rooms
@@ -31,11 +31,11 @@ def _code_version() -> str:
     return out.stdout.strip() or "unknown"
 
 
-def plan_rooms(points, floor, positions):
+def plan_rooms(points, floor, positions, face_scatter_m: float = LIDAR_FACE_SCATTER_M):
     """Rooms from walls first; if the walls do not meet at right angles, fall back to rooms traced
     from the seen floor. Returns (room map, outlines, openings, note for the warnings or None)."""
     try:
-        layout = build_layout(points, floor, positions)
+        layout = build_layout(points, floor, positions, face_scatter_m=face_scatter_m)
         if layout.outlines:
             return layout.room_map, layout.outlines, layout.openings, None
         note = "walls-first layout found no rooms; outlines traced from the seen floor instead"
@@ -53,17 +53,18 @@ class Plan:
     points: object      # drift-corrected PointSet
     floor: object       # HorizontalPlane
     outlines: dict      # room id -> RoomOutline
+    correction: object = None  # FrameCorrection (per-frame corrected camera positions), None without drift correction
 
 
-def plan_capture(capture, path: Path, tier: str, t0: float, drift: bool = True, jumps=None,
-                 errors: ErrorModel = LIDAR_ERRORS) -> Plan:
+def plan_capture(capture, path: Path, tier: str, t0: float, drift: bool = True, jumps=None, relocalized: bool = True,
+                 errors: ErrorModel = LIDAR_ERRORS, face_scatter_m: float = LIDAR_FACE_SCATTER_M) -> Plan:
     """Shared by every tier that gives per-frame depth and poses: fuse, correct drift, find the floor,
     lay out rooms, measure ceilings, write the document."""
     points = fuse(capture)
     positions = capture.positions
-    drift_summary = None
+    drift_summary = correction = None
     if drift:
-        correction, report = estimate_drift(capture, points, jumps=jumps)
+        correction, report = estimate_drift(capture, points, jumps=jumps, relocalized=relocalized)
         points = correction.apply(points)
         positions = correction.positions[correction.valid]
         drift_summary = report.to_schema()
@@ -71,7 +72,7 @@ def plan_capture(capture, path: Path, tier: str, t0: float, drift: bool = True, 
     if not floors:
         raise CaptureError(f"{path}: no floor found; the capture must show the floor")
     floor = floors[0]
-    room_map, outlines, openings, method_note = plan_rooms(points, floor, positions)
+    room_map, outlines, openings, method_note = plan_rooms(points, floor, positions, face_scatter_m)
     if not outlines:
         raise CaptureError(f"{path}: no room outline could be built")
     ceilings = room_ceilings(points, floor, room_map)
@@ -84,7 +85,7 @@ def plan_capture(capture, path: Path, tier: str, t0: float, drift: bool = True, 
     if method_note:
         document["quality"]["warnings"].append(method_note)
     yaw = next(iter(outlines.values())).yaw_deg
-    return Plan(document, yaw, points, floor, outlines)
+    return Plan(document, yaw, points, floor, outlines, correction)
 
 
 def run_lidar(path: Path, drift: bool = True) -> Plan:
@@ -92,12 +93,20 @@ def run_lidar(path: Path, drift: bool = True) -> Plan:
     return plan_capture(StrayCapture(path), path, "lidar", t0, drift=drift)
 
 
+VIDEO_FACE_SCATTER_M = 0.048  # video wall points across their wall, true poses, c00a170fe1 (LiDAR: 0.020)
+
+
 def plan_video_capture(capture, path: Path, t0: float, drift: bool = True) -> Plan:
-    plan = plan_capture(capture, path, "video", t0, drift=drift, jumps=[], errors=video_errors(capture.scale_sigma))
+    """Video walks are not cut at their tracking breaks (capture.breaks). On our three walks, cutting there and
+    re-attaching the pieces made the wall map agree better with LiDAR (1a8384c3f6 0.55 -> 0.63, c7d28f72c6
+    0.39 -> 0.49) but did not improve the plans (bench/README.md), so the breaks are only reported."""
+    plan = plan_capture(capture, path, "video", t0, drift=drift, jumps=[], relocalized=False,
+                        errors=video_errors(capture.scale_sigma), face_scatter_m=VIDEO_FACE_SCATTER_M)
     document, info = plan.document, capture.info
     document["quality"]["warnings"] += [
         f"no depth sensor: wall positions come from a learned depth model (Depth Anything 3) on {info['frames']} "
-        f"key frames",
+        f"key frames; camera tracking was doubtful at {len(capture.breaks)} place(s), where parts of the plan may be "
+        f"turned or shifted",
         f"real size set by a monocular metric-depth model, focal length from {info['focal_source']}: scale "
         f"uncertainty {100 * capture.scale_sigma:.1f}% (1 sigma), applied to every length",
     ]
