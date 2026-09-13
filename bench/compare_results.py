@@ -1,6 +1,6 @@
 """Compare regenerated benchmark results with the committed ones: the same numbers, or the first differences.
 
-    python bench/compare_results.py <regenerated results folder> [--committed bench/results] [--pair NEW=OLD ...]
+    python bench/compare_results.py <regenerated results folder> [--committed bench/results] [--pair NEW=OLD ...] [--limit N]
 
 Every JSON file in the regenerated folder is compared with the committed file of the same name (or the one named by
 --pair). Keys that record when or how fast a run happened (code commit, seconds, runtime) are ignored. Numbers must
@@ -20,7 +20,7 @@ TOLERANCE = 1e-6
 
 def differences(a, b, path: str = "", out: list | None = None, limit: int = 8) -> list[str]:
     out = [] if out is None else out
-    if len(out) >= limit:
+    if limit and len(out) >= limit:
         return out
     if isinstance(a, dict) and isinstance(b, dict):
         for k in sorted(set(a) | set(b)):
@@ -40,7 +40,7 @@ def differences(a, b, path: str = "", out: list | None = None, limit: int = 8) -
             out.append(f"{path}: committed {a}, regenerated {b}")
     elif a != b:
         out.append(f"{path}: committed {a!r}, regenerated {b!r}")
-    return out[:limit]
+    return out[:limit] if limit else out
 
 
 def main():
@@ -49,6 +49,7 @@ def main():
     ap.add_argument("--committed", default=str(ROOT / "bench" / "results"))
     ap.add_argument("--pair", action="append", default=[], help="NEW=OLD: compare regenerated NEW with committed OLD")
     ap.add_argument("--out", help="write the comparison as JSON")
+    ap.add_argument("--limit", type=int, default=8, help="differences listed per file (0: all)")
     args = ap.parse_args()
     pairs = dict(p.split("=", 1) for p in args.pair)
     report = {}
@@ -56,7 +57,7 @@ def main():
         old = Path(args.committed) / pairs.get(new.name, new.name)
         if not old.is_file():
             continue
-        diffs = differences(json.loads(old.read_text()), json.loads(new.read_text()))
+        diffs = differences(json.loads(old.read_text()), json.loads(new.read_text()), limit=args.limit)
         report[new.name] = {"committed": str(old.relative_to(Path(args.committed))), "same": not diffs, "differences": diffs}
         print(f"{new.name:45s} {'same' if not diffs else 'DIFFERS'}")
         for d in diffs:
