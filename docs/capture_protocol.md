@@ -9,6 +9,7 @@ Follow these steps exactly. Every "why" comes from a measured failure, listed in
 - Hold the phone at chest height. Walk slowly, about half your normal pace.
 - **Never turn while pointing at a plain wall closer than 1 m.** Step back first, then turn. *Why: this is where tracking is lost.*
 - **End the walk where you started.** *Why: returning lets drift be corrected.*
+- **Mirrors and glass:** do not film large mirrors or glass doors straight on. At night, close the curtains. *Why: depth sees a room behind the glass that is not there.*
 
 ## Tier 1: LiDAR (iPhone 12 Pro or newer Pro / Pro Max)
 
@@ -47,8 +48,8 @@ Every command writes `out/<name>/result.json` and `out/<name>/plan.svg`. Warning
 
 | Tier | Devices | Measured so far | Gate status |
 |---|---|---|---|
-| LiDAR | iPhone 12 Pro+ (Pro models), iPad Pro 2020+ | Ceiling height within 15 mm on 6/6 walks (ARKitScenes laser truth, iPad Pro 2020, after depth-bias correction). Same flat walked twice: footprints agree within 1.9%. Drift correction ablated on 3 walks | G-CEIL met on public data. Walls and openings not yet checked against a tape measure |
+| LiDAR | iPhone 12 Pro+ (Pro models), iPad Pro 2020+ | Ceiling height within 15 mm on 6/6 walks (ARKitScenes laser truth, iPad Pro 2020, after depth-bias correction). Same flat walked twice: footprints agree within 1.6%. Drift correction ablated on 3 walks | G-CEIL met on public data. Walls and openings not yet checked against a tape measure |
 | Video | Any iPhone 15+ | Walls typically 8–16% off against LiDAR of the same walk; intervals widened 4.5× to stay honest | G-WALL-VIDEO (±3%) not met |
-| Photo | Any iPhone 15+ | Per-room reconstruction not yet reliable. Stitching rooms through their doors gets every door right in 40 of 46 noise-free test runs, and in 14 of 46 with photo-like noise | G-PHOTO-STITCH not met |
+| Photo | Any iPhone 15+ | Room boxes about 26% off (median), too small more often than too big; intervals widened 5.1× hold on 17 of 18 dimensions. Stitching gets every door right in 40 of 46 noise-free test runs, and in 14 of 46 with photo-like noise | G-WALL-PHOTO and G-PHOTO-STITCH not met |
 
 *iPhone results are from our own three walks. The ceiling numbers come from a 2020 iPad Pro; their transfer to iPhone 15 Pro is unverified until a tape-measured room is captured.*
